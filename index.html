@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Studio v45.0 - Final Live</title>
+    <title>BGMI Studio v45.0 - Final Corrected</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
@@ -10,47 +10,51 @@
         :root {
             --rank-bg: #0e1236; --row-bg: #ffffff; --text-color: #000000;
             --total-bg: #00e5ff; --elim-bg: #ff0000; --row-gap: 5px; --fade-op: 0.85;
-            --w-rank: 45px; --w-logo: 80px; --w-name: 50px; --w-status: 45px; --w-fin: 55px; --w-tot: 40px;
-            --bar-w: 25px; --bar-h: 15px; --bar-gap: 30px;
+            --w-rank: 45px; --w-logo: 50px; --w-name: 200px; --w-status: 100px; --w-fin: 50px; --w-tot: 65px;
+            --bar-w: 3px; --bar-h: 16px; --bar-gap: 2px;
         }
         body { margin: 0; background: #00ff00; font-family: 'Bahnschrift', sans-serif; overflow: hidden; }
 
-        /* Sidebar Settings Panel (Screenshot Style) */
-        #admin { width: 320px; height: 100vh; background: #111111; position: fixed; left: 0; padding: 15px; border-right: 2px solid #333; z-index: 9999; overflow-y: auto; color: white; }
+        #admin { width: 320px; height: 100vh; background: #111; position: fixed; left: 0; padding: 15px; border-right: 2px solid #333; z-index: 9999; overflow-y: auto; color: white; }
         .config-sec { background: #1a1a1a; padding: 10px; margin-bottom: 12px; border-radius: 4px; border: 1px solid #00e5ff; }
-        .config-sec h4 { margin: 0 0 8px 0; color: #00e5ff; text-transform: uppercase; font-size: 11px; display: flex; align-items: center; gap: 5px; }
-        label { display: block; margin-top: 5px; color: #ffffff; font-size: 10px; }
+        .config-sec h4 { margin: 0 0 8px 0; color: #00e5ff; font-size: 11px; text-transform: uppercase; }
+        label { display: block; margin-top: 5px; font-size: 10px; }
         input[type="range"] { width: 100%; accent-color: #00e5ff; }
-        .btn-main { background: #00e5ff; color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
+        .btn-main { background: #00e5ff; color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 15px; }
 
-        /* Leaderboard Table */
         .movable { position: absolute; touch-action: none; cursor: move; z-index: 500; }
         .lb-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); }
         .lb-row { display: table-row; background: var(--row-bg); color: var(--text-color); font-weight: 900; }
         
-        /* Elimination & Fade Control */
         .lb-row.eliminated { 
             background: var(--elim-bg) !important; 
             opacity: var(--fade-op) !important; 
             color: #ffffff !important; 
         }
 
-        .cell { display: table-cell; vertical-align: middle; height: 35px; padding: 0; margin: 0; overflow: hidden; }
-        .col-rank { width: var(--w-rank); background: var(--rank-bg); color: white; text-align: center; }
+        .cell { display: table-cell; vertical-align: middle; height: 35px; padding: 0; }
+        .col-rank { width: var(--w-rank); background: var(--rank-bg); color: white; text-align: center; font-size: 18px; }
         .col-logo { width: var(--w-logo); background: #fff; text-align: center; }
-        .col-logo img { height: 24px; width: 24px; object-fit: contain; }
-        .col-name { width: var(--w-name); padding-left: 10px; text-transform: uppercase; white-space: nowrap; font-size: 14px; }
+        .col-logo img { height: 26px; width: 26px; object-fit: contain; }
+        .col-name { width: var(--w-name); padding-left: 10px; text-transform: uppercase; font-size: 14px; white-space: nowrap; }
         .col-status { width: var(--w-status); text-align: center; }
         .col-fin { width: var(--w-fin); text-align: center; border-left: 1px solid rgba(0,0,0,0.1); }
-        .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 18px; }
+        .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 20px; }
         
-        /* Thin Alive Bars */
-        .v-bar { display: inline-block; width: var(--bar-w); height: var(--bar-h); background: var(--rank-bg); border-radius: 1px; margin: 0 var(--bar-gap); vertical-align: middle; }
-        .v-bar.dead { background: #cbd5e0; opacity: 0.15; }
+        /* VERTICAL BARS RESTORED */
+        .v-bar { 
+            display: inline-block; 
+            width: var(--bar-w); 
+            height: var(--bar-h); 
+            background: var(--rank-bg); 
+            margin: 0 var(--bar-gap); 
+            vertical-align: middle;
+            border-radius: 1px;
+        }
+        .v-bar.dead { background: #cbd5e0; opacity: 0.2; }
 
-        /* Admin Team List */
-        .team-ctrl { background:#222; padding:8px; margin-bottom:5px; display:flex; gap:10px; align-items:center; border-radius:3px; border-bottom: 1px solid #333; }
-        .team-ctrl input[type="number"] { width: 45px; text-align: center; font-weight: bold; border: none; border-radius: 2px; }
+        .team-ctrl { background:#222; padding:8px; margin-bottom:4px; display:flex; gap:10px; align-items:center; border-radius:3px; }
+        #modal { position:fixed; top:5%; left:5%; width:90%; height:85%; background:#111; padding:20px; display:none; z-index:10001; color: white; border:1px solid #00e5ff; overflow-y:auto; }
     </style>
 </head>
 <body>
@@ -60,7 +64,7 @@
     
     <div class="config-sec">
         <h4>🎨 COLOR & FADE CONTROL</h4>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
             <div>Row <input type="color" value="#ffffff" oninput="adj('row-bg', this.value)"></div>
             <div>Total <input type="color" value="#00e5ff" oninput="adj('total-bg', this.value)"></div>
             <div>Rank <input type="color" value="#0e1236" oninput="adj('rank-bg', this.value)"></div>
@@ -71,28 +75,36 @@
     </div>
 
     <div class="config-sec">
-        <h4>⚡ THIN ALIVE BARS</h4>
-        <label>Width</label><input type="range" min="1" max="50" value="25" oninput="adj('bar-w', this.value+'px')">
-        <label>Height</label><input type="range" min="1" max="40" value="15" oninput="adj('bar-h', this.value+'px')">
-        <label>Gap</label><input type="range" min="0" max="50" value="30" oninput="adj('bar-gap', this.value+'px')">
+        <h4>⚡ THIN ALIVE BARS (VERTICAL)</h4>
+        <label>Width</label><input type="range" min="1" max="15" value="3" oninput="adj('bar-w', this.value+'px')">
+        <label>Height</label><input type="range" min="5" max="30" value="16" oninput="adj('bar-h', this.value+'px')">
+        <label>Gap</label><input type="range" min="0" max="10" value="2" oninput="adj('bar-gap', this.value+'px')">
     </div>
 
     <div class="config-sec">
         <h4>↔️ COLUMN ADJUSTMENTS</h4>
-        <label>Rank Box</label><input type="range" min="10" max="150" value="45" oninput="adj('w-rank', this.value+'px')">
-        <label>Logo Box</label><input type="range" min="10" max="150" value="80" oninput="adj('w-logo', this.value+'px')">
-        <label>Name Box</label><input type="range" min="10" max="400" value="50" oninput="adj('w-name', this.value+'px')">
-        <label>Status Box</label><input type="range" min="10" max="200" value="45" oninput="adj('w-status', this.value+'px')">
-        <label>Finish Box</label><input type="range" min="10" max="150" value="55" oninput="adj('w-fin', this.value+'px')">
-        <label>Total Box</label><input type="range" min="10" max="150" value="40" oninput="adj('w-tot', this.value+'px')">
-        <label>Vertical Row Gap</label><input type="range" min="0" max="30" value="5" oninput="adj('row-gap', this.value+'px')">
+        <label>Rank Box</label><input type="range" min="20" max="100" value="45" oninput="adj('w-rank', this.value+'px')">
+        <label>Logo Box</label><input type="range" min="20" max="100" value="50" oninput="adj('w-logo', this.value+'px')">
+        <label>Name Box</label><input type="range" min="50" max="400" value="200" oninput="adj('w-name', this.value+'px')">
+        <label>Status Box</label><input type="range" min="20" max="150" value="100" oninput="adj('w-status', this.value+'px')">
+        <label>Finish Box</label><input type="range" min="20" max="100" value="50" oninput="adj('w-fin', this.value+'px')">
+        <label>Total Box</label><input type="range" min="20" max="100" value="65" oninput="adj('w-tot', this.value+'px')">
+        <label>Vertical Row Gap</label><input type="range" min="0" max="20" value="5" oninput="adj('row-gap', this.value+'px')">
     </div>
 
     <div id="ctrl-list"></div>
+    <button class="btn-main" style="background:red; color:white; margin-top:10px;" onclick="resetAll()">🔄 RESET MATCH</button>
 </div>
 
 <div id="board" class="movable lb-container" style="top: 50px; left: 350px;">
     <div id="board-rows"></div>
+</div>
+
+<div id="modal">
+    <h3>Live Team Entry</h3>
+    <div id="set-inputs"></div>
+    <button onclick="addT()" style="background:green; color:white; padding:8px;">+ ADD TEAM</button>
+    <button onclick="saveS()" class="btn-main" style="margin-top:10px;">SAVE TO CLOUD</button>
 </div>
 
 <script>
@@ -123,8 +135,7 @@
     function adj(p, v) { document.documentElement.style.setProperty('--'+p, v); }
 
     db.ref('teams').on('value', (snap) => {
-        const data = snap.val();
-        const teams = data ? Object.values(data) : [];
+        const teams = snap.val() ? Object.values(snap.val()) : [];
         renderBoard(teams);
         renderAdmin(teams);
     });
@@ -152,9 +163,9 @@
         ctrl.innerHTML = '';
         teams.forEach((t, i) => {
             ctrl.innerHTML += `<div class="team-ctrl">
-                <span style="flex:1; font-size:10px; font-weight:bold;">${t.name}</span>
-                K: <input type="number" value="${t.kills}" onchange="updateKills(${i}, this.value)">
-                <label style="display:inline; margin:0;"><input type="checkbox" ${t.dead?'checked':''} onchange="setElim(${i}, this.checked)"> ELIM</label>
+                <span style="flex:1; font-size:10px;">${t.name}</span>
+                K: <input type="number" style="width:40px" value="${t.kills}" onchange="updateKills(${i}, this.value)">
+                <input type="checkbox" ${t.dead?'checked':''} onchange="setElim(${i}, this.checked)"> ELIM
             </div>`;
         });
     }
@@ -166,14 +177,66 @@
             const teams = Object.values(snap.val());
             if(checked) {
                 let rank = teams.filter(t => !t.dead).length;
-                db.ref('teams/'+i).update({ dead: true, alive: 0, autoPlace: posPoints[rank] || 0 });
+                if(confirm("Eliminate "+teams[i].name+" at Rank #"+rank+"?")) {
+                    db.ref('teams/'+i).update({ dead: true, alive: 0, autoPlace: posPoints[rank] || 0 });
+                } else {
+                    renderAdmin(teams); // Reset checkbox if cancelled
+                }
             } else {
                 db.ref('teams/'+i).update({ dead: false, alive: 4, autoPlace: 0 });
             }
         });
     }
 
-    function toggleM() { /* Logic for adding teams */ }
+    function toggleM() {
+        const m = document.getElementById('modal');
+        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        if(m.style.display === 'block') {
+            db.ref('teams').once('value', snap => {
+                const teams = snap.val() || [];
+                const box = document.getElementById('set-inputs'); box.innerHTML = '';
+                Object.values(teams).forEach((t, i) => {
+                    box.innerHTML += `<div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="text" id="n-${i}" value="${t.name}">
+                        <input type="text" id="l-${i}" value="${t.logo}" style="flex:1">
+                        <input type="number" id="p-${i}" value="${t.basePts}" style="width:50px">
+                    </div>`;
+                });
+            });
+        }
+    }
+
+    function addT() {
+        db.ref('teams').once('value', snap => {
+            const teams = snap.val() ? Object.values(snap.val()) : [];
+            teams.push({ name: 'TEAM', logo: 'https://i.ibb.co/VWVx67n/default.png', kills: 0, basePts: 0, autoPlace: 0, alive: 4, dead: false });
+            db.ref('teams').set(teams);
+            toggleM(); toggleM();
+        });
+    }
+
+    function saveS() {
+        db.ref('teams').once('value', snap => {
+            const teams = Object.values(snap.val());
+            teams.forEach((t, i) => {
+                t.name = document.getElementById(`n-${i}`).value.toUpperCase();
+                t.logo = document.getElementById(`l-${i}`).value;
+                t.basePts = parseInt(document.getElementById(`p-${i}`).value) || 0;
+            });
+            db.ref('teams').set(teams);
+            document.getElementById('modal').style.display = 'none';
+        });
+    }
+
+    function resetAll() {
+        if(confirm("Reset points and revive all teams?")) {
+            db.ref('teams').once('value', snap => {
+                const teams = Object.values(snap.val());
+                teams.forEach(t => { t.kills = 0; t.autoPlace = 0; t.dead = false; t.alive = 4; });
+                db.ref('teams').set(teams);
+            });
+        }
+    }
 </script>
 </body>
 </html>
