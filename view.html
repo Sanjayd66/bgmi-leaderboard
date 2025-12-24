@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Studio v44.0 - View Only</title>
+    <title>BGMI Studio v44.0 - View HUD</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
@@ -13,19 +13,26 @@
             --w-rank: 45px; --w-logo: 50px; --w-name: 200px; --w-status: 100px; --w-fin: 50px; --w-tot: 65px;
             --bar-w: 3px; --bar-h: 16px; --bar-gap: 2px;
         }
-        body { margin: 0; background: transparent; font-family: 'Bahnschrift', sans-serif; overflow: hidden; width: 1920px; height: 1080px; }
+        body { 
+            margin: 0; 
+            background: transparent no-repeat center center; 
+            background-size: 1920px 1080px;
+            font-family: 'Bahnschrift', sans-serif; 
+            overflow: hidden; 
+            width: 1920px; height: 1080px; 
+        }
 
         .movable { position: absolute; touch-action: none; cursor: move; }
         
         /* Forecast with Logo */
         #forecast-box { display: none; gap: 10px; top: 20px; left: 50%; transform: translateX(-50%); }
-        .f-item { width: 180px; height: 75px; background: #ff9d00; display: flex; align-items: center; padding: 0 10px; color: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.4); border-radius: 4px; }
-        .f-logo { width: 45px; height: 45px; object-fit: contain; margin-right: 10px; background: rgba(0,0,0,0.1); border-radius: 4px; }
-        .f-data { flex: 1; display: flex; flex-direction: column; }
+        .f-item { width: 170px; height: 70px; background: #ff9d00; display: flex; align-items: center; padding: 0 10px; color: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.4); border-radius: 4px; }
+        .f-logo { width: 42px; height: 42px; object-fit: contain; margin-right: 8px; }
+        .f-data { display: flex; flex-direction: column; }
 
-        /* Table */
+        /* Leaderboard */
         .lb-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); }
-        .lb-row { display: table-row; background: var(--row-bg); color: var(--text-color); font-weight: 900; }
+        .lb-row { display: table-row; background: var(--row-bg); color: var(--text-color); font-weight: 900; transition: all 0.3s; }
         .lb-row.eliminated { background: var(--elim-bg) !important; opacity: var(--fade-op) !important; color: rgba(255,255,255,0.7) !important; }
         
         .cell { display: table-cell; vertical-align: middle; height: 35px; }
@@ -68,8 +75,11 @@
         t.dataset.x = x; t.dataset.y = y;
     }}});
 
+    // Background & Settings Sync
     db.ref('settings').on('value', snap => {
-        const s = snap.val(); for(let k in s) document.documentElement.style.setProperty('--'+k, s[k]);
+        const s = snap.val(); if(!s) return;
+        for(let k in s) document.documentElement.style.setProperty('--'+k, s[k]);
+        if(s['bg-url']) document.body.style.backgroundImage = `url('${s['bg-url']}')`;
     });
 
     db.ref('teams').on('value', snap => {
@@ -99,7 +109,7 @@
                 fBox.innerHTML += `<div class="f-item">
                     <img class="f-logo" src="${t.logo}">
                     <div class="f-data"><div style="font-size:10px; font-weight:900;">${t.name}</div>
-                    <div style="font-size:24px; font-weight:900;">${prob}%</div></div>
+                    <div style="font-size:24px; font-weight:900; line-height:1;">${prob}%</div></div>
                 </div>`;
             });
         } else { fBox.style.display = 'none'; }
