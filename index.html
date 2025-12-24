@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Studio v45.0 - Live PT</title>
+    <title>BGMI Studio v45.0 - Final Live</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
@@ -15,17 +15,25 @@
         }
         body { margin: 0; background: #00ff00; font-family: 'Bahnschrift', sans-serif; overflow: hidden; }
 
+        /* Admin Sidebar */
         #admin { width: 320px; height: 100vh; background: #111; position: fixed; left: 0; padding: 15px; border-right: 2px solid #333; z-index: 9999; overflow-y: auto; color: white; font-size: 11px; }
         .config-sec { background: #1a1a1a; padding: 10px; margin-bottom: 12px; border-radius: 4px; border-top: 2px solid var(--total-bg); }
         .config-sec h4 { margin: 0 0 8px 0; color: var(--total-bg); text-transform: uppercase; font-size: 10px; }
         label { display: block; margin-top: 5px; color: #888; }
         input[type="range"] { width: 100%; accent-color: var(--total-bg); }
-        .btn-main { background: var(--total-bg); color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; }
+        .btn-main { background: var(--total-bg); color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
 
+        /* Table Logic */
         .movable { position: absolute; touch-action: none; cursor: move; z-index: 500; }
         .lb-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); }
         .lb-row { display: table-row; background: var(--row-bg); color: var(--text-color); font-weight: 900; }
-        .lb-row.eliminated { background: var(--elim-bg) !important; opacity: var(--fade-op) !important; color: rgba(255,255,255,0.7) !important; }
+        
+        /* Elimination Fade Fix */
+        .lb-row.eliminated { 
+            background: var(--elim-bg) !important; 
+            opacity: var(--fade-op) !important; 
+            color: rgba(255,255,255,0.7) !important; 
+        }
 
         .cell { display: table-cell; vertical-align: middle; height: 35px; padding: 0; margin: 0; overflow: hidden; }
         .col-rank { width: var(--w-rank); background: var(--rank-bg); color: white; text-align: center; font-size: 16px; }
@@ -36,6 +44,7 @@
         .col-fin { width: var(--w-fin); text-align: center; border-left: 1px solid rgba(0,0,0,0.1); }
         .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 18px; border-left: 1px solid rgba(0,0,0,0.1); }
         
+        /* Alive Bars Control */
         .v-bar { display: inline-block; width: var(--bar-w); height: var(--bar-h); background: var(--rank-bg); border-radius: 1px; margin: 0 var(--bar-gap); vertical-align: middle; }
         .v-bar.dead { background: #cbd5e0; opacity: 0.15; }
 
@@ -45,15 +54,15 @@
 <body>
 
 <div id="admin">
-    <button class="btn-main" onclick="toggleM()">⚙️ SETUP TEAMS</button>
+    <button class="btn-main" onclick="toggleM()">⚙️ TEAM SETUP</button>
     
     <div class="config-sec">
         <h4>🎨 Colors & Fade</h4>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
             <div>Row <input type="color" value="#ffffff" oninput="adj('row-bg', this.value)"></div>
             <div>Total <input type="color" value="#00e5ff" oninput="adj('total-bg', this.value)"></div>
-            <div>Elim <input type="color" value="#222222" oninput="adj('elim-bg', this.value)"></div>
             <div>Rank <input type="color" value="#0e1236" oninput="adj('rank-bg', this.value)"></div>
+            <div>Elim <input type="color" value="#222222" oninput="adj('elim-bg', this.value)"></div>
         </div>
         <label>Fade Opacity</label>
         <input type="range" min="0" max="100" value="40" oninput="adj('fade-op', this.value/100)">
@@ -63,6 +72,17 @@
         <h4>⚡ Thin Alive Bars</h4>
         <label>Width</label><input type="range" min="1" max="15" value="3" oninput="adj('bar-w', this.value+'px')">
         <label>Height</label><input type="range" min="5" max="30" value="16" oninput="adj('bar-h', this.value+'px')">
+        <label>Gap</label><input type="range" min="0" max="8" value="2" oninput="adj('bar-gap', this.value+'px')">
+    </div>
+
+    <div class="config-sec">
+        <h4>↔️ Column Widths</h4>
+        <label>Rank</label><input type="range" min="10" max="120" value="45" oninput="adj('w-rank', this.value+'px')">
+        <label>Logo</label><input type="range" min="10" max="120" value="50" oninput="adj('w-logo', this.value+'px')">
+        <label>Name</label><input type="range" min="50" max="500" value="200" oninput="adj('w-name', this.value+'px')">
+        <label>Status</label><input type="range" min="20" max="200" value="100" oninput="adj('w-status', this.value+'px')">
+        <label>Total</label><input type="range" min="20" max="200" value="65" oninput="adj('w-tot', this.value+'px')">
+        <label>Row Gap</label><input type="range" min="0" max="25" value="2" oninput="adj('row-gap', this.value+'px')">
     </div>
 
     <div id="ctrl-list"></div>
@@ -74,7 +94,7 @@
 </div>
 
 <div id="modal">
-    <h3>Team Entry</h3>
+    <h3>Live Team Entry</h3>
     <div id="set-inputs"></div>
     <button onclick="addT()" style="background:green; color:white; padding:8px;">+ ADD TEAM</button>
     <button onclick="saveS()" class="btn-main" style="margin-top:10px;">SAVE TO CLOUD</button>
@@ -83,19 +103,20 @@
 <script>
     // --- FIREBASE CONFIG (FILL apiKey & appId) ---
     const firebaseConfig = {
-        apiKey: "AIzaSy...APNI_KEY_YAHAN_DALEIN", 
+        apiKey: "YOUR_API_KEY", 
         authDomain: "live-pt-67ab3.firebaseapp.com",
         databaseURL: "https://live-pt-67ab3-default-rtdb.firebaseio.com",
         projectId: "live-pt-67ab3",
         storageBucket: "live-pt-67ab3.appspot.com",
         messagingSenderId: "77494483321",
-        appId: "1:77494483321:web:APNI_ID_YAHAN_DALEIN"
+        appId: "YOUR_APP_ID"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const posPoints = {1:10, 2:6, 3:5, 4:4, 5:3, 6:2, 7:1, 8:1};
 
+    // Drag Logic
     interact('.movable').draggable({
         listeners: { move (e) {
             let t = e.target;
@@ -108,6 +129,7 @@
 
     function adj(p, v) { document.documentElement.style.setProperty('--'+p, v); }
 
+    // Firebase Sync
     db.ref('teams').on('value', (snap) => {
         const teams = snap.val() ? Object.values(snap.val()) : [];
         renderBoard(teams);
@@ -199,7 +221,7 @@
     }
 
     function resetAll() {
-        if(confirm("Full Reset?")) {
+        if(confirm("Match reset karein?")) {
             db.ref('teams').once('value', snap => {
                 const teams = Object.values(snap.val());
                 teams.forEach(t => { t.kills = 0; t.autoPlace = 0; t.dead = false; t.alive = 4; });
@@ -210,4 +232,3 @@
 </script>
 </body>
 </html>
-
