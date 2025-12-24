@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI ADMIN v45.0</title>
+    <title>BGMI ADMIN v45.0 - FINAL FIX</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
@@ -10,25 +10,24 @@
         :root {
             --rank-bg: #0e1236; --row-bg: #410a0a; --text-color: #ffffff;
             --total-bg: #00e5ff; --row-gap: 5px; --fade-op: 0.9;
-            --w-rank: 45px; --w-logo: 50px; --w-name: 200px; --w-status: 100px; --w-fin: 50px; --w-tot: 65px;
+            --w-rank: 45px; --w-name: 200px; --w-status: 100px; --w-fin: 50px; --w-tot: 65px;
             --bar-w: 4px; --bar-h: 20px; --bar-gap: 3px;
         }
         body { margin: 0; background: #0c0c0c; font-family: 'Bahnschrift', sans-serif; color: white; overflow: hidden; }
-
-        /* Sidebar from your screenshot */
         #admin { width: 320px; height: 100vh; background: #111; position: fixed; left: 0; padding: 15px; border-right: 2px solid #333; z-index: 999; overflow-y: auto; }
         .config-sec { background: #1a1a1a; padding: 12px; margin-bottom: 12px; border-radius: 4px; border: 1px solid #333; }
-        .config-sec h4 { margin: 0 0 8px 0; color: #00e5ff; font-size: 11px; text-transform: uppercase; }
-        label { display: block; margin-top: 5px; font-size: 10px; color: #888; }
-        input[type="range"] { width: 100%; accent-color: #00e5ff; }
-        .btn-setup { background: #00e5ff; color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 15px; }
-
+        label { display: block; margin-top: 8px; font-size: 10px; color: #888; text-transform: uppercase; }
+        input[type="range"] { width: 100%; accent-color: #00e5ff; cursor: pointer; }
+        .btn-setup { background: #00e5ff; color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; width: 100%; margin-bottom: 15px; }
+        
         .movable { position: absolute; touch-action: none; cursor: move; }
         .lb-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); }
         .lb-row { display: table-row; background: var(--row-bg); opacity: var(--fade-op); transition: 0.2s; }
         .cell { display: table-cell; vertical-align: middle; height: 40px; }
-        
-        #teamModal { position: fixed; top: 10%; left: 350px; width: 600px; background: #1a1a1a; border: 2px solid #00e5ff; padding: 20px; display: none; z-index: 1000; height: 80vh; overflow-y: auto; }
+        .v-bar { display: inline-block; width: var(--bar-w); height: var(--bar-h); background: #00e5ff; margin: 0 var(--bar-gap); vertical-align: middle; }
+        .v-bar.dead { background: #555; opacity: 0.3; }
+
+        #teamModal { position: fixed; top: 10%; left: 350px; width: 600px; background: #1a1a1a; border: 2px solid #00e5ff; padding: 20px; display: none; z-index: 1000; height: 75vh; overflow-y: auto; }
         .modal-row { display: flex; gap: 5px; margin-bottom: 8px; }
         .modal-row input { background: #222; border: 1px solid #444; color: white; padding: 5px; flex: 1; }
     </style>
@@ -36,24 +35,17 @@
 <body>
 
 <div id="admin">
-    <button class="btn-setup" onclick="document.getElementById('teamModal').style.display='block'">⚙️ SETUP TEAMS</button>
+    <button class="btn-setup" onclick="openEntry()">⚙️ SETUP TEAMS</button>
     
     <div class="config-sec">
-        <h4>🎨 COLOR & FADE</h4>
-        <div style="display:flex; gap:10px;">
-            <div>Row <input type="color" value="#410a0a" oninput="adj('row-bg', this.value)"></div>
-            <div>Tot <input type="color" value="#00e5ff" oninput="adj('total-bg', this.value)"></div>
-        </div>
-        <label>Opacity</label><input type="range" min="10" max="100" value="90" oninput="adj('fade-op', this.value/100)">
-    </div>
-
-    <div class="config-sec">
-        <h4>↔️ ADJUSTMENTS</h4>
-        <label>Rank Box</label><input type="range" min="30" max="100" value="45" oninput="adj('w-rank', this.value+'px')">
-        <label>Name Box</label><input type="range" min="100" max="400" value="200" oninput="adj('w-name', this.value+'px')">
-        <label>Status Box</label><input type="range" min="50" max="200" value="100" oninput="adj('w-status', this.value+'px')">
-        <label>Finish Box</label><input type="range" min="30" max="100" value="50" oninput="adj('w-fin', this.value+'px')">
-        <label>Total Box</label><input type="range" min="30" max="100" value="65" oninput="adj('w-tot', this.value+'px')">
+        <h4>🎨 DESIGN ADJUSTMENTS</h4>
+        <label>Rank Width</label><input type="range" min="30" max="100" value="45" oninput="adj('w-rank', this.value+'px')">
+        <label>Name Width</label><input type="range" min="100" max="400" value="200" oninput="adj('w-name', this.value+'px')">
+        <label>Status Width</label><input type="range" min="50" max="200" value="100" oninput="adj('w-status', this.value+'px')">
+        <label>Finishes Width</label><input type="range" min="30" max="100" value="50" oninput="adj('w-fin', this.value+'px')">
+        <label>Total Width</label><input type="range" min="30" max="100" value="65" oninput="adj('w-tot', this.value+'px')">
+        <label>Vertical Row Gap</label><input type="range" min="0" max="20" value="5" oninput="adj('row-gap', this.value+'px')">
+        <label>Bar Height</label><input type="range" min="10" max="40" value="20" oninput="adj('bar-h', this.value+'px')">
     </div>
 
     <div id="quick-ctrl"></div>
@@ -64,11 +56,13 @@
 </div>
 
 <div id="teamModal">
-    <h3 style="color:#00e5ff;">Team Entry (Name, Logo URL, Base Pts)</h3>
+    <h3 style="color:#00e5ff;">Team Setup</h3>
     <div id="m-list"></div>
-    <button onclick="addT()" style="background:green; color:white; padding:10px; border:none; margin-top:10px;">+ NEW TEAM</button>
-    <button onclick="saveT()" style="background:#00e5ff; color:black; padding:10px; border:none; margin-top:10px; font-weight:bold;">SAVE TO CLOUD</button>
-    <button onclick="document.getElementById('teamModal').style.display='none'" style="background:red; color:white; padding:10px; border:none; margin-top:10px;">CLOSE</button>
+    <div style="margin-top:15px; display:flex; gap:10px;">
+        <button onclick="addT()" style="background:green; color:white; flex:1; padding:10px;">+ ADD TEAM</button>
+        <button onclick="saveT()" style="background:#00e5ff; color:black; flex:1; padding:10px; font-weight:bold;">SAVE CLOUD</button>
+        <button onclick="document.getElementById('teamModal').style.display='none'" style="background:red; color:white; flex:1;">CLOSE</button>
+    </div>
 </div>
 
 <script>
@@ -93,16 +87,21 @@
         container.innerHTML = ''; ctrl.innerHTML = '';
 
         teams.sort((a,b) => (b.kills+b.autoPlace+b.basePts) - (a.kills+a.autoPlace+a.basePts)).forEach((t, i) => {
+            let bars = '';
+            for(let j=1; j<=4; j++) bars += `<div class="v-bar ${j<=t.alive?'':'dead'}"></div>`;
+            
             container.innerHTML += `<div class="lb-row">
                 <div class="cell" style="width:var(--w-rank); background:var(--rank-bg); text-align:center;">${i+1}</div>
                 <div class="cell" style="width:var(--w-name); padding-left:10px;">${t.name}</div>
+                <div class="cell" style="width:var(--w-status); text-align:center;">${bars}</div>
                 <div class="cell" style="width:var(--w-fin); text-align:center;">${t.kills}</div>
                 <div class="cell" style="width:var(--w-tot); background:var(--total-bg); color:black; text-align:center;">${t.kills+t.autoPlace+t.basePts}</div>
             </div>`;
 
-            ctrl.innerHTML += `<div style="background:#222; padding:8px; margin-bottom:5px; display:flex; gap:10px; align-items:center;">
-                <span style="flex:1; font-size:11px;">${t.name}</span>
-                K: <input type="number" value="${t.kills}" style="width:40px" onchange="db.ref('teams/'+${i}).update({kills:parseInt(this.value)})">
+            ctrl.innerHTML += `<div style="background:#222; padding:8px; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                <span style="flex:1; font-size:10px;">${t.name}</span>
+                Alive: <input type="number" value="${t.alive}" style="width:35px" onchange="db.ref('teams/'+${i}).update({alive:parseInt(this.value)})">
+                K: <input type="number" value="${t.kills}" style="width:35px" onchange="db.ref('teams/'+${i}).update({kills:parseInt(this.value)})">
                 <input type="checkbox" ${t.dead?'checked':''} onchange="setE(${i}, this.checked)"> ELIM
             </div>`;
         });
@@ -120,27 +119,15 @@
         });
     }
 
-    function addT() {
-        db.ref('teams').once('value', s => {
-            const list = s.val() ? Object.values(s.val()) : [];
-            list.push({ name: 'NEW', logo: '', kills: 0, alive: 4, dead: false, basePts: 0, autoPlace: 0 });
-            db.ref('teams').set(list); openEntry();
-        });
-    }
-
     function openEntry() {
+        document.getElementById('teamModal').style.display='block';
         db.ref('teams').once('value', s => {
             const box = document.getElementById('m-list'); box.innerHTML = '';
             Object.values(s.val()||[]).forEach((t, i) => {
-                box.innerHTML += `<div class="modal-row">
-                    <input type="text" id="n-${i}" value="${t.name}">
-                    <input type="text" id="l-${i}" value="${t.logo}" placeholder="Logo Link">
-                    <input type="number" id="b-${i}" value="${t.basePts}" style="width:60px">
-                </div>`;
+                box.innerHTML += `<div class="modal-row"><input type="text" id="n-${i}" value="${t.name}"><input type="text" id="l-${i}" value="${t.logo}" placeholder="Logo URL"><input type="number" id="b-${i}" value="${t.basePts}" style="width:50px"></div>`;
             });
         });
     }
-    document.querySelector('.btn-setup').onclick = () => { document.getElementById('teamModal').style.display='block'; openEntry(); };
 
     function saveT() {
         db.ref('teams').once('value', s => {
@@ -151,6 +138,14 @@
                 t.basePts = parseInt(document.getElementById(`b-${i}`).value) || 0;
             });
             db.ref('teams').set(list); document.getElementById('teamModal').style.display='none';
+        });
+    }
+
+    function addT() {
+        db.ref('teams').once('value', s => {
+            const list = s.val() ? Object.values(s.val()) : [];
+            list.push({ name: 'TEAM', logo: '', kills: 0, alive: 4, dead: false, basePts: 0, autoPlace: 0 });
+            db.ref('teams').set(list); openEntry();
         });
     }
 </script>
