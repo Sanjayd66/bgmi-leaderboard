@@ -1,580 +1,486 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>BGMI Studio v44.0 - Admin PNG Edition</title>
+  <meta charset="UTF-8">
+  <title>BGMI Studio v50 - ADMIN MULTI MATCH</title>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 
-    <style>
-        :root { --accent: #00e5ff; }
+  <style>
+    :root { --accent:#00e5ff; }
 
-        body{
-            margin:0;
-            background:#111;
-            font-family:'Bahnschrift',sans-serif;
-            color:#fff;
-            padding-left:330px;           /* admin left panel width */
-            overflow:hidden;
-        }
+    *{box-sizing:border-box;font-family:'Bahnschrift',Arial,sans-serif;}
+    body{
+      margin:0;
+      background:#111;
+      color:#fff;
+      padding-left:330px;
+      overflow:hidden;
+    }
 
-        /* ------------ LEFT ADMIN PANEL ------------ */
-        #admin{
-            width:310px;
-            height:100vh;
-            background:#111;
-            position:fixed;
-            left:0;
-            top:0;
-            padding:15px;
-            border-right:2px solid #333;
-            overflow-y:auto;
-            font-size:11px;
-            z-index:1000;
-        }
-        .config-sec{
-            background:#1a1a1a;
-            padding:10px;
-            margin-bottom:12px;
-            border-radius:4px;
-            border-top:2px solid var(--accent);
-        }
-        .config-sec h4{
-            margin:0 0 8px 0;
-            color:var(--accent);
-            text-transform:uppercase;
-            font-size:10px;
-        }
-        label{display:block;margin-top:5px;color:#888;}
-        input[type="range"],input[type="text"]{
-            width:100%;
-            accent-color:var(--accent);
-            background:#000;
-            color:#fff;
-            border:1px solid #444;
-        }
-        .btn-main{
-            background:var(--accent);
-            color:#000;
-            width:100%;
-            padding:10px;
-            border:none;
-            font-weight:900;
-            cursor:pointer;
-            border-radius:4px;
-            text-transform:uppercase;
-            margin-bottom:5px;
-        }
-        .team-ctrl{
-            background:#222;
-            padding:5px;
-            margin-bottom:4px;
-            display:flex;
-            gap:5px;
-            align-items:center;
-            border-radius:3px;
-        }
-        input[type="number"]{
-            background:#000;
-            color:#fff;
-            border:1px solid #444;
-            width:35px;
-        }
+    /* LEFT ADMIN PANEL */
+    #admin{
+      width:310px;
+      height:100vh;
+      background:#111;
+      position:fixed;
+      left:0;top:0;
+      padding:15px;
+      border-right:2px solid #333;
+      overflow-y:auto;
+      font-size:11px;
+      z-index:1000;
+    }
+    h3{margin:0 0 10px 0;}
+    .btn-main{
+      background:var(--accent);
+      color:#000;
+      width:100%;
+      padding:10px;
+      border:none;
+      font-weight:900;
+      cursor:pointer;
+      border-radius:4px;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+    .config-sec{
+      background:#1a1a1a;
+      padding:10px;
+      margin-bottom:12px;
+      border-radius:4px;
+      border-top:2px solid var(--accent);
+    }
+    .config-sec h4{
+      margin:0 0 8px 0;
+      color:var(--accent);
+      text-transform:uppercase;
+      font-size:10px;
+    }
+    label{display:block;margin-top:5px;color:#888;}
+    input[type="text"],input[type="number"],select{
+      width:100%;
+      background:#000;
+      color:#fff;
+      border:1px solid #444;
+      padding:5px;
+      font-size:11px;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--accent);
+    }
 
-        /* ------------ MODAL FOR TEAM SETUP ------------ */
-        #modal{
-            position:fixed;
-            top:5%;
-            left:340px;
-            right:20px;
-            height:85%;
-            background:#111;
-            padding:20px;
-            border:1px solid var(--accent);
-            display:none;
-            z-index:1001;
-            color:#fff;
-            overflow-y:auto;
-        }
+    /* TEAM CONTROL ROWS */
+    #teamControls{
+      margin-top:8px;
+    }
+    .team-ctrl{
+      background:#222;
+      padding:5px;
+      margin-bottom:4px;
+      display:grid;
+      grid-template-columns:30px 60px 1.3fr 40px 40px 40px 55px 35px;
+      gap:4px;
+      align-items:center;
+      border-radius:3px;
+      font-size:10px;
+    }
+    .team-ctrl input[type="number"]{
+      padding:3px;
+      text-align:center;
+    }
+    .team-ctrl input[type="text"]{
+      padding:3px;
+    }
+    .slot{width:100%;}
+    .logo-url{width:100%;}
+    .name{width:100%;}
+    .alive{width:100%;}
+    .finish{width:100%;}
+    .kills{width:100%;}
+    .totalPts{
+      text-align:center;
+      font-weight:bold;
+      color:#00e5ff;
+    }
+    .deadFlag{width:100%;text-align:center;}
 
-        /* ========== OVERLAY DESIGN PART ========== */
+    .small-label-row{
+      display:grid;
+      grid-template-columns:30px 60px 1.3fr 40px 40px 40px 55px 35px;
+      gap:4px;
+      font-size:9px;
+      margin-bottom:2px;
+      color:#aaa;
+    }
 
-        /* Bg PNG (optional from settings/bg-url) */
-        #bg-image{
-            position:fixed;
-            inset:0;
-            background-position:center;
-            background-size:contain;
-            background-repeat:no-repeat;
-            pointer-events:none;
-            opacity:1;
-        }
+    /* MODAL FOR BULK TEAM EDIT (optional) */
+    #modal{
+      position:fixed;
+      top:5%;left:340px;right:20px;
+      height:85%;
+      background:#111;
+      padding:20px;
+      border:1px solid var(--accent);
+      display:none;
+      z-index:1001;
+      color:#fff;
+      overflow-y:auto;
+    }
+    #modal input[type="text"],#modal input[type="number"]{
+      font-size:11px;
+    }
 
-        /* TOP STRIPS – optional (can be extended later) */
-        .top-bar{
-            position:absolute;
-            top:20px;
-            left:50%;
-            transform:translateX(-50%);
-            display:flex;
-            gap:40px;
-            z-index:10;
-        }
-        .team-strip-wrap.dead .team-strip{filter:grayscale(1);opacity:0.4;}
-        .team-strip{
-            width:240px;
-            height:72px;
-            display:flex;
-            background:#f8a93a;
-            box-shadow:0 0 10px rgba(0,0,0,0.6);
-            font-size:14px;
-            text-transform:uppercase;
-        }
-        .team-strip-logo{
-            width:70px;
-            background:#2a0c0e;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:#fff;
-            font-weight:bold;
-        }
-        .team-strip-body{
-            flex:1;
-            padding:6px 10px;
-            display:flex;
-            flex-direction:column;
-            justify-content:space-between;
-        }
-        .team-strip-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            font-weight:bold;
-        }
-        .team-strip-header span.small{font-size:12px;}
-        .team-strip-footer{
-            display:flex;
-            align-items:center;
-            gap:6px;
-        }
-        .life-bars{display:flex;gap:3px;}
-        .life-bar{width:8px;height:18px;background:#2a0c0e;}
-        .kills-box{
-            margin-left:auto;
-            font-weight:bold;
-            color:#2a0c0e;
-            font-size:16px;
-        }
-
-        /* ------------ TEAM ELIMINATION POPUP ------------ */
-        .elim-popup{
-            position:absolute;
-            top:80px;
-            left:50%;
-            transform:translateX(-50%);
-            width:540px;
-            height:120px;
-            display:none;
-            grid-template-columns:140px 1fr;
-            background:#2a0c0e;
-            box-shadow:0 0 25px rgba(0,0,0,0.8);
-            overflow:hidden;
-            z-index:20;
-        }
-        .elim-left{
-            background:#2a0c0e;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-direction:column;
-            color:#f8a93a;
-            font-weight:bold;
-        }
-        .elim-left .logo{
-            width:70px;
-            height:70px;
-            border-radius:50%;
-            border:3px solid #f8a93a;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:18px;
-            background-size:cover;
-            background-position:center;
-        }
-        .elim-right{
-            background:#3a1013;
-            padding:10px 18px;
-            display:flex;
-            flex-direction:column;
-            justify-content:space-between;
-            position:relative;
-        }
-        .elim-tag{
-            position:absolute;
-            top:0;
-            left:0;
-            background:#f8a93a;
-            color:#2a0c0e;
-            padding:4px 14px;
-            font-weight:bold;
-            font-size:14px;
-        }
-        .elim-team-name{
-            margin-top:22px;
-            font-size:22px;
-            font-weight:bold;
-        }
-        .elim-stats{
-            margin-top:6px;
-            display:flex;
-            gap:25px;
-            font-size:14px;
-            text-transform:uppercase;
-        }
-        .elim-stats span.label{
-            color:#f8a93a;
-            font-weight:bold;
-            margin-right:6px;
-        }
-
-        /* ------------ RIGHT ALIVE TABLE + FORECAST ------------ */
-        .right-panel{
-            position:absolute;
-            top:90px;
-            right:40px;
-            width:260px;
-            background:#2a0c0e;
-            box-shadow:0 0 18px rgba(0,0,0,0.7);
-            font-size:13px;
-            text-transform:uppercase;
-            z-index:10;
-        }
-        .table-header,.table-row{
-            display:grid;
-            grid-template-columns:26px 1fr 60px 32px;
-            align-items:center;
-            height:26px;
-        }
-        .table-header{
-            background:#4a1518;
-            font-weight:bold;
-            font-size:11px;
-        }
-        .table-header div{padding:0 6px;}
-        .table-body{max-height:360px;overflow:hidden;}
-        .table-row{background:#7b2224;color:#fff;}
-        .table-row:nth-child(2n){background:#6a1c1f;}
-        .cell{padding:0 6px;}
-        .status-bars{display:flex;gap:2px;}
-        .status-bar{width:5px;height:16px;background:#f8a93a;}
-        .row-dead{opacity:0.45;}
-
-        .legend{
-            display:flex;
-            justify-content:flex-end;
-            gap:12px;
-            padding:6px 8px;
-            background:#2a0c0e;
-            font-size:11px;
-        }
-        .box-alive,.box-dead{
-            width:10px;
-            height:10px;
-            display:inline-block;
-            margin-right:4px;
-        }
-        .box-alive{background:#7b2224;}
-        .box-dead{background:#f8a93a;}
-
-        .forecast{
-            margin-top:4px;
-            border-top:2px solid #f8a93a;
-            padding:6px 8px 8px;
-            background:#3a1013;
-            font-size:11px;
-        }
-        .forecast-title{
-            font-weight:bold;
-            margin-bottom:4px;
-            color:#f8a93a;
-        }
-        .forecast-row{
-            display:flex;
-            justify-content:space-between;
-            margin:1px 0;
-        }
-    </style>
+    /* SIMPLE INFO AREA ON RIGHT (DEBUG / CURRENT MATCH) */
+    #infoBar{
+      position:fixed;
+      bottom:10px;left:330px;
+      right:20px;
+      background:#181818;
+      padding:8px 12px;
+      font-size:11px;
+      border-radius:4px;
+      border:1px solid #333;
+      opacity:0.9;
+    }
+  </style>
 </head>
 <body>
 
-<!-- BG PNG -->
-<div id="bg-image"></div>
-
-<!-- LEFT ADMIN PANEL -->
 <div id="admin">
-    <button class="btn-main" onclick="toggleM()">⚙️ SETUP TEAMS</button>
+  <h3>BGMI Studio – ADMIN</h3>
 
-    <div class="config-sec">
-        <h4>🖼️ Background PNG Overlay</h4>
-        <label>PNG Image URL</label>
-        <input type="text" id="bg-url" placeholder="Paste PNG link here" onchange="adj('bg-url', this.value)">
+  <!-- MATCH SELECT -->
+  <div class="config-sec">
+    <h4>🎮 Match Selector</h4>
+    <label>Current Match</label>
+    <div style="display:flex;gap:5px;">
+      <select id="matchSelect" onchange="changeMatch(this.value)" style="flex:1;"></select>
+      <button onclick="addMatch()" style="width:70px;background:#0f0;color:#000;border:none;font-weight:bold;cursor:pointer;">+M</button>
     </div>
+    <small>Example: Match 1, Match 2... sabka data alag store hoga.</small>
+  </div>
 
-    <div class="config-sec">
-        <h4>🎨 Design Controls</h4>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-            <div>Row <input type="color" value="#7b2224" oninput="adj('row-bg', this.value)"></div>
-            <div>Total <input type="color" value="#f8a93a" oninput="adj('total-bg', this.value)"></div>
-            <div>Rank <input type="color" value="#4a1518" oninput="adj('rank-bg', this.value)"></div>
-        </div>
-        <label>Elim Fade</label>
-        <input type="range" min="0" max="100" value="40" oninput="adj('fade-op', this.value/100)">
+  <!-- BACKGROUND / DESIGN SETTINGS -->
+  <div class="config-sec">
+    <h4>🖼️ Background PNG Overlay</h4>
+    <label>PNG Image URL</label>
+    <input type="text" id="bg-url" placeholder="Paste PNG link here" onchange="setSetting('bg-url',this.value)">
+  </div>
+
+  <!-- TEAM ROWS HEADER -->
+  <div class="config-sec">
+    <h4>📋 Teams – Current Match</h4>
+    <div class="small-label-row">
+      <span>#</span>
+      <span>Logo</span>
+      <span>Name</span>
+      <span>A</span>
+      <span>Fin</span>
+      <span>K</span>
+      <span>Total</span>
+      <span>Elim</span>
     </div>
+    <div id="teamControls"></div>
+    <button class="btn-main" onclick="addTeamRow()">+ Add Team Row</button>
+    <button class="btn-main" style="background:#ffb300;color:#000;" onclick="saveCurrentMatch()">💾 SAVE MATCH</button>
+    <button class="btn-main" style="background:#ff4444;color:#fff;" onclick="recomputeGlobal()">⟳ REBUILD TOTALS</button>
+  </div>
 
-    <div class="config-sec">
-        <h4>↔️ Row & Bar Adjust</h4>
-        <label>Row Gap</label><input type="range" min="0" max="25" value="2" oninput="adj('row-gap', this.value+'px')">
-        <label>Bar Width</label><input type="range" min="1" max="10" value="3" oninput="adj('bar-w', this.value+'px')">
-        <label>Bar Height</label><input type="range" min="5" max="30" value="16" oninput="adj('bar-h', this.value+'px')">
-    </div>
-
-    <div class="config-sec">
-        <h4>📏 Column Widths</h4>
-        <label>Name Box</label><input type="range" min="50" max="500" value="200" oninput="adj('w-name', this.value+'px')">
-        <label>Status Box</label><input type="range" min="20" max="200" value="100" oninput="adj('w-status', this.value+'px')">
-    </div>
-
-    <div id="ctrl-list"></div>
+  <!-- OPTIONAL BULK EDIT MODAL OPEN -->
+  <button class="btn-main" onclick="toggleModal()">Bulk Edit (Names / Logos)</button>
 </div>
 
-<!-- TEAM SETUP MODAL -->
+<!-- BULK EDIT MODAL -->
 <div id="modal">
-    <h3>Team Data Entry</h3>
-    <div id="set-inputs"></div>
-    <button onclick="addT()" style="background:green; color:white; border:none; padding:10px; cursor:pointer;">+ ADD NEW TEAM</button>
-    <button onclick="saveS()" class="btn-main" style="margin-top:20px;">SAVE ALL</button>
+  <h3>Bulk Team Edit – <span id="modalMatchName"></span></h3>
+  <div id="bulkInputs"></div>
+  <button onclick="addTeamRow(true)" style="background:#0f0;color:#000;border:none;padding:8px 12px;margin-top:8px;cursor:pointer;">+ Add Team</button>
+  <button onclick="saveBulk()" class="btn-main" style="margin-top:10px;">Save Changes</button>
+  <button onclick="toggleModal()" style="background:#444;color:#fff;border:none;padding:6px 10px;margin-top:10px;cursor:pointer;">Close</button>
 </div>
 
-<!-- ELIMINATION POPUP -->
-<div class="elim-popup" id="elimPopup">
-    <div class="elim-left">
-        <div class="logo" id="elimLogo"></div>
-    </div>
-    <div class="elim-right">
-        <div class="elim-tag">ELIMINATED</div>
-        <div class="elim-team-name" id="elimName">TEAM NAME</div>
-        <div class="elim-stats">
-            <div><span class="label">Rank</span><span id="elimRank">#1</span></div>
-            <div><span class="label">Elims</span><span id="elimElims">02</span></div>
-        </div>
-    </div>
-</div>
-
-<!-- RIGHT SIDE TABLE + FORECAST -->
-<div class="right-panel">
-    <div class="table-header">
-        <div class="cell">#</div>
-        <div class="cell">Team</div>
-        <div class="cell">Status</div>
-        <div class="cell">Fin</div>
-    </div>
-    <div class="table-body" id="tableBody"></div>
-
-    <div class="legend">
-        <span><span class="box-alive"></span>Alive</span>
-        <span><span class="box-dead"></span>Eliminated</span>
-    </div>
-
-    <div class="forecast" id="forecastBox">
-        <div class="forecast-title">Forecast – Win %</div>
-        <div id="forecastRows"></div>
-    </div>
+<!-- INFO BAR -->
+<div id="infoBar">
+  <span id="infoText">Loading…</span>
 </div>
 
 <script>
-    const firebaseConfig = { databaseURL: "https://live-pt-67ab3-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const posPoints = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
+  /* ---------- FIREBASE INIT (same DB as view panel) ---------- */
+  const firebaseConfig = { databaseURL:"https://live-pt-67ab3-default-rtdb.firebaseio.com" };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    function adj(p,v){ db.ref('settings/'+p).set(v); }
+  /* ---------- CONFIG ---------- */
+  const placePts = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
+  const killPoint = 1;
 
-    /* ---------- SETTINGS LISTENER (for bg PNG etc.) ---------- */
-    db.ref('settings').on('value',snap=>{
-        const s = snap.val() || {};
-        if(s['bg-url']){
-            document.getElementById('bg-image').style.backgroundImage = 'url('+s['bg-url']+')';
-        }
+  let currentMatchId = null;
+  let allMatches = {};   // cache snapshot for quick ops
+
+  /* ---------- SETTINGS HELPERS ---------- */
+  function setSetting(key,val){ db.ref('settings/'+key).set(val); }
+
+  /* ---------- LOAD MATCH LIST ---------- */
+  function loadMatchList(){
+    db.ref('matches').once('value').then(snap=>{
+      allMatches = snap.val() || {};
+      const select = document.getElementById('matchSelect');
+      select.innerHTML = '';
+      const keys = Object.keys(allMatches).sort();
+      if(keys.length === 0){
+        // create first match
+        const mid = 'm1';
+        allMatches[mid] = { name:'Match 1', teams:[] };
+        db.ref('matches').set(allMatches);
+      }
+      const finalKeys = Object.keys(allMatches).sort();
+      finalKeys.forEach(k=>{
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = allMatches[k].name || k;
+        select.appendChild(opt);
+      });
+      currentMatchId = finalKeys[0];
+      select.value = currentMatchId;
+      loadMatch(currentMatchId);
     });
+  }
 
-    /* ---------- TEAM CONTROL LIST (LEFT PANEL) ---------- */
-    db.ref('teams').on('value',snap=>{
-        const teams = snap.val() || [];
-        const ctrl = document.getElementById('ctrl-list');
-        ctrl.innerHTML='';
-        teams.forEach((t,i)=>{
-            ctrl.innerHTML += `
-            <div class="team-ctrl">
-                <b style="flex:1;">${t.name}</b>
-                K:<input type="number" value="${t.kills||0}" onchange="db.ref('teams/${i}/kills').set(parseInt(this.value)||0)">
-                A:<input type="number" min="0" max="4" value="${t.alive||0}" onchange="db.ref('teams/${i}/alive').set(parseInt(this.value)||0)">
-                <input type="checkbox" ${t.dead?'checked':''} onchange="triggerElim(${i}, this.checked)">
-            </div>`;
-        });
-        renderOverlay(teams);
+  function addMatch(){
+    const num = Object.keys(allMatches || {}).length + 1;
+    const mid = 'm'+num;
+    allMatches[mid] = { name:'Match '+num, teams:[] };
+    db.ref('matches').set(allMatches).then(loadMatchList);
+  }
+
+  function changeMatch(id){
+    currentMatchId = id;
+    loadMatch(currentMatchId);
+  }
+
+  /* ---------- RENDER TEAM ROWS FOR CURRENT MATCH ---------- */
+  function loadMatch(matchId){
+    if(!matchId) return;
+    db.ref('matches/'+matchId).once('value').then(snap=>{
+      const data = snap.val() || { name:'Match ?', teams:[] };
+      if(!data.teams) data.teams = [];
+      allMatches[matchId] = data;
+      document.getElementById('infoText').innerText =
+        `Editing ${data.name} | Teams: ${data.teams.length}`;
+      renderTeamControls(data.teams);
+      buildBulkInputs(data.teams);
     });
+  }
 
-    /* ---------- ELIMINATION LOGIC + POPUP TRIGGER ---------- */
-    function triggerElim(i,isChecked){
-        db.ref('teams').once('value',snap=>{
-            let list = snap.val() || [];
-            if(isChecked){
-                let aliveNow = list.filter(t=>!t.dead).length;
-                list[i].autoPlace = posPoints[aliveNow] || 0;
-                list[i].dead = true;
-                list[i].alive = 0;
-                db.ref('lastElim').set({
-                    name:list[i].name,
-                    logo:list[i].logo,
-                    kills:list[i].kills||0,
-                    rank:aliveNow,
-                    time:Date.now()
-                });
-            }else{
-                list[i].dead = false;
-                list[i].autoPlace = 0;
-                list[i].alive = 4;
-            }
-            db.ref('teams').set(list);
-        });
-    }
-
-    /* Listen for lastElim to show popup */
-    let lastShownTime = 0;
-    db.ref('lastElim').on('value',snap=>{
-        const d = snap.val();
-        if(!d || !d.time || d.time === lastShownTime) return;
-        lastShownTime = d.time;
-        const p = document.getElementById('elimPopup');
-        document.getElementById('elimName').innerText = d.name || 'TEAM';
-        document.getElementById('elimRank').innerText = '#'+(d.rank || 0);
-        document.getElementById('elimElims').innerText = ('0'+(d.kills||0)).slice(-2);
-        const logoDiv = document.getElementById('elimLogo');
-        logoDiv.style.backgroundImage = 'url('+(d.logo || 'https://i.ibb.co/VWVx67n/default.png')+')';
-        p.style.display='grid';
-        setTimeout(()=>{p.style.display='none';},3000);
+  function renderTeamControls(teams){
+    const box = document.getElementById('teamControls');
+    box.innerHTML = '';
+    teams.forEach((t,i)=>{
+      const div = document.createElement('div');
+      div.className = 'team-ctrl';
+      div.dataset.index = i;
+      div.innerHTML = `
+        <input type="number" class="slot" value="${t.teamNo||i+1}">
+        <input type="text" class="logo-url" value="${t.logo||''}">
+        <input type="text" class="name" value="${t.name||'TEAM'}">
+        <input type="number" class="alive" min="0" max="4" value="${t.alive||0}">
+        <input type="number" class="finish" min="1" max="64" value="${t.finish||''}">
+        <input type="number" class="kills" min="0" value="${t.kills||0}">
+        <span class="totalPts">${t.matchPts||0}</span>
+        <input type="checkbox" class="deadFlag" ${t.dead?'checked':''}>
+      `;
+      // inputs change listeners
+      div.querySelectorAll('input').forEach(inp=>{
+        inp.addEventListener('change',()=>recalcRow(div));
+      });
+      box.appendChild(div);
     });
+  }
 
-    /* ---------- MODAL TEAM EDIT ---------- */
-    function toggleM(){
-        const m=document.getElementById('modal');
-        m.style.display=(m.style.display==='block')?'none':'block';
-        if(m.style.display==='block'){
-            db.ref('teams').once('value',snap=>{
-                const teams=snap.val()||[];
-                const box=document.getElementById('set-inputs'); box.innerHTML='';
-                teams.forEach((t,i)=>{
-                    box.innerHTML+=`
-                    <div style="display:flex; gap:5px; margin-bottom:5px;">
-                        <input type="text" id="n-${i}" value="${t.name}">
-                        <input type="text" id="l-${i}" value="${t.logo||''}" style="flex:1">
-                        <input type="number" id="p-${i}" value="${t.basePts||0}">
-                        <button onclick="delT(${i})" style="color:red">DEL</button>
-                    </div>`;
-                });
-            });
-        }
-    }
+  function addTeamRow(alsoToBulk=false){
+    if(!currentMatchId) return;
+    const teams = allMatches[currentMatchId]?.teams || [];
+    teams.push({
+      teamNo: teams.length+1,
+      logo:'',
+      name:'TEAM',
+      alive:4,
+      finish:'',
+      kills:0,
+      basePts:0,
+      matchPts:0,
+      totalPts:0,
+      dead:false
+    });
+    allMatches[currentMatchId].teams = teams;
+    renderTeamControls(teams);
+    buildBulkInputs(teams);
+  }
 
-    function addT(){
-        db.ref('teams').once('value',snap=>{
-            const list=snap.val()||[];
-            list.push({
-                name:'TEAM',
-                logo:'https://i.ibb.co/VWVx67n/default.png',
-                kills:0,
-                basePts:0,
-                autoPlace:0,
-                alive:4,
-                dead:false
-            });
-            db.ref('teams').set(list);
+  /* ---------- PER ROW RECALC ---------- */
+  function recalcRow(rowDiv){
+    const idx = parseInt(rowDiv.dataset.index,10);
+    const t = getRowData(rowDiv);
+    const calc = calcMatchPoints(t);
+    t.basePts = calc.basePts;
+    t.matchPts = calc.matchPts;
+    rowDiv.querySelector('.totalPts').textContent = calc.matchPts;
+
+    // update in allMatches + DB
+    const teams = allMatches[currentMatchId].teams;
+    teams[idx] = t;
+    db.ref(`matches/${currentMatchId}/teams`).set(teams);
+    document.getElementById('infoText').innerText =
+      `Auto-saved ${allMatches[currentMatchId].name} | Team ${t.teamNo}`;
+  }
+
+  function getRowData(div){
+    return {
+      teamNo: parseInt(div.querySelector('.slot').value)||0,
+      logo:   div.querySelector('.logo-url').value,
+      name:   div.querySelector('.name').value.toUpperCase(),
+      alive:  parseInt(div.querySelector('.alive').value)||0,
+      finish: parseInt(div.querySelector('.finish').value)||0,
+      kills:  parseInt(div.querySelector('.kills').value)||0,
+      dead:   div.querySelector('.deadFlag').checked
+    };
+  }
+
+  function calcMatchPoints(t){
+    const base = placePts[t.finish] || 0;
+    const kills = t.kills || 0;
+    const matchPts = base + kills*killPoint;
+    return {basePts:base, matchPts};
+  }
+
+  /* ---------- SAVE CURRENT MATCH (ALL ROWS) ---------- */
+  function saveCurrentMatch(){
+    const rows = Array.from(document.querySelectorAll('.team-ctrl'));
+    const teams = rows.map(r=>{
+      const t = getRowData(r);
+      const calc = calcMatchPoints(t);
+      t.basePts = calc.basePts;
+      t.matchPts = calc.matchPts;
+      return t;
+    });
+    allMatches[currentMatchId].teams = teams;
+    db.ref('matches/'+currentMatchId).set(allMatches[currentMatchId]).then(()=>{
+      renderTeamControls(teams);
+      buildBulkInputs(teams);
+      document.getElementById('infoText').innerText =
+        `Saved ${allMatches[currentMatchId].name} | Teams: ${teams.length}`;
+      // recompute lastElim helper (optional)
+      updateLastElimOnSave(teams);
+    });
+  }
+
+  // Optional helper: last eliminated = sabse latest dead jiski finish sabse badhi
+  function updateLastElimOnSave(teams){
+    const deadTeams = teams.filter(t=>t.dead && t.finish);
+    if(deadTeams.length===0) return;
+    deadTeams.sort((a,b)=>b.finish-a.finish); // last finish highest
+    const last = deadTeams[0];
+    db.ref('lastElim').set({
+      name:last.name,
+      logo:last.logo,
+      kills:last.kills||0,
+      rank:last.finish,
+      time:Date.now()
+    });
+  }
+
+  /* ---------- RECOMPUTE GLOBAL TOTALS (all matches) ---------- */
+  function recomputeGlobal(){
+    db.ref('matches').once('value').then(snap=>{
+      const matches = snap.val() || {};
+      const totals = {};   // key: teamNo string -> {name,logo,totalPts}
+
+      Object.values(matches).forEach(m=>{
+        (m.teams||[]).forEach(t=>{
+          const key = t.teamNo || 0;
+          if(!key) return;
+          const {matchPts} = calcMatchPoints(t);
+          if(!totals[key]) totals[key] = {
+            teamNo:key,
+            name:t.name,
+            logo:t.logo,
+            totalPts:0
+          };
+          totals[key].totalPts += matchPts;
         });
-    }
+      });
 
-    function delT(i){
-        db.ref('teams').once('value',snap=>{
-            const list=snap.val()||[];
-            list.splice(i,1);
-            db.ref('teams').set(list);
-            toggleM(); toggleM();
-        });
-    }
+      db.ref('globalTotals/teams').set(totals).then(()=>{
+        document.getElementById('infoText').innerText =
+          `Global totals rebuilt for ${Object.keys(totals).length} teams`;
+      });
+    });
+  }
 
-    function saveS(){
-        db.ref('teams').once('value',snap=>{
-            const list=snap.val()||[];
-            list.forEach((t,i)=>{
-                t.name = document.getElementById(`n-${i}`).value.toUpperCase();
-                t.logo = document.getElementById(`l-${i}`).value;
-                t.basePts = parseInt(document.getElementById(`p-${i}`).value)||0;
-            });
-            db.ref('teams').set(list);
-            toggleM();
-        });
-    }
+  /* ---------- BULK EDIT MODAL ---------- */
+  function buildBulkInputs(teams){
+    const box = document.getElementById('bulkInputs');
+    const title = document.getElementById('modalMatchName');
+    if(!allMatches[currentMatchId]) return;
+    title.textContent = allMatches[currentMatchId].name;
+    box.innerHTML = '';
+    teams.forEach((t,i)=>{
+      const row = document.createElement('div');
+      row.style.display = 'grid';
+      row.style.gridTemplateColumns = '30px 1.2fr 2fr 60px';
+      row.style.gap = '5px';
+      row.style.marginBottom = '5px';
+      row.innerHTML = `
+        <input type="number" value="${t.teamNo||i+1}" id="bSlot-${i}">
+        <input type="text" value="${t.name||'TEAM'}" id="bName-${i}">
+        <input type="text" value="${t.logo||''}" id="bLogo-${i}">
+        <button onclick="deleteTeam(${i})" style="background:#ff4444;color:#fff;border:none;font-size:10px;cursor:pointer;">DEL</button>
+      `;
+      box.appendChild(row);
+    });
+  }
 
-    /* ---------- RENDER RIGHT TABLE + FORECAST ---------- */
-    function renderOverlay(teams){
-        const body = document.getElementById('tableBody');
-        const forecastBox = document.getElementById('forecastRows');
-        body.innerHTML='';
-        forecastBox.innerHTML='';
+  function toggleModal(){
+    const m = document.getElementById('modal');
+    m.style.display = (m.style.display==='block')?'none':'block';
+  }
 
-        // sort: alive first, then by basePts+kills desc
-        const sorted = [...teams].sort((a,b)=>{
-            if(a.dead!==b.dead) return a.dead?1:-1;
-            const sa = (a.basePts||0)+(a.kills||0)*2;
-            const sb = (b.basePts||0)+(b.kills||0)*2;
-            return sb-sa;
-        });
+  function deleteTeam(index){
+    const teams = allMatches[currentMatchId].teams || [];
+    teams.splice(index,1);
+    allMatches[currentMatchId].teams = teams;
+    db.ref('matches/'+currentMatchId+'/teams').set(teams).then(()=>{
+      renderTeamControls(teams);
+      buildBulkInputs(teams);
+    });
+  }
 
-        sorted.forEach((t,idx)=>{
-            const aliveBars = new Array(4).fill(0).map((_,i)=>`
-                <div class="status-bar" style="opacity:${i < (t.alive||0) ? 1 : 0.15}"></div>
-            `).join('');
-            const row = document.createElement('div');
-            row.className='table-row'+(t.dead?' row-dead':'');
-            row.innerHTML = `
-                <div class="cell">${idx+1}</div>
-                <div class="cell">${(t.tag||t.name||'TEAM').substring(0,4)}</div>
-                <div class="cell"><div class="status-bars">${aliveBars}</div></div>
-                <div class="cell">${t.finish || ''}</div>
-            `;
-            body.appendChild(row);
-        });
+  function saveBulk(){
+    const teams = allMatches[currentMatchId].teams || [];
+    teams.forEach((t,i)=>{
+      const slot = document.getElementById(`bSlot-${i}`);
+      const name = document.getElementById(`bName-${i}`);
+      const logo = document.getElementById(`bLogo-${i}`);
+      if(!slot) return;
+      t.teamNo = parseInt(slot.value)||0;
+      t.name   = (name.value||'TEAM').toUpperCase();
+      t.logo   = logo.value||'';
+    });
+    allMatches[currentMatchId].teams = teams;
+    db.ref('matches/'+currentMatchId+'/teams').set(teams).then(()=>{
+      renderTeamControls(teams);
+      buildBulkInputs(teams);
+      document.getElementById('infoText').innerText =
+        `Bulk save done for ${allMatches[currentMatchId].name}`;
+    });
+  }
 
-        // forecast for last 5 alive
-        const aliveTeams = sorted.filter(t=>!t.dead);
-        const topForForecast = aliveTeams.slice(0,5);
-        let totalScore = 0;
-        const scores = topForForecast.map(t=>{
-            const sc = (t.basePts||0)+(t.kills||0)*2+10;
-            totalScore += sc;
-            return {t,sc};
-        });
-        scores.forEach(s=>{
-            const pct = totalScore ? Math.round((s.sc/totalScore)*100) : 0;
-            const row = document.createElement('div');
-            row.className='forecast-row';
-            row.innerHTML = `<span>${(s.t.tag||s.t.name||'TEAM').substring(0,4)}</span><span>${pct}%</span>`;
-            forecastBox.appendChild(row);
-        });
-    }
+  /* ---------- INIT ---------- */
+  loadMatchList();
 </script>
 </body>
 </html>
