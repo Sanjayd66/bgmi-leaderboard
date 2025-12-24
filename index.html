@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Studio v44.0 - Full Admin</title>
+    <title>BGMI Studio v44.0 - Admin PNG Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
-        :root { --total-bg: #00e5ff; }
+        :root { --accent: #00e5ff; }
         body { margin: 0; background: #111; font-family: 'Bahnschrift', sans-serif; color: white; padding-left: 330px; }
-        #admin { width: 310px; height: 100vh; background: #111; position: fixed; left: 0; padding: 15px; border-right: 2px solid #333; z-index: 9999; overflow-y: auto; color: white; font-size: 11px; }
-        .config-sec { background: #1a1a1a; padding: 10px; margin-bottom: 12px; border-radius: 4px; border-top: 2px solid var(--total-bg); }
-        .config-sec h4 { margin: 0 0 8px 0; color: var(--total-bg); text-transform: uppercase; font-size: 10px; }
+        #admin { width: 310px; height: 100vh; background: #111; position: fixed; left: 0; top: 0; padding: 15px; border-right: 2px solid #333; overflow-y: auto; font-size: 11px; z-index: 1000; }
+        .config-sec { background: #1a1a1a; padding: 10px; margin-bottom: 12px; border-radius: 4px; border-top: 2px solid var(--accent); }
+        .config-sec h4 { margin: 0 0 8px 0; color: var(--accent); text-transform: uppercase; font-size: 10px; }
         label { display: block; margin-top: 5px; color: #888; }
-        input[type="range"] { width: 100%; accent-color: var(--total-bg); }
-        .btn-main { background: var(--total-bg); color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; }
-        .team-ctrl { background:#222; padding:5px; margin-bottom:4px; display:flex; gap:5px; align-items:center; }
+        input[type="range"], input[type="text"] { width: 100%; accent-color: var(--accent); background: #000; color: white; border: 1px solid #444; }
+        .btn-main { background: var(--accent); color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 5px; }
+        .team-ctrl { background:#222; padding:5px; margin-bottom:4px; display:flex; gap:5px; align-items:center; border-radius: 3px; }
         input[type="number"] { background: #000; color: #fff; border: 1px solid #444; width: 35px; }
     </style>
 </head>
@@ -24,39 +24,39 @@
     <button class="btn-main" onclick="toggleM()">⚙️ SETUP TEAMS</button>
     
     <div class="config-sec">
-        <h4>🎨 Color & Fade Control</h4>
+        <h4>🖼️ Background PNG Overlay</h4>
+        <label>PNG Image URL</label>
+        <input type="text" id="bg-url" placeholder="Paste PNG link here" onchange="adj('bg-url', this.value)">
+    </div>
+
+    <div class="config-sec">
+        <h4>🎨 Design Controls</h4>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
             <div>Row <input type="color" value="#ffffff" oninput="adj('row-bg', this.value)"></div>
             <div>Total <input type="color" value="#00e5ff" oninput="adj('total-bg', this.value)"></div>
             <div>Rank <input type="color" value="#0e1236" oninput="adj('rank-bg', this.value)"></div>
-            <div>Elim <input type="color" value="#222222" oninput="adj('elim-bg', this.value)"></div>
         </div>
-        <label>Fade Transparency</label>
+        <label>Elim Fade</label>
         <input type="range" min="0" max="100" value="40" oninput="adj('fade-op', this.value/100)">
     </div>
 
     <div class="config-sec">
-        <h4>⚡ Thin Alive Bars</h4>
-        <label>Width</label><input type="range" min="1" max="10" value="3" oninput="adj('bar-w', this.value+'px')">
-        <label>Height</label><input type="range" min="5" max="30" value="16" oninput="adj('bar-h', this.value+'px')">
-        <label>Gap</label><input type="range" min="0" max="8" value="2" oninput="adj('bar-gap', this.value+'px')">
+        <h4>↔️ Row & Bar Adjust</h4>
+        <label>Row Gap</label><input type="range" min="0" max="25" value="2" oninput="adj('row-gap', this.value+'px')">
+        <label>Bar Width</label><input type="range" min="1" max="10" value="3" oninput="adj('bar-w', this.value+'px')">
+        <label>Bar Height</label><input type="range" min="5" max="30" value="16" oninput="adj('bar-h', this.value+'px')">
     </div>
 
     <div class="config-sec">
-        <h4>↔️ Column Adjustments</h4>
-        <label>Rank Box</label><input type="range" min="10" max="120" value="45" oninput="adj('w-rank', this.value+'px')">
-        <label>Logo Box</label><input type="range" min="10" max="120" value="50" oninput="adj('w-logo', this.value+'px')">
+        <h4>📏 Column Widths</h4>
         <label>Name Box</label><input type="range" min="50" max="500" value="200" oninput="adj('w-name', this.value+'px')">
         <label>Status Box</label><input type="range" min="20" max="200" value="100" oninput="adj('w-status', this.value+'px')">
-        <label>Finish Box</label><input type="range" min="10" max="120" value="50" oninput="adj('w-fin', this.value+'px')">
-        <label>Total Box</label><input type="range" min="20" max="200" value="65" oninput="adj('w-tot', this.value+'px')">
-        <label>Row Gap</label><input type="range" min="0" max="25" value="2" oninput="adj('row-gap', this.value+'px')">
     </div>
 
     <div id="ctrl-list"></div>
 </div>
 
-<div id="modal" style="position:fixed; top:5%; left:340px; right:20px; height:85%; background:#111; padding:20px; border:1px solid var(--total-bg); display:none; z-index:10001; color: white; overflow-y:auto;">
+<div id="modal" style="position:fixed; top:5%; left:340px; right:20px; height:85%; background:#111; padding:20px; border:1px solid var(--accent); display:none; z-index:10001; color: white; overflow-y:auto;">
     <h3>Team Data Entry</h3>
     <div id="set-inputs"></div>
     <button onclick="addT()" style="background:green; color:white; border:none; padding:10px; cursor:pointer;">+ ADD NEW TEAM</button>
