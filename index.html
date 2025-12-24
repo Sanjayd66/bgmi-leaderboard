@@ -2,60 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI PRO ADMIN - FULL CONTROL</title>
+    <title>BGMI PRO ADMIN - v44 RESTORED</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
         :root { --accent: #00e5ff; }
-        body { margin: 0; background: #0c0c0c; font-family: 'Bahnschrift', sans-serif; color: white; display: flex; }
-        #sidebar { width: 340px; height: 100vh; background: #111; padding: 15px; border-right: 2px solid #333; overflow-y: auto; }
+        body { margin: 0; background: #0c0c0c; font-family: 'Bahnschrift', sans-serif; color: white; display: flex; font-size: 12px; }
+        #sidebar { width: 350px; height: 100vh; background: #111; padding: 15px; border-right: 2px solid #333; overflow-y: auto; position: fixed; }
         .sec { background: #1a1a1a; padding: 12px; margin-bottom: 10px; border-radius: 4px; border-left: 3px solid var(--accent); }
-        h4 { margin: 0 0 10px 0; font-size: 12px; color: var(--accent); text-transform: uppercase; }
+        h4 { margin: 0 0 10px 0; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
         label { display: block; margin-top: 8px; font-size: 10px; color: #888; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); }
-        input[type="color"] { background: none; border: none; width: 40px; height: 25px; cursor: pointer; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+        input[type="color"] { background: none; border: 1px solid #333; width: 45px; height: 25px; cursor: pointer; }
         .btn-main { background: var(--accent); color: #000; width: 100%; padding: 12px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; margin-bottom: 15px; }
-        
-        /* Quick Team List */
-        .team-ctrl { background: #222; padding: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; font-size: 11px; }
-        .team-ctrl input[type="number"] { width: 35px; background: #333; color: #fff; border: 1px solid #444; }
+        .team-row { background: #222; padding: 8px; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+        .team-row input[type="number"] { width: 35px; background: #000; color: #fff; border: 1px solid #444; text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <button class="btn-main" onclick="openSetup()">⚙️ SETUP TEAMS & LOGOS</button>
+    <button class="btn-main" onclick="openEntry()">⚙️ SETUP TEAMS & LOGOS</button>
 
     <div class="sec">
         <h4>🎨 COLOR & FADE CONTROL</h4>
         <div style="display:flex; flex-wrap: wrap; gap:10px;">
-            <div><label>Row</label><input type="color" id="c-row" onchange="sync('c-row', this.value)"></div>
-            <div><label>Total</label><input type="color" id="c-tot" onchange="sync('c-tot', this.value)"></div>
-            <div><label>Rank</label><input type="color" id="c-rank" onchange="sync('c-rank', this.value)"></div>
-            <div><label>Elim</label><input type="color" id="c-elim" onchange="sync('c-elim', this.value)"></div>
+            <div><label>Row</label><input type="color" onchange="sync('c-row', this.value)"></div>
+            <div><label>Total</label><input type="color" onchange="sync('c-tot', this.value)"></div>
+            <div><label>Rank</label><input type="color" onchange="sync('c-rank', this.value)"></div>
+            <div><label>Elim</label><input type="color" onchange="sync('c-elim', this.value)"></div>
         </div>
-        <label>Opacity</label><input type="range" min="0.1" max="1" step="0.1" oninput="sync('fade', this.value)">
+        <label>Fade Transparency (Opacity)</label>
+        <input type="range" min="0.1" max="1" step="0.1" oninput="sync('fade', this.value)">
     </div>
 
     <div class="sec">
         <h4>⚡ THIN ALIVE BARS</h4>
-        <label>Width</label><input type="range" min="1" max="15" oninput="sync('bar-w', this.value)">
-        <label>Height</label><input type="range" min="5" max="40" oninput="sync('bar-h', this.value)">
-        <label>Gap</label><input type="range" min="1" max="10" oninput="sync('bar-g', this.value)">
+        <label>Width</label><input type="range" min="1" max="15" value="5" oninput="sync('bar-w', this.value)">
+        <label>Height</label><input type="range" min="5" max="40" value="20" oninput="sync('bar-h', this.value)">
+        <label>Gap</label><input type="range" min="1" max="10" value="3" oninput="sync('bar-g', this.value)">
     </div>
 
     <div class="sec">
         <h4>↔️ COLUMN ADJUSTMENTS</h4>
-        <label>Rank Box</label><input type="range" min="30" max="80" oninput="sync('w-rank', this.value)">
-        <label>Logo Box</label><input type="range" min="30" max="80" oninput="sync('w-logo', this.value)">
-        <label>Name Box</label><input type="range" min="100" max="350" oninput="sync('w-name', this.value)">
-        <label>Status Box</label><input type="range" min="50" max="150" oninput="sync('w-status', this.value)">
-        <label>Finish Box</label><input type="range" min="30" max="80" oninput="sync('w-fin', this.value)">
-        <label>Total Box</label><input type="range" min="40" max="100" oninput="sync('w-tot', this.value)">
-        <label>Vertical Row Gap</label><input type="range" min="0" max="20" oninput="sync('row-gap', this.value)">
+        <label>Rank Box</label><input type="range" min="30" max="100" oninput="sync('w-rank', this.value)">
+        <label>Logo Box</label><input type="range" min="30" max="100" oninput="sync('w-logo', this.value)">
+        <label>Name Box</label><input type="range" min="100" max="400" oninput="sync('w-name', this.value)">
+        <label>Status Box</label><input type="range" min="50" max="200" oninput="sync('w-status', this.value)">
+        <label>Finish Box</label><input type="range" min="30" max="100" oninput="sync('w-fin', this.value)">
+        <label>Total Box</label><input type="range" min="40" max="120" oninput="sync('w-tot', this.value)">
+        <label>Vertical Row Gap</label><input type="range" min="0" max="25" oninput="sync('row-gap', this.value)">
     </div>
 
-    <div id="quick-list"></div>
+    <div id="team-list"></div>
 </div>
 
 <script>
@@ -67,35 +66,30 @@
 
     db.ref('teams').on('value', snap => {
         const teams = snap.val() ? Object.values(snap.val()) : [];
-        const list = document.getElementById('quick-list');
-        list.innerHTML = '<h4>TEAM CONTROL</h4>';
+        const box = document.getElementById('team-list');
+        box.innerHTML = '<h4>LIVE SCORE CONTROL</h4>';
         teams.forEach((t, i) => {
-            list.innerHTML += `
-                <div class="team-ctrl">
-                    <span style="flex:1">${t.name}</span>
-                    K: <input type="number" value="${t.kills}" onchange="db.ref('teams/${i}/kills').set(parseInt(this.value))">
-                    A: <input type="number" value="${t.alive}" onchange="db.ref('teams/${i}/alive').set(parseInt(this.value))">
-                    <input type="checkbox" ${t.dead?'checked':''} onchange="updateElim(${i}, this.checked)"> ELIM
+            box.innerHTML += `
+                <div class="team-row">
+                    <span style="flex:1; overflow:hidden;">${t.name}</span>
+                    K:<input type="number" value="${t.kills}" onchange="db.ref('teams/${i}/kills').set(parseInt(this.value))">
+                    A:<input type="number" value="${t.alive}" onchange="db.ref('teams/${i}/alive').set(parseInt(this.value))">
+                    <input type="checkbox" ${t.dead?'checked':''} onchange="handleElim(${i}, this.checked)">
                 </div>`;
         });
     });
 
-    function updateElim(i, isDead) {
+    function handleElim(i, dead) {
         db.ref('teams').once('value', s => {
             const list = Object.values(s.val());
-            const rank = list.filter(x => !x.dead).length;
-            if(isDead) {
+            if(dead) {
+                const r = list.filter(x => !x.dead).length;
                 db.ref('teams/'+i).update({ dead: true, alive: 0 });
-                db.ref('lastElim').set({ name: list[i].name, logo: list[i].logo, kills: list[i].kills, rank: rank, time: Date.now() });
+                db.ref('lastElim').set({ name: list[i].name, logo: list[i].logo, kills: list[i].kills, rank: r, time: Date.now() });
             } else {
                 db.ref('teams/'+i).update({ dead: false, alive: 4 });
             }
         });
-    }
-
-    function openSetup() { 
-        // Logic for modal remains same as previous or direct link to Firebase
-        alert("Use Setup Teams button to add names and logos.");
     }
 </script>
 </body>
