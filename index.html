@@ -2,93 +2,251 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI PRO ADMIN - v44 RESTORED</title>
+    <title>BGMI Studio v46.0 - Advanced Hybrid</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
     <style>
-        :root { --accent: #00e5ff; }
-        body { margin: 0; background: #0c0c0c; font-family: 'Bahnschrift', sans-serif; color: white; display: flex; font-size: 12px; }
-        #sidebar { width: 350px; height: 100vh; background: #111; padding: 15px; border-right: 2px solid #333; overflow-y: auto; position: fixed; }
-        .sec { background: #1a1a1a; padding: 12px; margin-bottom: 10px; border-radius: 4px; border-left: 3px solid var(--accent); }
-        h4 { margin: 0 0 10px 0; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        :root {
+            --rank-bg: #0e1236; --row-bg: rgba(255, 255, 255, 0.95); --text-dark: #000;
+            --total-bg: #00e5ff; --accent: #ff9d00; --row-gap: 1px;
+            --w-rank: 40px; --w-logo: 50px; --w-name: 200px; --w-status: 100px; --w-fin: 50px; --w-tot: 65px;
+            --bar-w: 4px; --bar-h: 18px; --bar-g: 3px; --fade: 1;
+        }
+        body { margin: 0; background: #00ff00; font-family: 'Bahnschrift', sans-serif; overflow: hidden; }
+
+        /* ADMIN PANEL */
+        #admin { width: 340px; height: 100vh; background: #111; position: fixed; left: 0; padding: 15px; border-right: 2px solid #333; z-index: 9999; overflow-y: auto; color: white; }
+        .config-sec { background: #1a1a1a; padding: 12px; margin-bottom: 12px; border-radius: 4px; border-left: 3px solid var(--total-bg); }
+        h4 { margin: 0 0 10px 0; font-size: 11px; color: var(--total-bg); text-transform: uppercase; }
         label { display: block; margin-top: 8px; font-size: 10px; color: #888; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-        input[type="color"] { background: none; border: 1px solid #333; width: 45px; height: 25px; cursor: pointer; }
-        .btn-main { background: var(--accent); color: #000; width: 100%; padding: 12px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; margin-bottom: 15px; }
-        .team-row { background: #222; padding: 8px; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
-        .team-row input[type="number"] { width: 35px; background: #000; color: #fff; border: 1px solid #444; text-align: center; }
+        input[type="range"] { width: 100%; accent-color: var(--total-bg); }
+        .btn-main { background: var(--total-bg); color: #000; width: 100%; padding: 12px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
+
+        /* WIDGETS */
+        .movable { position: absolute; touch-action: none; cursor: move; }
+        
+        /* FORECAST BOX */
+        #forecast-box { display: none; gap: 10px; top: 20px; left: 50%; transform: translateX(-50%); }
+        .f-item { width: 180px; height: 75px; background: var(--accent); border-left: 25px solid #111; display: flex; flex-direction: column; justify-content: center; padding-left: 10px; color: #000; }
+
+        /* LEADERBOARD */
+        #board { right: 50px; top: 50px; }
+        .lb-row { display: flex; background: var(--row-bg); margin-bottom: var(--row-gap); height: 35px; align-items: center; color: var(--text-dark); font-weight: 900; opacity: var(--fade); }
+        .col-rank { width: var(--w-rank); background: var(--rank-bg); color: white; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .col-logo { width: var(--w-logo); text-align: center; display: flex; align-items: center; justify-content: center; background: #fff; height: 100%; }
+        .col-logo img { height: 26px; width: 26px; object-fit: contain; }
+        .col-name { width: var(--w-name); padding-left: 10px; text-transform: uppercase; font-size: 14px; }
+        .col-status { width: var(--w-status); display: flex; gap: var(--bar-g); justify-content: center; align-items: center; }
+        .col-fin { width: var(--w-fin); text-align: center; border-left: 1px solid #ccc; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        
+        .v-bar { width: var(--bar-w); height: var(--bar-h); background: #0e1236; }
+        .v-bar.dead { background: #cbd5e0; opacity: 0.3; }
+
+        /* ELIMINATION POPUP */
+        #alert { width: 380px; height: 95px; background: #230808; border-bottom: 4px solid var(--accent); display: none; z-index: 10000; overflow: hidden; position: relative;}
+        .alert-tag { position: absolute; top: 0; left: 0; background: var(--accent); color: #000; padding: 2px 10px; font-size: 10px; font-weight: 900; clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%); }
+        .alert-rank { color: var(--accent); font-size: 24px; font-weight: 900; }
+
+        #modal { position:fixed; top:10%; left:10%; width:80%; height:80%; background:#111; padding:20px; border:2px solid var(--total-bg); display:none; z-index:10001; overflow-y:auto; color: white; }
+        .setup-row { display: grid; grid-template-columns: 1fr 2fr 1fr 50px; gap: 10px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-<div id="sidebar">
-    <button class="btn-main" onclick="openEntry()">⚙️ SETUP TEAMS & LOGOS</button>
-
-    <div class="sec">
-        <h4>🎨 COLOR & FADE CONTROL</h4>
-        <div style="display:flex; flex-wrap: wrap; gap:10px;">
-            <div><label>Row</label><input type="color" onchange="sync('c-row', this.value)"></div>
-            <div><label>Total</label><input type="color" onchange="sync('c-tot', this.value)"></div>
-            <div><label>Rank</label><input type="color" onchange="sync('c-rank', this.value)"></div>
-            <div><label>Elim</label><input type="color" onchange="sync('c-elim', this.value)"></div>
-        </div>
-        <label>Fade Transparency (Opacity)</label>
-        <input type="range" min="0.1" max="1" step="0.1" oninput="sync('fade', this.value)">
+<div id="admin">
+    <button class="btn-main" onclick="toggleM()">⚙️ TEAM SETUP (LOGOS/BASE)</button>
+    
+    <div class="config-sec">
+        <h4>🎨 DESIGN & SYNC</h4>
+        <label>Rank Box Width</label><input type="range" min="30" max="80" value="40" oninput="adj('w-rank', this.value+'px')">
+        <label>Name Box Width</label><input type="range" min="100" max="400" value="200" oninput="adj('w-name', this.value+'px')">
+        <label>Row Gap</label><input type="range" min="0" max="15" value="1" oninput="adj('row-gap', this.value+'px')">
+        <label>Total Color</label><input type="color" value="#00e5ff" oninput="adj('total-bg', this.value)">
     </div>
 
-    <div class="sec">
+    <div class="config-sec">
         <h4>⚡ THIN ALIVE BARS</h4>
-        <label>Width</label><input type="range" min="1" max="15" value="5" oninput="sync('bar-w', this.value)">
-        <label>Height</label><input type="range" min="5" max="40" value="20" oninput="sync('bar-h', this.value)">
-        <label>Gap</label><input type="range" min="1" max="10" value="3" oninput="sync('bar-g', this.value)">
+        <label>Bar Width</label><input type="range" min="1" max="15" value="4" oninput="adj('bar-w', this.value+'px')">
+        <label>Bar Height</label><input type="range" min="5" max="35" value="18" oninput="adj('bar-h', this.value+'px')">
     </div>
 
-    <div class="sec">
-        <h4>↔️ COLUMN ADJUSTMENTS</h4>
-        <label>Rank Box</label><input type="range" min="30" max="100" oninput="sync('w-rank', this.value)">
-        <label>Logo Box</label><input type="range" min="30" max="100" oninput="sync('w-logo', this.value)">
-        <label>Name Box</label><input type="range" min="100" max="400" oninput="sync('w-name', this.value)">
-        <label>Status Box</label><input type="range" min="50" max="200" oninput="sync('w-status', this.value)">
-        <label>Finish Box</label><input type="range" min="30" max="100" oninput="sync('w-fin', this.value)">
-        <label>Total Box</label><input type="range" min="40" max="120" oninput="sync('w-tot', this.value)">
-        <label>Vertical Row Gap</label><input type="range" min="0" max="25" oninput="sync('row-gap', this.value)">
-    </div>
+    <div id="ctrl-list"></div>
+</div>
 
-    <div id="team-list"></div>
+<div id="forecast-box" class="movable"></div>
+
+<div id="board" class="movable">
+    <div id="board-rows"></div>
+</div>
+
+<div id="alert" class="movable">
+    <div class="alert-tag">ELIMINATED</div>
+    <div style="display:flex; height:100%;">
+        <div style="width:95px; background:#300; display:flex; align-items:center; justify-content:center;"><img id="a-img" src="" style="width:65px;"></div>
+        <div style="flex:1; background:#000; padding:15px; color:white; border-left: 2px solid #444;">
+            <div id="a-name" style="font-size:22px; font-weight:900; text-transform:uppercase;">TEAM NAME</div>
+            <div style="display:flex; gap:20px; margin-top:5px; border-top:1px solid #333; padding-top:5px;">
+                <div>RANK <span class="alert-rank" id="a-rank">#0</span></div>
+                <div>ELIMS <span class="alert-rank" id="a-fin">0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal">
+    <h3>Team Settings</h3>
+    <div id="set-inputs"></div>
+    <button onclick="addT()" style="background:green; color:white; padding:8px;">+ NEW TEAM</button>
+    <button onclick="saveS()" class="btn-main" style="margin-top:20px;">SAVE TO CLOUD</button>
 </div>
 
 <script>
+    // Firebase Init
     const firebaseConfig = { databaseURL: "https://live-pt-67ab3-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function sync(prop, val) { db.ref('settings/' + prop).set(val); }
-
-    db.ref('teams').on('value', snap => {
-        const teams = snap.val() ? Object.values(snap.val()) : [];
-        const box = document.getElementById('team-list');
-        box.innerHTML = '<h4>LIVE SCORE CONTROL</h4>';
-        teams.forEach((t, i) => {
-            box.innerHTML += `
-                <div class="team-row">
-                    <span style="flex:1; overflow:hidden;">${t.name}</span>
-                    K:<input type="number" value="${t.kills}" onchange="db.ref('teams/${i}/kills').set(parseInt(this.value))">
-                    A:<input type="number" value="${t.alive}" onchange="db.ref('teams/${i}/alive').set(parseInt(this.value))">
-                    <input type="checkbox" ${t.dead?'checked':''} onchange="handleElim(${i}, this.checked)">
-                </div>`;
-        });
+    interact('.movable').draggable({
+        listeners: { move (e) {
+            let t = e.target;
+            let x = (parseFloat(t.dataset.x) || 0) + e.dx;
+            let y = (parseFloat(t.dataset.y) || 0) + e.dy;
+            t.style.transform = `translate(${x}px, ${y}px)`;
+            t.dataset.x = x; t.dataset.y = y;
+        }}
     });
 
-    function handleElim(i, dead) {
+    function adj(p, v) { 
+        document.documentElement.style.setProperty('--'+p, v); 
+        db.ref('settings/'+p).set(v); // Sync to Cloud
+    }
+
+    // Load Teams from Firebase
+    db.ref('teams').on('value', snap => {
+        const teams = snap.val() ? Object.values(snap.val()) : [];
+        render(teams);
+        updateForecast(teams);
+    });
+
+    // Listen for Settings Sync
+    db.ref('settings').on('value', snap => {
+        const s = snap.val();
+        for(let k in s) document.documentElement.style.setProperty('--'+k, s[k]);
+    });
+
+    function render(teams) {
+        const rows = document.getElementById('board-rows');
+        const ctrl = document.getElementById('ctrl-list');
+        rows.innerHTML = ''; ctrl.innerHTML = '';
+
+        let sorted = [...teams].sort((a,b) => (b.kills + b.place) - (a.kills + a.place));
+
+        sorted.forEach((t, i) => {
+            let bars = '';
+            for(let j=1; j<=4; j++) bars += `<div class="v-bar ${j<=t.alive?'':'dead'}"></div>`;
+            rows.innerHTML += `
+                <div class="lb-row" style="${t.dead?'opacity:0.4; filter:grayscale(1)':''}">
+                    <div class="col-rank">${i+1}</div>
+                    <div class="col-logo"><img src="${t.logo}"></div>
+                    <div class="col-name">${t.name}</div>
+                    <div class="col-status">${bars}</div>
+                    <div class="col-fin">${t.kills}</div>
+                    <div class="col-tot">${t.kills + t.place}</div>
+                </div>`;
+        });
+
+        teams.forEach((t, i) => {
+            ctrl.innerHTML += `<div style="background:#222; padding:8px; margin-bottom:5px; display:flex; gap:5px; align-items:center;">
+                <b style="flex:1; font-size:10px;">${t.name}</b>
+                K:<input type="number" style="width:30px" value="${t.kills}" onchange="db.ref('teams/${i}/kills').set(parseInt(this.value))">
+                A:<input type="number" style="width:30px" value="${t.alive}" onchange="db.ref('teams/${i}/alive').set(parseInt(this.value))">
+                <input type="checkbox" ${t.dead?'checked':''} onchange="triggerElim(${i}, this.checked)">
+            </div>`;
+        });
+    }
+
+    function triggerElim(i, isChecked) {
         db.ref('teams').once('value', s => {
             const list = Object.values(s.val());
-            if(dead) {
-                const r = list.filter(x => !x.dead).length;
+            if(isChecked) {
+                let aliveNow = list.filter(t => !t.dead).length;
                 db.ref('teams/'+i).update({ dead: true, alive: 0 });
-                db.ref('lastElim').set({ name: list[i].name, logo: list[i].logo, kills: list[i].kills, rank: r, time: Date.now() });
+                showPop(list[i], aliveNow);
             } else {
                 db.ref('teams/'+i).update({ dead: false, alive: 4 });
             }
+        });
+    }
+
+    function showPop(team, rank) {
+        const a = document.getElementById('alert');
+        document.getElementById('a-img').src = team.logo;
+        document.getElementById('a-name').innerText = team.name;
+        document.getElementById('a-rank').innerText = "#" + rank;
+        document.getElementById('a-fin').innerText = team.kills;
+        a.style.display = 'block';
+        setTimeout(() => a.style.display = 'none', 6000);
+    }
+
+    function updateForecast(teams) {
+        const f = document.getElementById('forecast-box');
+        const alive = teams.filter(t => !t.dead);
+        if(alive.length > 0 && alive.length <= 5) {
+            f.style.display = 'flex'; f.innerHTML = '';
+            const totalAliveKills = alive.reduce((acc, t) => acc + t.kills, 0) || 1;
+            alive.sort((a,b) => b.kills - a.kills).forEach(t => {
+                let prob = Math.round((t.kills / totalAliveKills) * 100);
+                f.innerHTML += `<div class="f-item"><div style="font-size:12px; font-weight:900;">${t.name}</div><div style="font-size:22px; font-weight:900;">${prob}%</div></div>`;
+            });
+        } else { f.style.display = 'none'; }
+    }
+
+    function toggleM() {
+        const m = document.getElementById('modal');
+        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        if(m.style.display === 'block') {
+            db.ref('teams').once('value', s => {
+                const list = s.val() ? Object.values(s.val()) : [];
+                const box = document.getElementById('set-inputs'); box.innerHTML = '';
+                list.forEach((t, i) => {
+                    box.innerHTML += `<div class="setup-row">
+                        <input type="text" id="n-${i}" value="${t.name}">
+                        <input type="text" id="l-${i}" value="${t.logo}">
+                        <input type="number" id="p-${i}" value="${t.place}">
+                        <button onclick="delT(${i})">X</button>
+                    </div>`;
+                });
+            });
+        }
+    }
+
+    function saveS() {
+        db.ref('teams').once('value', s => {
+            const list = Object.values(s.val());
+            list.forEach((t, i) => {
+                t.name = document.getElementById(`n-${i}`).value.toUpperCase();
+                t.logo = document.getElementById(`l-${i}`).value;
+                t.place = parseInt(document.getElementById(`p-${i}`).value) || 0;
+            });
+            db.ref('teams').set(list); toggleM();
+        });
+    }
+
+    function addT() {
+        db.ref('teams').once('value', s => {
+            const list = s.val() ? Object.values(s.val()) : [];
+            list.push({ name: 'TEAM', logo: 'https://i.ibb.co/VWVx67n/default.png', kills: 0, place: 0, alive: 4, dead: false });
+            db.ref('teams').set(list); toggleM(); toggleM();
+        });
+    }
+    
+    function delT(i) {
+        db.ref('teams').once('value', s => {
+            const list = Object.values(s.val());
+            list.splice(i, 1);
+            db.ref('teams').set(list); toggleM(); toggleM();
         });
     }
 </script>
