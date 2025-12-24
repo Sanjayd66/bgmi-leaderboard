@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Studio v45.0 - Final Corrected</title>
+    <title>BGMI Studio v45.0 - Final Stable</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
@@ -11,7 +11,7 @@
             --rank-bg: #0e1236; --row-bg: #ffffff; --text-color: #000000;
             --total-bg: #00e5ff; --elim-bg: #ff0000; --row-gap: 5px; --fade-op: 0.85;
             --w-rank: 45px; --w-logo: 50px; --w-name: 200px; --w-status: 100px; --w-fin: 50px; --w-tot: 65px;
-            --bar-w: 3px; --bar-h: 16px; --bar-gap: 2px;
+            --bar-w: 3px; --bar-h: 18px; --bar-gap: 2px;
         }
         body { margin: 0; background: #00ff00; font-family: 'Bahnschrift', sans-serif; overflow: hidden; }
 
@@ -20,7 +20,7 @@
         .config-sec h4 { margin: 0 0 8px 0; color: #00e5ff; font-size: 11px; text-transform: uppercase; }
         label { display: block; margin-top: 5px; font-size: 10px; }
         input[type="range"] { width: 100%; accent-color: #00e5ff; }
-        .btn-main { background: #00e5ff; color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 15px; }
+        .btn-main { background: #00e5ff; color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
 
         .movable { position: absolute; touch-action: none; cursor: move; z-index: 500; }
         .lb-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); }
@@ -41,16 +41,8 @@
         .col-fin { width: var(--w-fin); text-align: center; border-left: 1px solid rgba(0,0,0,0.1); }
         .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 20px; }
         
-        /* VERTICAL BARS RESTORED */
-        .v-bar { 
-            display: inline-block; 
-            width: var(--bar-w); 
-            height: var(--bar-h); 
-            background: var(--rank-bg); 
-            margin: 0 var(--bar-gap); 
-            vertical-align: middle;
-            border-radius: 1px;
-        }
+        /* VERTICAL BARS */
+        .v-bar { display: inline-block; width: var(--bar-w); height: var(--bar-h); background: var(--rank-bg); margin: 0 var(--bar-gap); vertical-align: middle; border-radius: 1px; }
         .v-bar.dead { background: #cbd5e0; opacity: 0.2; }
 
         .team-ctrl { background:#222; padding:8px; margin-bottom:4px; display:flex; gap:10px; align-items:center; border-radius:3px; }
@@ -63,33 +55,13 @@
     <button class="btn-main" onclick="toggleM()">⚙️ SETUP TEAMS</button>
     
     <div class="config-sec">
-        <h4>🎨 COLOR & FADE CONTROL</h4>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <div>Row <input type="color" value="#ffffff" oninput="adj('row-bg', this.value)"></div>
-            <div>Total <input type="color" value="#00e5ff" oninput="adj('total-bg', this.value)"></div>
-            <div>Rank <input type="color" value="#0e1236" oninput="adj('rank-bg', this.value)"></div>
-            <div>Elim <input type="color" value="#ff0000" oninput="adj('elim-bg', this.value)"></div>
-        </div>
-        <label>Fade Transparency (Opacity)</label>
-        <input type="range" min="0" max="100" value="85" oninput="adj('fade-op', this.value/100)">
-    </div>
-
-    <div class="config-sec">
-        <h4>⚡ THIN ALIVE BARS (VERTICAL)</h4>
-        <label>Width</label><input type="range" min="1" max="15" value="3" oninput="adj('bar-w', this.value+'px')">
-        <label>Height</label><input type="range" min="5" max="30" value="16" oninput="adj('bar-h', this.value+'px')">
-        <label>Gap</label><input type="range" min="0" max="10" value="2" oninput="adj('bar-gap', this.value+'px')">
-    </div>
-
-    <div class="config-sec">
-        <h4>↔️ COLUMN ADJUSTMENTS</h4>
-        <label>Rank Box</label><input type="range" min="20" max="100" value="45" oninput="adj('w-rank', this.value+'px')">
-        <label>Logo Box</label><input type="range" min="20" max="100" value="50" oninput="adj('w-logo', this.value+'px')">
-        <label>Name Box</label><input type="range" min="50" max="400" value="200" oninput="adj('w-name', this.value+'px')">
-        <label>Status Box</label><input type="range" min="20" max="150" value="100" oninput="adj('w-status', this.value+'px')">
-        <label>Finish Box</label><input type="range" min="20" max="100" value="50" oninput="adj('w-fin', this.value+'px')">
-        <label>Total Box</label><input type="range" min="20" max="100" value="65" oninput="adj('w-tot', this.value+'px')">
-        <label>Vertical Row Gap</label><input type="range" min="0" max="20" value="5" oninput="adj('row-gap', this.value+'px')">
+        <h4>🎨 ADJUSTMENTS</h4>
+        <label>Vertical Bar Width</label>
+        <input type="range" min="1" max="15" value="3" oninput="adj('bar-w', this.value+'px')">
+        <label>Vertical Bar Height</label>
+        <input type="range" min="5" max="35" value="18" oninput="adj('bar-h', this.value+'px')">
+        <label>Vertical Bar Gap</label>
+        <input type="range" min="0" max="10" value="2" oninput="adj('bar-gap', this.value+'px')">
     </div>
 
     <div id="ctrl-list"></div>
@@ -108,6 +80,7 @@
 </div>
 
 <script>
+    // FILL THESE FROM YOUR FIREBASE SETTINGS
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY", 
         authDomain: "live-pt-67ab3.firebaseapp.com",
@@ -143,6 +116,7 @@
     function renderBoard(teams) {
         const rows = document.getElementById('board-rows');
         rows.innerHTML = '';
+        // Win Prediction Sort Logic
         let sorted = [...teams].sort((a,b) => (b.kills + b.autoPlace + b.basePts) - (a.kills + a.autoPlace + a.basePts));
         sorted.forEach((t, i) => {
             let bars = '';
@@ -163,7 +137,7 @@
         ctrl.innerHTML = '';
         teams.forEach((t, i) => {
             ctrl.innerHTML += `<div class="team-ctrl">
-                <span style="flex:1; font-size:10px;">${t.name}</span>
+                <span style="flex:1; font-size:10px; font-weight:bold;">${t.name}</span>
                 K: <input type="number" style="width:40px" value="${t.kills}" onchange="updateKills(${i}, this.value)">
                 <input type="checkbox" ${t.dead?'checked':''} onchange="setElim(${i}, this.checked)"> ELIM
             </div>`;
@@ -172,15 +146,17 @@
 
     function updateKills(i, v) { db.ref('teams/'+i).update({ kills: parseInt(v) || 0 }); }
     
+    // RESTORED ELIMINATION POPUP LOGIC
     function setElim(i, checked) {
         db.ref('teams').once('value', snap => {
             const teams = Object.values(snap.val());
             if(checked) {
-                let rank = teams.filter(t => !t.dead).length;
-                if(confirm("Eliminate "+teams[i].name+" at Rank #"+rank+"?")) {
-                    db.ref('teams/'+i).update({ dead: true, alive: 0, autoPlace: posPoints[rank] || 0 });
+                let currentRank = teams.filter(t => !t.dead).length;
+                // Popup Confirmation
+                if(confirm("Eliminate Team: " + teams[i].name + "\nRank Secured: #" + currentRank)) {
+                    db.ref('teams/'+i).update({ dead: true, alive: 0, autoPlace: posPoints[currentRank] || 0 });
                 } else {
-                    renderAdmin(teams); // Reset checkbox if cancelled
+                    renderAdmin(teams); // Revert checkbox
                 }
             } else {
                 db.ref('teams/'+i).update({ dead: false, alive: 4, autoPlace: 0 });
@@ -229,7 +205,7 @@
     }
 
     function resetAll() {
-        if(confirm("Reset points and revive all teams?")) {
+        if(confirm("Are you sure? This will revive all teams and reset match points!")) {
             db.ref('teams').once('value', snap => {
                 const teams = Object.values(snap.val());
                 teams.forEach(t => { t.kills = 0; t.autoPlace = 0; t.dead = false; t.alive = 4; });
