@@ -2,92 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI VIEW - 1080p</title>
+    <title>BGMI VIEW - v46.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
     <style>
-        :root { --rank-bg: #410a0a; --row-bg: #1a1a1a; --total-bg: #ff9800; --row-gap: 8px; }
+        :root { --row-gap: 5px; --w-rank: 45px; --w-logo: 50px; --w-name: 200px; --w-status: 100px; --w-fin: 50px; --w-tot: 65px; --bar-h: 20px; }
         body { margin: 0; width: 1920px; height: 1080px; background: #00ff00; overflow: hidden; font-family: 'Bahnschrift', sans-serif; }
 
-        /* FORECAST WITH PERCENTAGE */
-        #forecast-panel { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); display: none; gap: 15px; }
-        .forecast-box { width: 220px; height: 85px; background: #ff9800; border-left: 35px solid #1a110a; display: flex; flex-direction: column; justify-content: center; padding-left: 15px; position: relative; }
-        .f-name { font-weight: 900; font-size: 16px; color: #000; text-transform: uppercase; }
-        .f-perc { font-size: 24px; font-weight: 900; color: #1a110a; margin: 2px 0; }
-        .f-bars { display: flex; gap: 3px; }
-        .f-bar { width: 4px; height: 18px; background: #1a110a; }
+        /* ELIMINATION POPUP DESIGN */
+        #elim-popup { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 550px; background: #1a110a; border-bottom: 5px solid #ff9800; display: none; color: white; animation: slideDown 0.5s ease-out; }
+        @keyframes slideDown { from { top: -200px; } to { top: 100px; } }
+        .elim-tag { background: #ff9800; color: #000; padding: 4px 15px; font-weight: 900; font-size: 14px; position: absolute; top: -25px; left: 0; clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%); }
+        .elim-content { display: flex; padding: 20px; align-items: center; }
+        .elim-logo-box { width: 100px; height: 100px; background: #2a1a10; display: flex; align-items: center; justify-content: center; margin-right: 20px; border: 1px solid #333; }
+        .elim-logo-box img { width: 80px; height: 80px; object-fit: contain; }
+        .elim-info h2 { margin: 0; font-size: 35px; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
+        .elim-stats { border-top: 1px solid #444; margin-top: 10px; padding-top: 10px; font-size: 20px; font-weight: bold; }
+        .stat-val { color: #ff9800; }
 
-        #main-lb { position: absolute; top: 200px; right: 50px; }
-        .lb-row { display: flex; margin-bottom: var(--row-gap); background: var(--row-bg); height: 50px; align-items: center; font-weight: 900; }
-        .col-rank { width: 55px; background: var(--rank-bg); text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
-        .col-name { width: 280px; padding-left: 15px; text-transform: uppercase; font-size: 20px; color: white; }
-        .col-status { width: 110px; display: flex; justify-content: center; gap: 4px; }
-        .v-bar { width: 5px; height: 26px; background: #ff9800; }
-        .v-bar.dead { opacity: 0.1; }
-        .col-fin { width: 65px; text-align: center; color: #ff9800; font-size: 22px; }
-        .col-tot { width: 75px; background: var(--total-bg); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 26px; }
-
+        /* Board Sync */
+        #board-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); position: absolute; }
+        .lb-row { display: table-row; background: #1a1a1a; }
+        .cell { display: table-cell; vertical-align: middle; height: 45px; }
+        .col-rank { background: #410a0a; text-align: center; color: white; font-weight: 900; font-size: 22px; }
+        .col-logo img { width: 35px; height: 35px; object-fit: contain; }
+        .col-name { padding-left: 15px; text-transform: uppercase; font-weight: 900; color: white; font-size: 20px; }
+        .v-bar { display: inline-block; width: 5px; height: var(--bar-h); background: #ff9800; margin: 0 2px; }
+        .v-bar.dead { background: #333; opacity: 0.1; }
+        .col-fin { text-align: center; color: #ff9800; font-weight: 900; font-size: 22px; }
+        .col-tot { background: #ff9800; color: #000; text-align: center; font-weight: 900; font-size: 24px; }
         .movable { cursor: move; }
     </style>
 </head>
 <body>
 
-<div id="forecast-panel" class="movable"></div>
-<div id="main-lb" class="movable"></div>
+<div id="elim-popup">
+    <div class="elim-tag">ELIMINATED</div>
+    <div class="elim-content">
+        <div class="elim-logo-box"><img id="e-logo" src=""></div>
+        <div class="elim-info">
+            <h2 id="e-name">GODLIKE ESPORTS</h2>
+            <div class="elim-stats">
+                RANK <span class="stat-val" id="e-rank">#01</span> | ELIMS <span class="stat-val" id="e-kills">02</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="board-container" class="movable"><div id="rows-view"></div></div>
 
 <script>
     const firebaseConfig = { databaseURL: "https://live-pt-67ab3-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    interact('.movable').draggable({ listeners: { move (e) {
-        let t = e.target;
-        let x = (parseFloat(t.dataset.x) || 0) + e.dx;
-        let y = (parseFloat(t.dataset.y) || 0) + e.dy;
-        t.style.transform = `translate(${x}px, ${y}px)`;
-        t.dataset.x = x; t.dataset.y = y;
-    }}});
+    // Sync Adjustments
+    db.ref('settings').on('value', snap => {
+        const set = snap.val();
+        for(let key in set) { document.documentElement.style.setProperty('--'+key, set[key]+'px'); }
+    });
+
+    // Handle Elimination Popup
+    db.ref('lastElim').on('value', snap => {
+        const data = snap.val();
+        if(!data) return;
+        
+        document.getElementById('e-name').innerText = data.name;
+        document.getElementById('e-logo').src = data.logo;
+        document.getElementById('e-rank').innerText = "#" + data.rank;
+        document.getElementById('e-kills').innerText = (data.kills < 10 ? "0" : "") + data.kills;
+        
+        const pop = document.getElementById('elim-popup');
+        pop.style.display = 'block';
+        setTimeout(() => { pop.style.display = 'none'; }, 6000);
+    });
 
     db.ref('teams').on('value', snap => {
         const teams = Object.values(snap.val() || {});
-        renderLB(teams);
-        updateForecast(teams);
-    });
-
-    function renderLB(teams) {
-        const box = document.getElementById('main-lb'); box.innerHTML = '';
+        const box = document.getElementById('rows-view'); box.innerHTML = '';
         teams.sort((a,b) => (b.kills+b.autoPlace+b.basePts) - (a.kills+a.autoPlace+a.basePts)).forEach((t, i) => {
-            let bars = '';
-            for(let j=1;j<=4;j++) bars += `<div class="v-bar ${j<=t.alive?'':'dead'}"></div>`;
-            box.innerHTML += `
-                <div class="lb-row" style="${t.dead?'opacity:0.4; filter:grayscale(1)':''}">
-                    <div class="col-rank">${i+1}</div>
-                    <div class="col-name">${t.name}</div>
-                    <div class="col-status">${bars}</div>
-                    <div class="col-fin">${t.kills}</div>
-                    <div class="col-tot">${t.kills+t.autoPlace+t.basePts}</div>
-                </div>`;
+            let bars = ''; for(let j=1; j<=4; j++) bars += `<div class="v-bar ${j<=t.alive?'':'dead'}"></div>`;
+            box.innerHTML += `<div class="lb-row" style="${t.dead?'opacity:0.4; filter:grayscale(1)':''}">
+                <div class="cell col-rank" style="width:var(--w-rank)">${i+1}</div>
+                <div class="cell col-logo" style="width:var(--w-logo)"><img src="${t.logo}"></div>
+                <div class="cell col-name" style="width:var(--w-name)">${t.name}</div>
+                <div class="cell col-status" style="width:var(--w-status)">${bars}</div>
+                <div class="cell col-fin" style="width:var(--w-fin)">${t.kills}</div>
+                <div class="cell col-tot" style="width:var(--w-tot)">${t.kills+t.autoPlace+t.basePts}</div>
+            </div>`;
         });
-    }
-
-    function updateForecast(teams) {
-        const f = document.getElementById('forecast-panel');
-        const alive = teams.filter(t => !t.dead);
-        if(alive.length > 0 && alive.length <= 5) {
-            f.style.display = 'flex'; f.innerHTML = '';
-            const totalAliveKills = alive.reduce((acc, curr) => acc + curr.kills, 0) || 1;
-            alive.sort((a,b) => (b.kills+b.basePts) - (a.kills+a.autoPlace+a.basePts)).forEach((t) => {
-                let prob = Math.round((t.kills / totalAliveKills) * 100);
-                f.innerHTML += `
-                    <div class="forecast-box">
-                        <div class="f-name">${t.name}</div>
-                        <div class="f-perc">${prob}%</div>
-                        <div class="f-bars"><div class="f-bar"></div><div class="f-bar"></div><div class="f-bar"></div><div class="f-bar"></div></div>
-                    </div>`;
-            });
-        } else { f.style.display = 'none'; }
-    }
+    });
 </script>
 </body>
 </html>
