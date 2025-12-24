@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Studio v45.0 - Final Stable</title>
+    <title>BGMI Studio v45.0 - Final Restored</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
@@ -15,38 +15,54 @@
         }
         body { margin: 0; background: #00ff00; font-family: 'Bahnschrift', sans-serif; overflow: hidden; }
 
+        /* Admin Panel Restored */
         #admin { width: 320px; height: 100vh; background: #111; position: fixed; left: 0; padding: 15px; border-right: 2px solid #333; z-index: 9999; overflow-y: auto; color: white; }
         .config-sec { background: #1a1a1a; padding: 10px; margin-bottom: 12px; border-radius: 4px; border: 1px solid #00e5ff; }
         .config-sec h4 { margin: 0 0 8px 0; color: #00e5ff; font-size: 11px; text-transform: uppercase; }
-        label { display: block; margin-top: 5px; font-size: 10px; }
+        label { display: block; margin-top: 5px; font-size: 10px; color: #fff; }
         input[type="range"] { width: 100%; accent-color: #00e5ff; }
         .btn-main { background: #00e5ff; color: #000; width: 100%; padding: 10px; border:none; font-weight: 900; cursor: pointer; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
 
+        /* Leaderboard */
         .movable { position: absolute; touch-action: none; cursor: move; z-index: 500; }
         .lb-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); }
-        .lb-row { display: table-row; background: var(--row-bg); color: var(--text-color); font-weight: 900; }
-        
-        .lb-row.eliminated { 
-            background: var(--elim-bg) !important; 
-            opacity: var(--fade-op) !important; 
-            color: #ffffff !important; 
-        }
+        .lb-row { display: table-row; background: var(--row-bg); color: var(--text-color); font-weight: 900; transition: 0.3s; }
+        .lb-row.eliminated { background: var(--elim-bg) !important; opacity: var(--fade-op) !important; color: #ffffff !important; }
 
-        .cell { display: table-cell; vertical-align: middle; height: 35px; padding: 0; }
+        .cell { display: table-cell; vertical-align: middle; height: 35px; }
         .col-rank { width: var(--w-rank); background: var(--rank-bg); color: white; text-align: center; font-size: 18px; }
         .col-logo { width: var(--w-logo); background: #fff; text-align: center; }
         .col-logo img { height: 26px; width: 26px; object-fit: contain; }
         .col-name { width: var(--w-name); padding-left: 10px; text-transform: uppercase; font-size: 14px; white-space: nowrap; }
         .col-status { width: var(--w-status); text-align: center; }
-        .col-fin { width: var(--w-fin); text-align: center; border-left: 1px solid rgba(0,0,0,0.1); }
-        .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 20px; }
-        
-        /* VERTICAL BARS */
         .v-bar { display: inline-block; width: var(--bar-w); height: var(--bar-h); background: var(--rank-bg); margin: 0 var(--bar-gap); vertical-align: middle; border-radius: 1px; }
         .v-bar.dead { background: #cbd5e0; opacity: 0.2; }
+        .col-fin { width: var(--w-fin); text-align: center; border-left: 1px solid rgba(0,0,0,0.1); }
+        .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 20px; }
 
-        .team-ctrl { background:#222; padding:8px; margin-bottom:4px; display:flex; gap:10px; align-items:center; border-radius:3px; }
-        #modal { position:fixed; top:5%; left:5%; width:90%; height:85%; background:#111; padding:20px; display:none; z-index:10001; color: white; border:1px solid #00e5ff; overflow-y:auto; }
+        /* ELIMINATED POPUP DESIGN */
+        #elim-popup { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 450px; height: 120px; background: #111; border-bottom: 4px solid #ff9800;
+            display: none; z-index: 10000; color: white;
+        }
+        .elim-tag { position: absolute; top: -15px; left: 0; background: #ff9800; color: #000; padding: 2px 10px; font-weight: 900; font-size: 12px; clip-path: polygon(0% 0%, 90% 0%, 100% 100%, 0% 100%); }
+        .elim-content { display: flex; align-items: center; height: 100%; padding: 0 20px; }
+        .elim-logo { width: 80px; height: 80px; background: #00e5ff; margin-right: 20px; display: flex; align-items: center; justify-content: center; }
+        .elim-info h2 { margin: 0; font-size: 28px; text-transform: uppercase; }
+        .elim-stats { color: #fff; font-size: 18px; margin-top: 5px; font-weight: bold; }
+        .elim-stats span { color: #ff9800; margin-right: 15px; }
+
+        /* FORECAST DESIGN */
+        #forecast-panel { 
+            position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+            display: none; gap: 10px; z-index: 900;
+        }
+        .forecast-card { 
+            width: 140px; background: #ff9800; display: flex; align-items: center; padding: 5px; border-left: 30px solid #1a0a00;
+        }
+        .forecast-name { font-weight: 900; font-size: 11px; text-transform: uppercase; color: #000; flex: 1; padding-left: 5px; }
+        .forecast-rank { color: #000; font-size: 12px; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -55,32 +71,37 @@
     <button class="btn-main" onclick="toggleM()">⚙️ SETUP TEAMS</button>
     
     <div class="config-sec">
-        <h4>🎨 ADJUSTMENTS</h4>
-        <label>Vertical Bar Width</label>
-        <input type="range" min="1" max="15" value="3" oninput="adj('bar-w', this.value+'px')">
-        <label>Vertical Bar Height</label>
-        <input type="range" min="5" max="35" value="18" oninput="adj('bar-h', this.value+'px')">
-        <label>Vertical Bar Gap</label>
-        <input type="range" min="0" max="10" value="2" oninput="adj('bar-gap', this.value+'px')">
+        <h4>↔️ ADJUSTMENTS</h4>
+        <label>Rank Box</label><input type="range" min="20" max="100" value="45" oninput="adj('w-rank', this.value+'px')">
+        <label>Logo Box</label><input type="range" min="20" max="120" value="50" oninput="adj('w-logo', this.value+'px')">
+        <label>Name Box</label><input type="range" min="50" max="400" value="200" oninput="adj('w-name', this.value+'px')">
+        <label>Status Box</label><input type="range" min="20" max="200" value="100" oninput="adj('w-status', this.value+'px')">
+        <label>Finish Box</label><input type="range" min="20" max="100" value="50" oninput="adj('w-fin', this.value+'px')">
+        <label>Total Box</label><input type="range" min="20" max="100" value="65" oninput="adj('w-tot', this.value+'px')">
+        <label>Vertical Row Gap</label><input type="range" min="0" max="20" value="5" oninput="adj('row-gap', this.value+'px')">
     </div>
 
     <div id="ctrl-list"></div>
-    <button class="btn-main" style="background:red; color:white; margin-top:10px;" onclick="resetAll()">🔄 RESET MATCH</button>
 </div>
 
-<div id="board" class="movable lb-container" style="top: 50px; left: 350px;">
+<div id="forecast-panel"></div>
+
+<div id="elim-popup">
+    <div class="elim-tag">TEAM ELIMINATED</div>
+    <div class="elim-content">
+        <div class="elim-logo" id="e-logo"></div>
+        <div class="elim-info">
+            <h2 id="e-name">TEAM NAME</h2>
+            <div class="elim-stats">RANK <span id="e-rank">#0</span> FINISHES <span id="e-kills">0</span></div>
+        </div>
+    </div>
+</div>
+
+<div id="board" class="movable lb-container" style="top: 150px; left: 350px;">
     <div id="board-rows"></div>
 </div>
 
-<div id="modal">
-    <h3>Live Team Entry</h3>
-    <div id="set-inputs"></div>
-    <button onclick="addT()" style="background:green; color:white; padding:8px;">+ ADD TEAM</button>
-    <button onclick="saveS()" class="btn-main" style="margin-top:10px;">SAVE TO CLOUD</button>
-</div>
-
 <script>
-    // FILL THESE FROM YOUR FIREBASE SETTINGS
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY", 
         authDomain: "live-pt-67ab3.firebaseapp.com",
@@ -111,12 +132,12 @@
         const teams = snap.val() ? Object.values(snap.val()) : [];
         renderBoard(teams);
         renderAdmin(teams);
+        handleForecast(teams);
     });
 
     function renderBoard(teams) {
         const rows = document.getElementById('board-rows');
         rows.innerHTML = '';
-        // Win Prediction Sort Logic
         let sorted = [...teams].sort((a,b) => (b.kills + b.autoPlace + b.basePts) - (a.kills + a.autoPlace + a.basePts));
         sorted.forEach((t, i) => {
             let bars = '';
@@ -132,86 +153,58 @@
         });
     }
 
+    function handleForecast(teams) {
+        const fPanel = document.getElementById('forecast-panel');
+        const aliveTeams = teams.filter(t => !t.dead);
+        if (aliveTeams.length > 0 && aliveTeams.length <= 5) {
+            fPanel.style.display = 'flex';
+            fPanel.innerHTML = '';
+            aliveTeams.sort((a,b) => (b.kills+b.basePts) - (a.kills+a.basePts)).forEach(t => {
+                fPanel.innerHTML += `
+                    <div class="forecast-card">
+                        <div class="forecast-name">${t.name}</div>
+                        <div class="forecast-rank">#${aliveTeams.indexOf(t)+1}</div>
+                    </div>`;
+            });
+        } else {
+            fPanel.style.display = 'none';
+        }
+    }
+
     function renderAdmin(teams) {
         const ctrl = document.getElementById('ctrl-list');
         ctrl.innerHTML = '';
         teams.forEach((t, i) => {
-            ctrl.innerHTML += `<div class="team-ctrl">
+            ctrl.innerHTML += `<div style="background:#222; padding:8px; margin-bottom:4px; display:flex; gap:10px; align-items:center; border-radius:3px;">
                 <span style="flex:1; font-size:10px; font-weight:bold;">${t.name}</span>
-                K: <input type="number" style="width:40px" value="${t.kills}" onchange="updateKills(${i}, this.value)">
-                <input type="checkbox" ${t.dead?'checked':''} onchange="setElim(${i}, this.checked)"> ELIM
+                K: <input type="number" style="width:40px" value="${t.kills}" onchange="db.ref('teams/'+${i}).update({kills:parseInt(this.value)})">
+                <input type="checkbox" ${t.dead?'checked':''} onchange="triggerElim(${i}, this.checked)"> ELIM
             </div>`;
         });
     }
 
-    function updateKills(i, v) { db.ref('teams/'+i).update({ kills: parseInt(v) || 0 }); }
-    
-    // RESTORED ELIMINATION POPUP LOGIC
-    function setElim(i, checked) {
+    function triggerElim(i, checked) {
         db.ref('teams').once('value', snap => {
             const teams = Object.values(snap.val());
+            const t = teams[i];
             if(checked) {
-                let currentRank = teams.filter(t => !t.dead).length;
-                // Popup Confirmation
-                if(confirm("Eliminate Team: " + teams[i].name + "\nRank Secured: #" + currentRank)) {
-                    db.ref('teams/'+i).update({ dead: true, alive: 0, autoPlace: posPoints[currentRank] || 0 });
-                } else {
-                    renderAdmin(teams); // Revert checkbox
-                }
+                let rank = teams.filter(item => !item.dead).length;
+                showPopup(t, rank);
+                db.ref('teams/'+i).update({ dead: true, alive: 0, autoPlace: posPoints[rank] || 0 });
             } else {
                 db.ref('teams/'+i).update({ dead: false, alive: 4, autoPlace: 0 });
             }
         });
     }
 
-    function toggleM() {
-        const m = document.getElementById('modal');
-        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-        if(m.style.display === 'block') {
-            db.ref('teams').once('value', snap => {
-                const teams = snap.val() || [];
-                const box = document.getElementById('set-inputs'); box.innerHTML = '';
-                Object.values(teams).forEach((t, i) => {
-                    box.innerHTML += `<div style="display:flex; gap:5px; margin-bottom:5px;">
-                        <input type="text" id="n-${i}" value="${t.name}">
-                        <input type="text" id="l-${i}" value="${t.logo}" style="flex:1">
-                        <input type="number" id="p-${i}" value="${t.basePts}" style="width:50px">
-                    </div>`;
-                });
-            });
-        }
-    }
-
-    function addT() {
-        db.ref('teams').once('value', snap => {
-            const teams = snap.val() ? Object.values(snap.val()) : [];
-            teams.push({ name: 'TEAM', logo: 'https://i.ibb.co/VWVx67n/default.png', kills: 0, basePts: 0, autoPlace: 0, alive: 4, dead: false });
-            db.ref('teams').set(teams);
-            toggleM(); toggleM();
-        });
-    }
-
-    function saveS() {
-        db.ref('teams').once('value', snap => {
-            const teams = Object.values(snap.val());
-            teams.forEach((t, i) => {
-                t.name = document.getElementById(`n-${i}`).value.toUpperCase();
-                t.logo = document.getElementById(`l-${i}`).value;
-                t.basePts = parseInt(document.getElementById(`p-${i}`).value) || 0;
-            });
-            db.ref('teams').set(teams);
-            document.getElementById('modal').style.display = 'none';
-        });
-    }
-
-    function resetAll() {
-        if(confirm("Are you sure? This will revive all teams and reset match points!")) {
-            db.ref('teams').once('value', snap => {
-                const teams = Object.values(snap.val());
-                teams.forEach(t => { t.kills = 0; t.autoPlace = 0; t.dead = false; t.alive = 4; });
-                db.ref('teams').set(teams);
-            });
-        }
+    function showPopup(team, rank) {
+        const p = document.getElementById('elim-popup');
+        document.getElementById('e-name').innerText = team.name;
+        document.getElementById('e-rank').innerText = "#" + rank;
+        document.getElementById('e-kills').innerText = team.kills;
+        document.getElementById('e-logo').innerHTML = `<img src="${team.logo}" style="width:60px; height:60px; object-fit:contain;">`;
+        p.style.display = 'block';
+        setTimeout(() => { p.style.display = 'none'; }, 4000);
     }
 </script>
 </body>
