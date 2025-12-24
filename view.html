@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Studio v44.0 - View Panel</title>
+    <title>BGMI Studio v44.0 - View Only</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
@@ -17,52 +17,41 @@
 
         .movable { position: absolute; touch-action: none; cursor: move; }
         
-        /* Forecast UI */
+        /* Forecast with Logo */
         #forecast-box { display: none; gap: 10px; top: 20px; left: 50%; transform: translateX(-50%); }
-        .f-item { width: 160px; height: 75px; background: #ff9d00; border-left: 20px solid #111; display: flex; flex-direction: column; justify-content: center; padding-left: 10px; color: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-        .f-prob { font-size: 26px; font-weight: 900; line-height: 1; }
+        .f-item { width: 180px; height: 75px; background: #ff9d00; display: flex; align-items: center; padding: 0 10px; color: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.4); border-radius: 4px; }
+        .f-logo { width: 45px; height: 45px; object-fit: contain; margin-right: 10px; background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .f-data { flex: 1; display: flex; flex-direction: column; }
 
-        /* Leaderboard */
+        /* Table */
         .lb-container { display: table; border-collapse: separate; border-spacing: 0 var(--row-gap); }
         .lb-row { display: table-row; background: var(--row-bg); color: var(--text-color); font-weight: 900; }
         .lb-row.eliminated { background: var(--elim-bg) !important; opacity: var(--fade-op) !important; color: rgba(255,255,255,0.7) !important; }
-        .lb-row.eliminated .v-bar { background: #444 !important; opacity: 0.1; }
-
+        
         .cell { display: table-cell; vertical-align: middle; height: 35px; }
-        .col-rank { width: var(--w-rank); background: var(--rank-bg); color: white; text-align: center; font-size: 16px; }
+        .col-rank { width: var(--w-rank); background: var(--rank-bg); color: white; text-align: center; }
         .col-logo { width: var(--w-logo); background: #fff; text-align: center; }
         .col-logo img { height: 24px; width: 24px; object-fit: contain; }
         .col-name { width: var(--w-name); padding-left: 10px; text-transform: uppercase; font-size: 14px; }
-        .col-status { width: var(--w-status); text-align: center; border-left: 1px solid rgba(0,0,0,0.1); }
-        .col-fin { width: var(--w-fin); text-align: center; border-left: 1px solid rgba(0,0,0,0.1); }
-        .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 18px; border-left: 1px solid rgba(0,0,0,0.1); }
+        .col-status { width: var(--w-status); text-align: center; }
+        .col-fin { width: var(--w-fin); text-align: center; }
+        .col-tot { width: var(--w-tot); background: var(--total-bg); color: #000; text-align: center; font-size: 18px; }
         
-        /* Fixed Alive Bars Logic */
-        .v-bar { display: inline-block; width: var(--bar-w); height: var(--bar-h); background: var(--rank-bg); border-radius: 1px; margin: 0 var(--bar-gap); }
+        .v-bar { display: inline-block; width: var(--bar-w); height: var(--bar-h); background: var(--rank-bg); margin: 0 var(--bar-gap); }
         .v-bar.dead { background: #cbd5e0 !important; opacity: 0.2 !important; }
 
-        /* Alert UI */
         #alert { width: 380px; height: 95px; background: #1a0505; border-bottom: 5px solid #ff9d00; display: none; position: absolute; color: white; }
     </style>
 </head>
 <body>
 
 <div id="forecast-box" class="movable"></div>
-
-<div id="board" class="movable lb-container" style="top: 120px; right: 50px;">
-    <div id="board-rows"></div>
-</div>
-
+<div id="board" class="movable lb-container" style="top: 100px; right: 50px;"><div id="board-rows"></div></div>
 <div id="alert" class="movable" style="top: 150px; left: 50%; transform: translateX(-50%);">
     <div style="display:flex; height:100%;">
         <div style="width:90px; background:#000; display:flex; align-items:center; justify-content:center;"><img id="a-img" src="" style="width:60px;"></div>
-        <div style="flex:1; background:#111; padding:15px;">
-            <div id="a-name" style="font-size:22px; font-weight:900; text-transform:uppercase;">TEAM NAME</div>
-            <div style="display:flex; gap:20px; margin-top:5px; border-top:1px solid #333; padding-top:5px;">
-                <div>RANK <span id="a-rank" style="color:#ff9d00;">#0</span></div>
-                <div>KILLS <span id="a-fin" style="color:#ff9d00;">0</span></div>
-            </div>
-        </div>
+        <div style="flex:1; background:#111; padding:15px;"><div id="a-name" style="font-size:22px; font-weight:900;">TEAM</div>
+        <div style="display:flex; gap:20px; margin-top:5px; border-top:1px solid #333;">RANK <span id="a-rank" style="color:#ff9d00;">#0</span> KILLS <span id="a-fin" style="color:#ff9d00;">0</span></div></div>
     </div>
 </div>
 
@@ -71,75 +60,57 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    interact('.movable').draggable({
-        listeners: { move (e) {
-            let t = e.target;
-            let x = (parseFloat(t.dataset.x) || 0) + e.dx;
-            let y = (parseFloat(t.dataset.y) || 0) + e.dy;
-            t.style.transform = `translate(${x}px, ${y}px)`;
-            t.dataset.x = x; t.dataset.y = y;
-        }}
-    });
+    interact('.movable').draggable({ listeners: { move (e) {
+        let t = e.target;
+        let x = (parseFloat(t.dataset.x) || 0) + e.dx;
+        let y = (parseFloat(t.dataset.y) || 0) + e.dy;
+        t.style.transform = `translate(${x}px, ${y}px)`;
+        t.dataset.x = x; t.dataset.y = y;
+    }}});
 
     db.ref('settings').on('value', snap => {
-        const s = snap.val();
-        for(let k in s) document.documentElement.style.setProperty('--'+k, s[k]);
+        const s = snap.val(); for(let k in s) document.documentElement.style.setProperty('--'+k, s[k]);
     });
 
     db.ref('teams').on('value', snap => {
         const teams = snap.val() || [];
-        const rows = document.getElementById('board-rows');
-        rows.innerHTML = '';
-        
+        const rows = document.getElementById('board-rows'); rows.innerHTML = '';
         let sorted = [...teams].sort((a,b) => (b.kills + b.autoPlace + b.basePts) - (a.kills + a.autoPlace + a.basePts));
         
         sorted.forEach((t, i) => {
-            let bars = '';
-            for(let j=1; j<=4; j++) {
-                // Agar player alive hai toh normal bar, warna 'dead' class
-                bars += `<div class="v-bar ${j <= t.alive ? '' : 'dead'}"></div>`;
-            }
-            rows.innerHTML += `
-                <div class="lb-row ${t.dead ? 'eliminated' : ''}">
-                    <div class="cell col-rank">${i+1}</div>
-                    <div class="cell col-logo"><img src="${t.logo}"></div>
-                    <div class="cell col-name">${t.name}</div>
-                    <div class="cell col-status">${bars}</div>
-                    <div class="cell col-fin">${t.kills}</div>
-                    <div class="cell col-tot">${t.kills + t.autoPlace + t.basePts}</div>
-                </div>`;
+            let bars = ''; for(let j=1; j<=4; j++) bars += `<div class="v-bar ${j<=t.alive?'':'dead'}"></div>`;
+            rows.innerHTML += `<div class="lb-row ${t.dead ? 'eliminated' : ''}">
+                <div class="cell col-rank">${i+1}</div>
+                <div class="cell col-logo"><img src="${t.logo}"></div>
+                <div class="cell col-name">${t.name}</div>
+                <div class="cell col-status">${bars}</div>
+                <div class="cell col-fin">${t.kills}</div>
+                <div class="cell col-tot">${t.kills + t.autoPlace + t.basePts}</div>
+            </div>`;
         });
 
-        // Fixed Forecast Logic
         const aliveTeams = teams.filter(t => !t.dead && t.alive > 0);
         const fBox = document.getElementById('forecast-box');
-        
         if(aliveTeams.length > 0 && aliveTeams.length <= 5) {
             fBox.style.display = 'flex'; fBox.innerHTML = '';
-            // Power = (Kills + Players Alive * 2) taaki zero kill par bhi % dikhe
             let totalPower = aliveTeams.reduce((sum, t) => sum + (t.kills + (t.alive * 2)), 0) || 1;
-            
             aliveTeams.sort((a,b) => (b.kills + (b.alive * 2)) - (a.kills + (a.alive * 2))).forEach(t => {
                 let prob = Math.round(((t.kills + (t.alive * 2)) / totalPower) * 100);
                 fBox.innerHTML += `<div class="f-item">
-                    <div style="font-size:10px; font-weight:900;">${t.name}</div>
-                    <div class="f-prob">${prob}%</div>
-                    <div style="font-size:8px; font-weight:bold; opacity:0.8">${t.alive}/4 ALIVE</div>
+                    <img class="f-logo" src="${t.logo}">
+                    <div class="f-data"><div style="font-size:10px; font-weight:900;">${t.name}</div>
+                    <div style="font-size:24px; font-weight:900;">${prob}%</div></div>
                 </div>`;
             });
         } else { fBox.style.display = 'none'; }
     });
 
     db.ref('lastElim').on('value', snap => {
-        const d = snap.val();
-        if(!d || Date.now() - d.time > 10000) return;
-        document.getElementById('a-img').src = d.logo;
-        document.getElementById('a-name').innerText = d.name;
-        document.getElementById('a-rank').innerText = "#" + d.rank;
-        document.getElementById('a-fin').innerText = d.kills;
-        const a = document.getElementById('alert');
-        a.style.display = 'block';
-        setTimeout(() => a.style.display = 'none', 6000);
+        const d = snap.val(); if(!d || Date.now() - d.time > 10000) return;
+        document.getElementById('a-img').src = d.logo; document.getElementById('a-name').innerText = d.name;
+        document.getElementById('a-rank').innerText = "#" + d.rank; document.getElementById('a-fin').innerText = d.kills;
+        document.getElementById('alert').style.display = 'block';
+        setTimeout(() => document.getElementById('alert').style.display = 'none', 6000);
     });
 </script>
 </body>
