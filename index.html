@@ -1,486 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>BGMI Studio v50 - ADMIN MULTI MATCH</title>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-
-  <style>
-    :root { --accent:#00e5ff; }
-
-    *{box-sizing:border-box;font-family:'Bahnschrift',Arial,sans-serif;}
-    body{
-      margin:0;
-      background:#111;
-      color:#fff;
-      padding-left:330px;
-      overflow:hidden;
-    }
-
-    /* LEFT ADMIN PANEL */
-    #admin{
-      width:310px;
-      height:100vh;
-      background:#111;
-      position:fixed;
-      left:0;top:0;
-      padding:15px;
-      border-right:2px solid #333;
-      overflow-y:auto;
-      font-size:11px;
-      z-index:1000;
-    }
-    h3{margin:0 0 10px 0;}
-    .btn-main{
-      background:var(--accent);
-      color:#000;
-      width:100%;
-      padding:10px;
-      border:none;
-      font-weight:900;
-      cursor:pointer;
-      border-radius:4px;
-      text-transform:uppercase;
-      margin-bottom:8px;
-    }
-    .config-sec{
-      background:#1a1a1a;
-      padding:10px;
-      margin-bottom:12px;
-      border-radius:4px;
-      border-top:2px solid var(--accent);
-    }
-    .config-sec h4{
-      margin:0 0 8px 0;
-      color:var(--accent);
-      text-transform:uppercase;
-      font-size:10px;
-    }
-    label{display:block;margin-top:5px;color:#888;}
-    input[type="text"],input[type="number"],select{
-      width:100%;
-      background:#000;
-      color:#fff;
-      border:1px solid #444;
-      padding:5px;
-      font-size:11px;
-    }
-    input[type="range"]{
-      width:100%;
-      accent-color:var(--accent);
-    }
-
-    /* TEAM CONTROL ROWS */
-    #teamControls{
-      margin-top:8px;
-    }
-    .team-ctrl{
-      background:#222;
-      padding:5px;
-      margin-bottom:4px;
-      display:grid;
-      grid-template-columns:30px 60px 1.3fr 40px 40px 40px 55px 35px;
-      gap:4px;
-      align-items:center;
-      border-radius:3px;
-      font-size:10px;
-    }
-    .team-ctrl input[type="number"]{
-      padding:3px;
-      text-align:center;
-    }
-    .team-ctrl input[type="text"]{
-      padding:3px;
-    }
-    .slot{width:100%;}
-    .logo-url{width:100%;}
-    .name{width:100%;}
-    .alive{width:100%;}
-    .finish{width:100%;}
-    .kills{width:100%;}
-    .totalPts{
-      text-align:center;
-      font-weight:bold;
-      color:#00e5ff;
-    }
-    .deadFlag{width:100%;text-align:center;}
-
-    .small-label-row{
-      display:grid;
-      grid-template-columns:30px 60px 1.3fr 40px 40px 40px 55px 35px;
-      gap:4px;
-      font-size:9px;
-      margin-bottom:2px;
-      color:#aaa;
-    }
-
-    /* MODAL FOR BULK TEAM EDIT (optional) */
-    #modal{
-      position:fixed;
-      top:5%;left:340px;right:20px;
-      height:85%;
-      background:#111;
-      padding:20px;
-      border:1px solid var(--accent);
-      display:none;
-      z-index:1001;
-      color:#fff;
-      overflow-y:auto;
-    }
-    #modal input[type="text"],#modal input[type="number"]{
-      font-size:11px;
-    }
-
-    /* SIMPLE INFO AREA ON RIGHT (DEBUG / CURRENT MATCH) */
-    #infoBar{
-      position:fixed;
-      bottom:10px;left:330px;
-      right:20px;
-      background:#181818;
-      padding:8px 12px;
-      font-size:11px;
-      border-radius:4px;
-      border:1px solid #333;
-      opacity:0.9;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Sanjay BGMI Ultra Dashboard</title>
+    <style>
+        :root { --orange:#ff5a00; --blue:#0088ff; --green:#2ecc71; --red:#dc3545; --dark:#111; }
+        body { margin:0; font-family:'Oswald', sans-serif; background:#050505; color:#fff; overflow:hidden; }
+        #admin { display: grid; grid-template-columns: 1fr 400px; height: 100vh; }
+        
+        /* Left Panel: Control Grid */
+        .control-panel { padding: 20px; overflow-y: auto; border-right: 2px solid #333; }
+        .grid-25 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .slot-card { 
+            background: #1a1a1a; border: 2px solid #333; border-radius: 8px; padding: 10px; 
+            text-align: center; cursor: pointer; position: relative;
+        }
+        .slot-card.active { border-color: var(--green); box-shadow: 0 0 10px var(--green); }
+        .slot-card h2 { margin: 0; font-size: 28px; }
+        
+        /* Right Panel: Settings */
+        .settings-panel { padding: 15px; background: #0a0a0a; overflow-y: auto; }
+        .section-title { color: var(--orange); border-bottom: 1px solid var(--orange); margin: 15px 0 10px; padding-bottom: 5px; text-transform: uppercase; font-size: 14px; }
+        
+        input, select, textarea { width: 100%; background: #000; color: #fff; border: 1px solid #444; padding: 8px; margin-bottom: 8px; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
+        
+        /* Mini Stats */
+        .stats-row { display: flex; gap: 5px; margin-top: 5px; }
+        .stats-row input { font-size: 10px; padding: 4px; }
+        
+        /* Hidden UI */
+        .hide-ui { display: none !important; }
+    </style>
 </head>
 <body>
 
 <div id="admin">
-  <h3>BGMI Studio – ADMIN</h3>
+    <div class="control-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: var(--orange); margin: 0;">PRO BROADCAST GRID</h2>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="background: var(--blue); width: auto;" onclick="window.open('overlay.html')">OPEN OVERLAY</button>
+                <button class="btn" style="background: var(--red); width: auto;" onclick="toggleSettings()">CAST MODE</button>
+            </div>
+        </div>
 
-  <!-- MATCH SELECT -->
-  <div class="config-sec">
-    <h4>🎮 Match Selector</h4>
-    <label>Current Match</label>
-    <div style="display:flex;gap:5px;">
-      <select id="matchSelect" onchange="changeMatch(this.value)" style="flex:1;"></select>
-      <button onclick="addMatch()" style="width:70px;background:#0f0;color:#000;border:none;font-weight:bold;cursor:pointer;">+M</button>
+        <div class="grid-25" id="mainGrid"></div>
+        
+        <div class="section-title">SPECIAL CARDS (MVP / WWCD)</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" style="background: gold; color: #000;" onclick="triggerCard('WWCD')">🏆 SHOW WWCD</button>
+            <button class="btn" style="background: #fff; color: #000;" onclick="triggerCard('MVP')">🌟 SHOW MVP</button>
+        </div>
     </div>
-    <small>Example: Match 1, Match 2... sabka data alag store hoga.</small>
-  </div>
 
-  <!-- BACKGROUND / DESIGN SETTINGS -->
-  <div class="config-sec">
-    <h4>🖼️ Background PNG Overlay</h4>
-    <label>PNG Image URL</label>
-    <input type="text" id="bg-url" placeholder="Paste PNG link here" onchange="setSetting('bg-url',this.value)">
-  </div>
+    <div class="settings-panel" id="sideSettings">
+        <div class="section-title">MATCH INFO</div>
+        <input type="text" id="mNum" placeholder="Match Number (e.g. Match 01)" onchange="syncMeta()">
+        <input type="text" id="mMap" placeholder="Map Name (e.g. Erangel)" onchange="syncMeta()">
 
-  <!-- TEAM ROWS HEADER -->
-  <div class="config-sec">
-    <h4>📋 Teams – Current Match</h4>
-    <div class="small-label-row">
-      <span>#</span>
-      <span>Logo</span>
-      <span>Name</span>
-      <span>A</span>
-      <span>Fin</span>
-      <span>K</span>
-      <span>Total</span>
-      <span>Elim</span>
+        <div class="section-title">BULK TEAM IMPORT</div>
+        <textarea id="bulkArea" placeholder="1 | TEAM NAME"></textarea>
+        <button class="btn" style="background: #333;" onclick="importTeams()">IMPORT LIST</button>
+
+        <div class="section-title">SOCIAL & SPONSORS (ROTATION)</div>
+        <input type="text" id="soc1" placeholder="Social 1: Caster Indian" onchange="syncMeta()">
+        <input type="text" id="soc2" placeholder="Social 2: Onyx is Live" onchange="syncMeta()">
+
+        <div class="section-title">POINTS TABLE (AUTO CALC)</div>
+        <button class="btn" style="background: var(--green);" onclick="generatePointsTable()">GENERATE STANDINGS</button>
+        
+        <div id="teamConfigs"></div>
     </div>
-    <div id="teamControls"></div>
-    <button class="btn-main" onclick="addTeamRow()">+ Add Team Row</button>
-    <button class="btn-main" style="background:#ffb300;color:#000;" onclick="saveCurrentMatch()">💾 SAVE MATCH</button>
-    <button class="btn-main" style="background:#ff4444;color:#fff;" onclick="recomputeGlobal()">⟳ REBUILD TOTALS</button>
-  </div>
-
-  <!-- OPTIONAL BULK EDIT MODAL OPEN -->
-  <button class="btn-main" onclick="toggleModal()">Bulk Edit (Names / Logos)</button>
-</div>
-
-<!-- BULK EDIT MODAL -->
-<div id="modal">
-  <h3>Bulk Team Edit – <span id="modalMatchName"></span></h3>
-  <div id="bulkInputs"></div>
-  <button onclick="addTeamRow(true)" style="background:#0f0;color:#000;border:none;padding:8px 12px;margin-top:8px;cursor:pointer;">+ Add Team</button>
-  <button onclick="saveBulk()" class="btn-main" style="margin-top:10px;">Save Changes</button>
-  <button onclick="toggleModal()" style="background:#444;color:#fff;border:none;padding:6px 10px;margin-top:10px;cursor:pointer;">Close</button>
-</div>
-
-<!-- INFO BAR -->
-<div id="infoBar">
-  <span id="infoText">Loading…</span>
 </div>
 
 <script>
-  /* ---------- FIREBASE INIT (same DB as view panel) ---------- */
-  const firebaseConfig = { databaseURL:"https://live-pt-67ab3-default-rtdb.firebaseio.com" };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+    const CONFIG_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/configData.json";
+    const LIVE_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/liveData.json";
 
-  /* ---------- CONFIG ---------- */
-  const placePts = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
-  const killPoint = 1;
+    const fixedColors = { 1: '#10449e', 2: '#1b5e20', 3: '#c62828', 4: '#e65100', 5: '#6a1b9a', 6: '#2ecc71', 7: '#ad1457', 8: '#00796b', 9: '#795548', 10: '#303f9f', 11: '#fbc02d', 12: '#1565c0', 13: '#388e3c', 14: '#ff8f00', 15: '#d81b60', 16: '#7b1fa2', 17: '#00897b', 18: '#9e9e9e', 19: '#558b2f', 20: '#5d4037', 21: '#0277bd', 22: '#616161', 23: '#ff5722', 24: '#7cb342', 25: '#263238' };
 
-  let currentMatchId = null;
-  let allMatches = {};   // cache snapshot for quick ops
+    let teamDB = JSON.parse(localStorage.getItem('sanjay_db') || '{}');
+    let meta = { mNum: "Match 1", mMap: "Erangel", soc1: "Caster Indian", soc2: "Onyx is Live" };
 
-  /* ---------- SETTINGS HELPERS ---------- */
-  function setSetting(key,val){ db.ref('settings/'+key).set(val); }
+    function init() {
+        const grid = document.getElementById('mainGrid');
+        const configs = document.getElementById('teamConfigs');
+        grid.innerHTML = ""; configs.innerHTML = "";
 
-  /* ---------- LOAD MATCH LIST ---------- */
-  function loadMatchList(){
-    db.ref('matches').once('value').then(snap=>{
-      allMatches = snap.val() || {};
-      const select = document.getElementById('matchSelect');
-      select.innerHTML = '';
-      const keys = Object.keys(allMatches).sort();
-      if(keys.length === 0){
-        // create first match
-        const mid = 'm1';
-        allMatches[mid] = { name:'Match 1', teams:[] };
-        db.ref('matches').set(allMatches);
-      }
-      const finalKeys = Object.keys(allMatches).sort();
-      finalKeys.forEach(k=>{
-        const opt = document.createElement('option');
-        opt.value = k;
-        opt.textContent = allMatches[k].name || k;
-        select.appendChild(opt);
-      });
-      currentMatchId = finalKeys[0];
-      select.value = currentMatchId;
-      loadMatch(currentMatchId);
-    });
-  }
+        for(let i=1; i<=25; i++) {
+            if(!teamDB[i]) teamDB[i] = { name: `TEAM ${i}`, finishes: 0, alive: 4, placement: 0 };
+            const t = teamDB[i];
 
-  function addMatch(){
-    const num = Object.keys(allMatches || {}).length + 1;
-    const mid = 'm'+num;
-    allMatches[mid] = { name:'Match '+num, teams:[] };
-    db.ref('matches').set(allMatches).then(loadMatchList);
-  }
+            // Dashboard Card
+            grid.innerHTML += `
+                <div class="slot-card" id="slot-${i}" onclick="sendToLive(${i})" style="border-bottom: 4px solid ${fixedColors[i]}">
+                    <h2>${i}</h2>
+                    <p style="font-size:10px;">${t.name}</p>
+                    <div style="font-size:12px; color:var(--green)">F: ${t.finishes} | A: ${t.alive}</div>
+                </div>`;
 
-  function changeMatch(id){
-    currentMatchId = id;
-    loadMatch(currentMatchId);
-  }
+            // Config Form
+            configs.innerHTML += `
+                <div style="background:#1a1a1a; padding:10px; border-radius:5px; margin-bottom:10px;">
+                    <div style="font-weight:bold; color:var(--orange)">SLOT ${i}</div>
+                    <input type="text" value="${t.name}" onchange="updateTeam(${i}, 'name', this.value)" placeholder="Team Name">
+                    <div class="stats-row">
+                        <input type="number" value="${t.finishes}" onchange="updateTeam(${i}, 'finishes', this.value)" placeholder="Finishes">
+                        <input type="number" value="${t.alive}" onchange="updateTeam(${i}, 'alive', this.value)" placeholder="Alive">
+                    </div>
+                </div>`;
+        }
+    }
 
-  /* ---------- RENDER TEAM ROWS FOR CURRENT MATCH ---------- */
-  function loadMatch(matchId){
-    if(!matchId) return;
-    db.ref('matches/'+matchId).once('value').then(snap=>{
-      const data = snap.val() || { name:'Match ?', teams:[] };
-      if(!data.teams) data.teams = [];
-      allMatches[matchId] = data;
-      document.getElementById('infoText').innerText =
-        `Editing ${data.name} | Teams: ${data.teams.length}`;
-      renderTeamControls(data.teams);
-      buildBulkInputs(data.teams);
-    });
-  }
+    function updateTeam(i, key, val) {
+        teamDB[i][key] = (key === 'name') ? val : parseInt(val);
+        localStorage.setItem('sanjay_db', JSON.stringify(teamDB));
+        init();
+    }
 
-  function renderTeamControls(teams){
-    const box = document.getElementById('teamControls');
-    box.innerHTML = '';
-    teams.forEach((t,i)=>{
-      const div = document.createElement('div');
-      div.className = 'team-ctrl';
-      div.dataset.index = i;
-      div.innerHTML = `
-        <input type="number" class="slot" value="${t.teamNo||i+1}">
-        <input type="text" class="logo-url" value="${t.logo||''}">
-        <input type="text" class="name" value="${t.name||'TEAM'}">
-        <input type="number" class="alive" min="0" max="4" value="${t.alive||0}">
-        <input type="number" class="finish" min="1" max="64" value="${t.finish||''}">
-        <input type="number" class="kills" min="0" value="${t.kills||0}">
-        <span class="totalPts">${t.matchPts||0}</span>
-        <input type="checkbox" class="deadFlag" ${t.dead?'checked':''}>
-      `;
-      // inputs change listeners
-      div.querySelectorAll('input').forEach(inp=>{
-        inp.addEventListener('change',()=>recalcRow(div));
-      });
-      box.appendChild(div);
-    });
-  }
+    function syncMeta() {
+        meta.mNum = document.getElementById('mNum').value;
+        meta.mMap = document.getElementById('mMap').value;
+        meta.soc1 = document.getElementById('soc1').value;
+        meta.soc2 = document.getElementById('soc2').value;
+    }
 
-  function addTeamRow(alsoToBulk=false){
-    if(!currentMatchId) return;
-    const teams = allMatches[currentMatchId]?.teams || [];
-    teams.push({
-      teamNo: teams.length+1,
-      logo:'',
-      name:'TEAM',
-      alive:4,
-      finish:'',
-      kills:0,
-      basePts:0,
-      matchPts:0,
-      totalPts:0,
-      dead:false
-    });
-    allMatches[currentMatchId].teams = teams;
-    renderTeamControls(teams);
-    buildBulkInputs(teams);
-  }
+    function sendToLive(i) {
+        const t = teamDB[i];
+        const payload = { 
+            type: 'TEAM_VIEW', slot: i, name: t.name, finishes: t.finishes, 
+            alive: t.alive, color: fixedColors[i], meta: meta, ts: Date.now() 
+        };
+        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(payload) });
+        document.querySelectorAll('.slot-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(`slot-${i}`).classList.add('active');
+    }
 
-  /* ---------- PER ROW RECALC ---------- */
-  function recalcRow(rowDiv){
-    const idx = parseInt(rowDiv.dataset.index,10);
-    const t = getRowData(rowDiv);
-    const calc = calcMatchPoints(t);
-    t.basePts = calc.basePts;
-    t.matchPts = calc.matchPts;
-    rowDiv.querySelector('.totalPts').textContent = calc.matchPts;
+    function triggerCard(cardType) {
+        const payload = { type: cardType, meta: meta, ts: Date.now() };
+        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(payload) });
+    }
 
-    // update in allMatches + DB
-    const teams = allMatches[currentMatchId].teams;
-    teams[idx] = t;
-    db.ref(`matches/${currentMatchId}/teams`).set(teams);
-    document.getElementById('infoText').innerText =
-      `Auto-saved ${allMatches[currentMatchId].name} | Team ${t.teamNo}`;
-  }
+    function toggleSettings() {
+        document.getElementById('sideSettings').classList.toggle('hide-ui');
+    }
 
-  function getRowData(div){
-    return {
-      teamNo: parseInt(div.querySelector('.slot').value)||0,
-      logo:   div.querySelector('.logo-url').value,
-      name:   div.querySelector('.name').value.toUpperCase(),
-      alive:  parseInt(div.querySelector('.alive').value)||0,
-      finish: parseInt(div.querySelector('.finish').value)||0,
-      kills:  parseInt(div.querySelector('.kills').value)||0,
-      dead:   div.querySelector('.deadFlag').checked
-    };
-  }
-
-  function calcMatchPoints(t){
-    const base = placePts[t.finish] || 0;
-    const kills = t.kills || 0;
-    const matchPts = base + kills*killPoint;
-    return {basePts:base, matchPts};
-  }
-
-  /* ---------- SAVE CURRENT MATCH (ALL ROWS) ---------- */
-  function saveCurrentMatch(){
-    const rows = Array.from(document.querySelectorAll('.team-ctrl'));
-    const teams = rows.map(r=>{
-      const t = getRowData(r);
-      const calc = calcMatchPoints(t);
-      t.basePts = calc.basePts;
-      t.matchPts = calc.matchPts;
-      return t;
-    });
-    allMatches[currentMatchId].teams = teams;
-    db.ref('matches/'+currentMatchId).set(allMatches[currentMatchId]).then(()=>{
-      renderTeamControls(teams);
-      buildBulkInputs(teams);
-      document.getElementById('infoText').innerText =
-        `Saved ${allMatches[currentMatchId].name} | Teams: ${teams.length}`;
-      // recompute lastElim helper (optional)
-      updateLastElimOnSave(teams);
-    });
-  }
-
-  // Optional helper: last eliminated = sabse latest dead jiski finish sabse badhi
-  function updateLastElimOnSave(teams){
-    const deadTeams = teams.filter(t=>t.dead && t.finish);
-    if(deadTeams.length===0) return;
-    deadTeams.sort((a,b)=>b.finish-a.finish); // last finish highest
-    const last = deadTeams[0];
-    db.ref('lastElim').set({
-      name:last.name,
-      logo:last.logo,
-      kills:last.kills||0,
-      rank:last.finish,
-      time:Date.now()
-    });
-  }
-
-  /* ---------- RECOMPUTE GLOBAL TOTALS (all matches) ---------- */
-  function recomputeGlobal(){
-    db.ref('matches').once('value').then(snap=>{
-      const matches = snap.val() || {};
-      const totals = {};   // key: teamNo string -> {name,logo,totalPts}
-
-      Object.values(matches).forEach(m=>{
-        (m.teams||[]).forEach(t=>{
-          const key = t.teamNo || 0;
-          if(!key) return;
-          const {matchPts} = calcMatchPoints(t);
-          if(!totals[key]) totals[key] = {
-            teamNo:key,
-            name:t.name,
-            logo:t.logo,
-            totalPts:0
-          };
-          totals[key].totalPts += matchPts;
+    function importTeams() {
+        const text = document.getElementById('bulkArea').value;
+        text.split('\n').forEach(line => {
+            const m = line.match(/(\d+)\s*[|•-]\s*(.+)/);
+            if(m) {
+                const s = parseInt(m[1]);
+                if(s>=1 && s<=25) teamDB[s].name = m[2].trim();
+            }
         });
-      });
+        init();
+    }
 
-      db.ref('globalTotals/teams').set(totals).then(()=>{
-        document.getElementById('infoText').innerText =
-          `Global totals rebuilt for ${Object.keys(totals).length} teams`;
-      });
-    });
-  }
-
-  /* ---------- BULK EDIT MODAL ---------- */
-  function buildBulkInputs(teams){
-    const box = document.getElementById('bulkInputs');
-    const title = document.getElementById('modalMatchName');
-    if(!allMatches[currentMatchId]) return;
-    title.textContent = allMatches[currentMatchId].name;
-    box.innerHTML = '';
-    teams.forEach((t,i)=>{
-      const row = document.createElement('div');
-      row.style.display = 'grid';
-      row.style.gridTemplateColumns = '30px 1.2fr 2fr 60px';
-      row.style.gap = '5px';
-      row.style.marginBottom = '5px';
-      row.innerHTML = `
-        <input type="number" value="${t.teamNo||i+1}" id="bSlot-${i}">
-        <input type="text" value="${t.name||'TEAM'}" id="bName-${i}">
-        <input type="text" value="${t.logo||''}" id="bLogo-${i}">
-        <button onclick="deleteTeam(${i})" style="background:#ff4444;color:#fff;border:none;font-size:10px;cursor:pointer;">DEL</button>
-      `;
-      box.appendChild(row);
-    });
-  }
-
-  function toggleModal(){
-    const m = document.getElementById('modal');
-    m.style.display = (m.style.display==='block')?'none':'block';
-  }
-
-  function deleteTeam(index){
-    const teams = allMatches[currentMatchId].teams || [];
-    teams.splice(index,1);
-    allMatches[currentMatchId].teams = teams;
-    db.ref('matches/'+currentMatchId+'/teams').set(teams).then(()=>{
-      renderTeamControls(teams);
-      buildBulkInputs(teams);
-    });
-  }
-
-  function saveBulk(){
-    const teams = allMatches[currentMatchId].teams || [];
-    teams.forEach((t,i)=>{
-      const slot = document.getElementById(`bSlot-${i}`);
-      const name = document.getElementById(`bName-${i}`);
-      const logo = document.getElementById(`bLogo-${i}`);
-      if(!slot) return;
-      t.teamNo = parseInt(slot.value)||0;
-      t.name   = (name.value||'TEAM').toUpperCase();
-      t.logo   = logo.value||'';
-    });
-    allMatches[currentMatchId].teams = teams;
-    db.ref('matches/'+currentMatchId+'/teams').set(teams).then(()=>{
-      renderTeamControls(teams);
-      buildBulkInputs(teams);
-      document.getElementById('infoText').innerText =
-        `Bulk save done for ${allMatches[currentMatchId].name}`;
-    });
-  }
-
-  /* ---------- INIT ---------- */
-  loadMatchList();
+    init();
 </script>
 </body>
 </html>
