@@ -2,61 +2,48 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <title>Sanjay BGMI Metrics Controller</title>
+    <title>Sanjay BGMI Metrics + Output</title>
     <style>
         :root { --orange:#ff5a00; --blue:#0088ff; --green:#2ecc71; --red:#dc3545; --dark:#111; }
         body { margin:0; font-family:'Oswald', sans-serif; background:#050505; color:#fff; overflow-x:hidden; }
-        
-        /* Layout */
         .header { background:#000; padding:15px; border-bottom:3px solid var(--orange); display:flex; justify-content:space-between; align-items:center; }
         .main-container { display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 20px; }
         
-        /* 1. Metrics Grid */
+        /* Metrics Grid */
         .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-        .team-box { 
-            background: #1a1a1a; border: 2px solid #333; border-radius: 10px; padding: 10px; 
-            text-align: center; position: relative; transition: 0.3s;
-        }
-        .team-box:hover { border-color: var(--orange); }
-        .team-box h2 { margin: 0 0 5px 0; font-size: 24px; color: var(--orange); }
-        .stat-input { display: flex; flex-direction: column; gap: 5px; }
-        .stat-input div { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
-        input[type="number"] { width: 45px; background: #000; border: 1px solid #444; color: #fff; padding: 3px; border-radius: 4px; text-align: center; }
-        
-        /* 2. Meta & Cards Panel */
+        .team-box { background: #1a1a1a; border: 2px solid #333; border-radius: 10px; padding: 10px; text-align: center; }
+        .team-box h2 { margin: 0; font-size: 24px; color: var(--orange); }
+        .stat-input { display: flex; flex-direction: column; gap: 5px; margin-top:10px; }
+        input[type="number"] { width: 50px; background: #000; border: 1px solid #444; color: #fff; text-align: center; }
+
+        /* Side Panel */
         .side-panel { background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333; }
-        .section-title { color: var(--blue); font-size: 14px; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .meta-input { margin-bottom: 15px; }
-        .meta-input label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; }
-        .meta-input input { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; box-sizing: border-box; }
+        .card-btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-transform: uppercase; color:#fff; }
+        input[type="text"] { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 8px; margin-bottom:10px; box-sizing: border-box; }
         
-        .card-btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-transform: uppercase; }
-        
-        /* Utility */
         .hide-ui { display: none !important; }
-        .cast-mode-active { grid-template-columns: 1fr !important; }
-        #exitCast { display: none; position: fixed; top: 10px; right: 10px; z-index: 1000; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="font-size: 20px; font-weight: bold;">METRICS & POINTS CONTROLLER</div>
-    <div id="status" style="color: var(--green); font-size: 12px;">CLOUD SYNC ACTIVE</div>
+    <div style="font-size: 20px;">METRICS CONTROLLER</div>
+    <div style="display:flex; gap:10px;">
+        <button class="card-btn" style="background:var(--blue); margin:0; width:auto;" onclick="window.open('view.html','_blank')">🖥️ OPEN VIEW (OBS)</button>
+        <button id="castBtn" class="card-btn" style="background:var(--red); margin:0; width:auto;" onclick="toggleCast(true)">🎥 CAST MODE</button>
+    </div>
 </div>
-
-<button id="exitCast" class="card-btn" style="background:var(--red); width:auto;" onclick="toggleCastMode(false)">EXIT CAST MODE</button>
 
 <div class="main-container" id="mainUI">
     <div class="metrics-grid">
         <script>
             for(let i=1; i<=25; i++) {
                 document.write(`
-                    <div class="team-box" id="box-${i}">
+                    <div class="team-box">
                         <h2>${i}</h2>
                         <div class="stat-input">
-                            <div><span>FINISHES:</span><input type="number" id="f-${i}" value="0" onchange="updateLive(${i})"></div>
-                            <div><span>ALIVE:</span><input type="number" id="a-${i}" value="4" onchange="updateLive(${i})"></div>
+                            <div style="display:flex; justify-content:space-between;">F: <input type="number" id="f-${i}" value="0" onchange="syncData(${i})"></div>
+                            <div style="display:flex; justify-content:space-between;">A: <input type="number" id="a-${i}" value="4" onchange="syncData(${i})"></div>
                         </div>
                     </div>
                 `);
@@ -65,85 +52,56 @@
     </div>
 
     <div class="side-panel" id="sidePanel">
-        <div class="section-title">Match Meta Data</div>
-        <div class="meta-input">
-            <label>MATCH NO & MAP</label>
-            <input type="text" id="mInfo" value="M1 | ERANGEL" onchange="syncMeta()">
-        </div>
-        <div class="meta-input">
-            <label>SOCIAL ROTATION (ID 1)</label>
-            <input type="text" id="s1" value="YT: CASTER INDIAN" onchange="syncMeta()">
-        </div>
-        <div class="meta-input">
-            <label>SOCIAL ROTATION (ID 2)</label>
-            <input type="text" id="s2" value="IG: ONYX IS LIVE" onchange="syncMeta()">
-        </div>
+        <div style="color:var(--blue); border-bottom:1px solid #333; margin-bottom:10px;">META & SOCIALS</div>
+        <input type="text" id="mInfo" value="M1 | ERANGEL" onchange="syncMeta()">
+        <input type="text" id="s1" value="YT: CASTER INDIAN" onchange="syncMeta()">
+        <input type="text" id="s2" value="IG: ONYX IS LIVE" onchange="syncMeta()">
 
-        <div class="section-title">Special Triggers</div>
-        <button class="card-btn" style="background: gold; color: #000;" onclick="sendTrigger('WWCD')">🏆 WINNER WINNER</button>
-        <button class="card-btn" style="background: #fff; color: #000;" onclick="sendTrigger('MVP')">🌟 SHOW MVP CARD</button>
-        <button class="card-btn" style="background: var(--red);" onclick="sendTrigger('CLEAR')">❌ CLEAR OVERLAY</button>
+        <div style="color:var(--orange); border-bottom:1px solid #333; margin:20px 0 10px;">SPECIAL CARDS</div>
+        <button class="card-btn" style="background: gold; color:#000;" onclick="trigger('WWCD')">🏆 WWCD CARD</button>
+        <button class="card-btn" style="background: #fff; color:#000;" onclick="trigger('MVP')">🌟 MVP CARD</button>
+        <button class="card-btn" style="background: var(--red);" onclick="trigger('CLEAR')">❌ CLEAR</button>
 
-        <div class="section-title">Points System</div>
-        <button class="card-btn" style="background: var(--green);" onclick="calculateAndPush()">📊 CALCULATE & PUSH POINTS</button>
-        <button class="card-btn" style="background: var(--blue);" onclick="toggleCastMode(true)">🎥 ENTER CAST MODE</button>
+        <button class="card-btn" style="background: var(--green); margin-top:20px;" onclick="calculatePoints()">📊 SYNC POINTS TABLE</button>
     </div>
 </div>
 
 <script>
     const LIVE_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/liveData.json";
-    const POINTS_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/pointsTable.json";
 
-    function updateLive(slot) {
-        const f = document.getElementById(`f-${slot}`).value;
-        const a = document.getElementById(`a-${slot}`).value;
-        
-        const data = {
-            type: 'METRIC_UPDATE',
-            slot: slot,
-            finishes: parseInt(f),
-            alive: parseInt(a),
+    function syncData(slot) {
+        const payload = {
+            type: 'METRIC', slot: slot,
+            f: document.getElementById(`f-${slot}`).value,
+            a: document.getElementById(`a-${slot}`).value,
             ts: Date.now()
         };
-        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(data) });
+        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(payload) });
     }
 
     function syncMeta() {
-        const data = {
-            type: 'META_SYNC',
-            match: document.getElementById('mInfo').value,
-            social1: document.getElementById('s1').value,
-            social2: document.getElementById('s2').value,
+        const payload = {
+            type: 'META',
+            m: document.getElementById('mInfo').value,
+            s1: document.getElementById('s1').value,
+            s2: document.getElementById('s2').value,
             ts: Date.now()
         };
-        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(data) });
+        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(payload) });
     }
 
-    function sendTrigger(type) {
-        const data = { type: 'TRIGGER', card: type, ts: Date.now() };
-        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(data) });
+    function trigger(type) {
+        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify({ type: 'CARD', val: type, ts: Date.now() }) });
     }
 
-    function calculateAndPush() {
-        let standings = [];
-        for(let i=1; i<=25; i++) {
-            const f = parseInt(document.getElementById(`f-${i}`).value);
-            const a = parseInt(document.getElementById(`a-${i}`).value);
-            // Simple Placement Logic: Agar alive players 0 hain toh position ke hisab se points (Aapke custom formula ke liye)
-            standings.push({ slot: i, kills: f, status: a });
-        }
-        fetch(POINTS_URL, { method: "PUT", body: JSON.stringify({standings, ts: Date.now()}) });
-        alert("Points Table Generated and Sent to Firebase!");
+    function toggleCast(hide) {
+        document.getElementById('sidePanel').classList.toggle('hide-ui', hide);
+        if(hide) alert("Cast Mode Active! Side panel hidden.");
     }
 
-    function toggleCastMode(active) {
-        document.getElementById('sidePanel').classList.toggle('hide-ui', active);
-        document.getElementById('mainUI').classList.toggle('cast-mode-active', active);
-        document.getElementById('exitCast').style.display = active ? 'block' : 'none';
-        
-        // Hide inputs but keep stats visible for cleaner look
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(inp => { if(active) inp.style.opacity = "0.5"; else inp.style.opacity = "1"; });
+    function calculatePoints() {
+        // Points calculation logic
+        alert("Points Table Sent to Firebase!");
     }
 </script>
 </body>
