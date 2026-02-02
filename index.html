@@ -2,31 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Caster Indian - Firebase Admin</title>
+    <title>Caster Indian - Pro Admin</title>
     <style>
         :root { --cyan: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; background: #111; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .admin-panel { background: #1a1a1a; padding: 20px; border-radius: 8px; width: 720px; border: 1px solid #444; height: 95vh; overflow-y: auto; }
+        .admin-panel { background: #1a1a1a; padding: 20px; border-radius: 8px; width: 750px; border: 1px solid #444; height: 95vh; overflow-y: auto; }
+        
+        /* Settings Grid Restored */
         .setting-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #222; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid var(--cyan); }
         .item { display: flex; align-items: center; justify-content: space-between; background: #333; padding: 5px 10px; border-radius: 4px; }
-        .team-card { background: #2a2a2a; padding: 10px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #333; position: relative; }
-        .edit-grid { display: grid; grid-template-columns: 120px 120px 60px 60px 80px; gap: 8px; margin-bottom: 10px; }
-        input[type="text"], input[type="number"] { background: #444; border: 1px solid #666; color: white; padding: 5px; border-radius: 3px; font-size: 11px; width: 100%; }
-        input[type="color"] { border: none; width: 25px; height: 25px; cursor: pointer; background: transparent; }
-        .p-btn { width: 30px; height: 30px; border: none; background: var(--cyan); font-weight: bold; cursor: pointer; border-radius: 3px; margin-right: 4px; }
-        .p-btn.off { background: #555; opacity: 0.4; }
-        .action-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; text-transform: uppercase; }
-        .del-btn { position: absolute; right: 10px; bottom: 10px; background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; }
-        label { font-size: 9px; color: #aaa; font-weight: bold; text-transform: uppercase; }
+        
+        .team-card { background: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #333; position: relative; }
+        .edit-grid { display: grid; grid-template-columns: 120px 1fr 60px 60px 60px; gap: 10px; margin-bottom: 10px; }
+        
+        input { background: #444; border: 1px solid #666; color: white; padding: 6px; border-radius: 4px; font-size: 12px; width: 100%; }
+        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: transparent; padding: 0; }
         input[type="range"] { width: 100px; accent-color: var(--cyan); }
+        
+        .p-btn { width: 35px; height: 35px; border: none; background: var(--cyan); font-weight: bold; cursor: pointer; border-radius: 4px; margin-right: 5px; transition: 0.3s; }
+        .p-btn.off { background: #555; opacity: 0.4; }
+        .action-btn { width: 100%; padding: 15px; margin-bottom: 15px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; font-size: 14px; }
+        .del-btn { position: absolute; right: 15px; bottom: 15px; background: #ff4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        label { font-size: 10px; color: #aaa; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 4px; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="admin-panel">
-        <h2 style="color:var(--cyan); text-align:center; margin-bottom:15px;">BGMI FIREBASE ADMIN</h2>
-        <div class="setting-grid" id="config-grid">
-            </div>
+        <h2 style="color:var(--cyan); text-align:center; margin-bottom:20px;">BGMI FIREBASE ADMIN</h2>
+        
+        <div class="setting-grid">
+            <div class="item"><label>Board BG</label> <input type="color" id="dark-blue" oninput="updateCfg('dark-blue', this.value)"></div>
+            <div class="item"><label>Row BG Color</label> <input type="color" id="row-bg" oninput="updateCfg('row-bg', this.value)"></div>
+            <div class="item"><label>Logo/Name BG</label> <input type="color" id="logo-name-bg" oninput="updateCfg('logo-name-bg', this.value)"></div>
+            <div class="item"><label>Cyan Color</label> <input type="color" id="cyan" oninput="updateCfg('cyan', this.value)"></div>
+            <div class="item"><label>Text Color</label> <input type="color" id="text-color" oninput="updateCfg('text-color', this.value)"></div>
+            <div class="item"><label>Logo Size</label> <input type="range" min="20" max="80" oninput="updateCfg('logo-size', this.value)"></div>
+            <div class="item"><label>Name Width</label> <input type="range" min="50" max="300" oninput="updateCfg('name-width', this.value)"></div>
+            <div class="item"><label>Col Gap</label> <input type="range" min="0" max="50" oninput="updateCfg('col-gap', this.value)"></div>
+            <div class="item"><label>Total Gap</label> <input type="range" min="0" max="100" oninput="updateCfg('total-gap', this.value)"></div>
+        </div>
+
         <button class="action-btn" style="background:#28a745; color:white;" onclick="addTeam()">+ ADD TEAM</button>
         <div id="team-list"></div>
     </div>
@@ -34,24 +50,13 @@
     <script>
         const LIVE_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/liveData.json";
         let teams = [];
-        let config = { "dark-blue": "#12193b", "row-bg": "#1a2245", "logo-name-bg": "#242f66", "cyan": "#00f2ff", "text-color": "#ffffff", "logo-size": "30", "name-width": "120", "col-gap": "5", "total-gap": "15" };
+        let config = {};
 
-        async function syncToFirebase() {
-            await fetch(LIVE_URL, {
-                method: 'PUT',
-                body: JSON.stringify({ teams, config })
-            });
+        async function sync() {
+            await fetch(LIVE_URL, { method: 'PUT', body: JSON.stringify({ teams, config }) });
         }
 
-        async function loadData() {
-            const res = await fetch(LIVE_URL);
-            const data = await res.json();
-            if (data) {
-                teams = data.teams || [];
-                config = data.config || config;
-                draw();
-            }
-        }
+        function updateCfg(p, v) { config[p] = v; sync(); }
 
         function draw() {
             const list = document.getElementById('team-list');
@@ -64,20 +69,28 @@
                         <div><label>Logo</label><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
                         <div><label>Finishes</label><input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
                         <div><label>Placement</label><input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
-                        <div><label>TOTAL</label><input type="number" value="${t.total}" readonly></div>
+                        <div><label>Total</label><input value="${t.total}" readonly style="background:#111; color:var(--cyan); font-weight:bold;"></div>
                     </div>
-                    <div style="display:flex;">${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}</div>
+                    <div style="display:flex;">
+                        ${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}
+                    </div>
                     <button class="del-btn" onclick="removeTeam(${i})">REMOVE</button>
                 </div>`;
             });
         }
 
-        function edit(i, f, v) { teams[i][f] = v; syncToFirebase(); draw(); }
-        function tog(i, pi) { teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1; syncToFirebase(); draw(); }
-        function addTeam() { teams.push({ name: "NEW", logo: "", fin: 0, place: 0, alive: [1,1,1,1] }); syncToFirebase(); draw(); }
-        function removeTeam(i) { teams.splice(i, 1); syncToFirebase(); draw(); }
+        function edit(i, f, v) { teams[i][f] = v; sync(); draw(); }
+        function tog(i, pi) { teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1; sync(); draw(); }
+        function addTeam() { teams.push({ name: "NEW", logo: "", fin: 0, place: 0, alive: [1,1,1,1] }); sync(); draw(); }
+        function removeTeam(i) { teams.splice(i, 1); sync(); draw(); }
 
-        loadData();
+        // Initial Load
+        async function init() {
+            const res = await fetch(LIVE_URL);
+            const data = await res.json();
+            if(data) { teams = data.teams || []; config = data.config || {}; draw(); }
+        }
+        init();
     </script>
 </body>
 </html>
