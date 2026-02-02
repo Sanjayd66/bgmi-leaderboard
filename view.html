@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --logo-name-bg: #242f66; --cyan: #00f2ff; --text-color: #ffffff; --row-h: 38px; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px; }
+        :root { 
+            --dark-blue: #12193b; --row-bg: #1a2245; --logo-name-bg: #242f66; 
+            --cyan: #00f2ff; --text-color: #ffffff; --row-h: 38px; --logo-size: 30px; --name-width: 120px; 
+            --col-gap: 5px; --total-gap: 15px; 
+        }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; color: var(--text-color); overflow: hidden; }
-        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 10px; border-radius: 8px; }
+        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 8px; border-radius: 8px; }
         .header-row { display: flex; align-items: center; height: 25px; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 8px; }
         .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; transition: 0.4s; }
         .logo-name-section { display: flex; align-items: center; background: var(--logo-name-bg); height: 100%; }
-        .rank { width: 30px; text-align: center; }
+        .rank { width: 30px; text-align: center; font-weight: bold; }
         .logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .name { padding-left: 10px; font-weight: bold; text-transform: uppercase; overflow: hidden; white-space: nowrap; }
         .status { display: flex; gap: 2px; justify-content: center; }
@@ -17,6 +21,7 @@
         .bar.dead { opacity: 0.2; height: 5px; background: #445588; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="board"></div>
@@ -27,16 +32,16 @@
                 const res = await fetch(LIVE_URL); const data = await res.json(); if(!data) return;
                 Object.entries(data.config || {}).forEach(([p, v]) => { document.documentElement.style.setProperty('--' + p, v + (isNaN(v) || v.startsWith('#') ? '' : 'px')); });
                 const sorted = [...(data.teams || [])].sort((a,b) => {
-                    let aPts = (parseInt(a.fin)+parseInt(a.place) + (a.matches ? a.matches.reduce((x,y)=>x+parseInt(y),0):0));
-                    let bPts = (parseInt(b.fin)+parseInt(b.place) + (b.matches ? b.matches.reduce((x,y)=>x+parseInt(y),0):0));
-                    return bPts - aPts;
+                    let aP = (parseInt(a.fin)+parseInt(a.place) + (a.matches ? a.matches.reduce((x,y)=>x+parseInt(y),0):0));
+                    let bP = (parseInt(b.fin)+parseInt(b.place) + (b.matches ? b.matches.reduce((x,y)=>x+parseInt(y),0):0));
+                    return bP - aP;
                 });
-                let html = `<div class="header-row"><div style="width:30px;text-align:center">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 15px)">TEAM</div><div style="width:55px;text-align:center;margin-left:var(--col-gap)">ALIVE</div><div style="width:40px;text-align:center">FIN</div><div style="width:60px;text-align:center;margin-left:var(--total-gap)">TOTAL</div></div>`;
+                let h = `<div class="header-row"><div style="width:30px;text-align:center">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 15px)">TEAM</div><div style="width:55px;text-align:center;margin-left:var(--col-gap)">ALIVE</div><div style="width:40px;text-align:center">FIN</div><div style="width:60px;text-align:center;margin-left:var(--total-gap)">TOTAL</div></div>`;
                 sorted.forEach((t, i) => {
                     let total = parseInt(t.fin)+parseInt(t.place) + (t.matches ? t.matches.reduce((x,y)=>x+parseInt(y),0):0);
-                    html += `<div class="team-row ${t.alive.every(a=>a===0)?'eliminated':''}"><div class="logo-name-section"><div class="rank">${i+1}</div><div class="logo" style="width:var(--logo-size)"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div><div class="name" style="width:var(--name-width)">${t.name}</div></div><div class="status" style="width:55px; margin-left:var(--col-gap)">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div><div style="width:40px;text-align:center;font-weight:bold;">${t.fin}</div><div class="total-box" style="width:60px; margin-left:var(--total-gap)">${total}</div></div>`;
+                    h += `<div class="team-row"><div class="logo-name-section"><div class="rank">${i+1}</div><div class="logo" style="width:var(--logo-size)"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div><div class="name" style="width:var(--name-width)">${t.name}</div></div><div class="status" style="width:55px; margin-left:var(--col-gap)">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div><div style="width:40px;text-align:center;font-weight:bold;">${t.fin}</div><div class="total-box" style="width:60px; margin-left:var(--total-gap)">${total}</div></div>`;
                 });
-                document.getElementById('board').innerHTML = html;
+                document.getElementById('board').innerHTML = h;
             } catch(e) {}
         }
         setInterval(update, 2000); update();
