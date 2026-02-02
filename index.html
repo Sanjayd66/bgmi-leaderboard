@@ -6,9 +6,9 @@
     <style>
         :root { --cyan: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; background: #111; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .admin-panel { background: #1a1a1a; padding: 20px; border-radius: 8px; width: 750px; border: 1px solid #444; height: 95vh; overflow-y: auto; }
+        .admin-panel { background: #1a1a1a; padding: 20px; border-radius: 8px; width: 800px; border: 1px solid #444; height: 95vh; overflow-y: auto; }
         
-        /* EXACT PRE-FIREBASE SETTINGS GRID */
+        /* RESTORED SETTINGS GRID */
         .setting-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #222; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid var(--cyan); }
         .item { display: flex; align-items: center; justify-content: space-between; background: #333; padding: 5px 10px; border-radius: 4px; }
         
@@ -20,11 +20,11 @@
         input[type="range"] { width: 100px; accent-color: var(--cyan); }
         
         .match-section { background: #111; padding: 8px; border-radius: 4px; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-        .m-input { width: 45px !important; text-align: center; background: #222 !important; border: 1px solid #444 !important; }
+        .m-input { width: 45px !important; text-align: center; background: #222 !important; border: 1px solid #444 !important; color: var(--cyan) !important; font-weight: bold; }
         
         .p-btn { width: 35px; height: 35px; border: none; background: var(--cyan); font-weight: bold; cursor: pointer; border-radius: 4px; margin-right: 5px; }
         .p-btn.off { background: #555; opacity: 0.4; }
-        .action-btn { width: 100%; padding: 15px; margin-bottom: 15px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; font-size: 14px; }
+        .action-btn { width: 100%; padding: 15px; margin-bottom: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; font-size: 14px; }
         .del-btn { position: absolute; right: 15px; top: 15px; background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; }
         label { font-size: 10px; color: #aaa; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 4px; }
     </style>
@@ -46,7 +46,11 @@
             <div class="item"><label>Total Gap</label> <input type="range" min="0" max="100" oninput="updateCfg('total-gap', this.value)"></div>
         </div>
 
-        <button class="action-btn" style="background:#28a745; color:white;" onclick="addTeam()">+ ADD TEAM</button>
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <button class="action-btn" style="background:#28a745; color:white; flex: 1;" onclick="addTeam()">+ ADD TEAM</button>
+            <button class="action-btn" style="background:orange; color:white; flex: 1;" onclick="globalAddMatch()">+ ADD MATCH (ALL TEAMS)</button>
+        </div>
+        
         <div id="team-list"></div>
     </div>
 
@@ -56,6 +60,15 @@
 
         async function sync() { await fetch(LIVE_URL, { method: 'PUT', body: JSON.stringify({ teams, config }) }); }
         function updateCfg(p, v) { config[p] = v; sync(); }
+
+        // Function to add match for all teams at once
+        function globalAddMatch() {
+            teams.forEach(t => {
+                if(!t.matches) t.matches = [];
+                t.matches.push(0);
+            });
+            sync(); draw();
+        }
 
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
@@ -72,12 +85,15 @@
                         <div><label>Placement</label><input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
                         <div><label>TOTAL</label><input value="${t.total}" readonly style="background:#111; color:var(--cyan); font-weight:bold;"></div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:20px;">
                         <div style="display:flex;">${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}</div>
                         <div class="match-section">
-                            <label style="margin:0 5px 0 0;">MATCHES:</label>
-                            ${(t.matches || []).map((m, mi) => `<input type="number" class="m-input" value="${m}" onchange="editMatch(${i},${mi},this.value)">`).join('')}
-                            <button onclick="addMatch(${i})" style="padding:2px 8px; cursor:pointer; background:var(--cyan); border:none; font-size:10px; font-weight:bold;">+ ADD</button>
+                            <label style="margin:0 10px 0 0; color:var(--cyan)">MATCH HISTORY:</label>
+                            ${(t.matches || []).map((m, mi) => `
+                                <div style="text-align:center">
+                                    <span style="font-size:8px; display:block">M${mi+1}</span>
+                                    <input type="number" class="m-input" value="${m}" onchange="editMatch(${i},${mi},this.value)">
+                                </div>`).join('')}
                         </div>
                     </div>
                 </div>`;
@@ -86,9 +102,13 @@
 
         function edit(i, f, v) { teams[i][f] = v; sync(); draw(); }
         function editMatch(ti, mi, v) { teams[ti].matches[mi] = v; sync(); draw(); }
-        function addMatch(ti) { if(!teams[ti].matches) teams[ti].matches = []; teams[ti].matches.push(0); sync(); draw(); }
         function tog(i, pi) { teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1; sync(); draw(); }
-        function addTeam() { teams.push({ name: "NEW", logo: "", fin: 0, place: 0, matches: [], alive: [1,1,1,1] }); sync(); draw(); }
+        function addTeam() { 
+            let matchCount = teams.length > 0 && teams[0].matches ? teams[0].matches.length : 0;
+            let newMatches = new Array(matchCount).fill(0);
+            teams.push({ name: "NEW", logo: "", fin: 0, place: 0, matches: newMatches, alive: [1,1,1,1] }); 
+            sync(); draw(); 
+        }
         function removeTeam(i) { teams.splice(i, 1); sync(); draw(); }
 
         async function init() {
