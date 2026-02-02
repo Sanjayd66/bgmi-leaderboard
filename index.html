@@ -1,108 +1,83 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sanjay BGMI Metrics + Output</title>
+    <title>Caster Indian - Firebase Admin</title>
     <style>
-        :root { --orange:#ff5a00; --blue:#0088ff; --green:#2ecc71; --red:#dc3545; --dark:#111; }
-        body { margin:0; font-family:'Oswald', sans-serif; background:#050505; color:#fff; overflow-x:hidden; }
-        .header { background:#000; padding:15px; border-bottom:3px solid var(--orange); display:flex; justify-content:space-between; align-items:center; }
-        .main-container { display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 20px; }
-        
-        /* Metrics Grid */
-        .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-        .team-box { background: #1a1a1a; border: 2px solid #333; border-radius: 10px; padding: 10px; text-align: center; }
-        .team-box h2 { margin: 0; font-size: 24px; color: var(--orange); }
-        .stat-input { display: flex; flex-direction: column; gap: 5px; margin-top:10px; }
-        input[type="number"] { width: 50px; background: #000; border: 1px solid #444; color: #fff; text-align: center; }
-
-        /* Side Panel */
-        .side-panel { background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333; }
-        .card-btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-transform: uppercase; color:#fff; }
-        input[type="text"] { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 8px; margin-bottom:10px; box-sizing: border-box; }
-        
-        .hide-ui { display: none !important; }
+        :root { --cyan: #00f2ff; }
+        body { font-family: 'Oswald', sans-serif; background: #111; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .admin-panel { background: #1a1a1a; padding: 20px; border-radius: 8px; width: 720px; border: 1px solid #444; height: 95vh; overflow-y: auto; }
+        .setting-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #222; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid var(--cyan); }
+        .item { display: flex; align-items: center; justify-content: space-between; background: #333; padding: 5px 10px; border-radius: 4px; }
+        .team-card { background: #2a2a2a; padding: 10px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #333; position: relative; }
+        .edit-grid { display: grid; grid-template-columns: 120px 120px 60px 60px 80px; gap: 8px; margin-bottom: 10px; }
+        input[type="text"], input[type="number"] { background: #444; border: 1px solid #666; color: white; padding: 5px; border-radius: 3px; font-size: 11px; width: 100%; }
+        input[type="color"] { border: none; width: 25px; height: 25px; cursor: pointer; background: transparent; }
+        .p-btn { width: 30px; height: 30px; border: none; background: var(--cyan); font-weight: bold; cursor: pointer; border-radius: 3px; margin-right: 4px; }
+        .p-btn.off { background: #555; opacity: 0.4; }
+        .action-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; text-transform: uppercase; }
+        .del-btn { position: absolute; right: 10px; bottom: 10px; background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; }
+        label { font-size: 9px; color: #aaa; font-weight: bold; text-transform: uppercase; }
+        input[type="range"] { width: 100px; accent-color: var(--cyan); }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<div class="header">
-    <div style="font-size: 20px;">METRICS CONTROLLER</div>
-    <div style="display:flex; gap:10px;">
-        <button class="card-btn" style="background:var(--blue); margin:0; width:auto;" onclick="window.open('view.html','_blank')">🖥️ OPEN VIEW (OBS)</button>
-        <button id="castBtn" class="card-btn" style="background:var(--red); margin:0; width:auto;" onclick="toggleCast(true)">🎥 CAST MODE</button>
+    <div class="admin-panel">
+        <h2 style="color:var(--cyan); text-align:center; margin-bottom:15px;">BGMI FIREBASE ADMIN</h2>
+        <div class="setting-grid" id="config-grid">
+            </div>
+        <button class="action-btn" style="background:#28a745; color:white;" onclick="addTeam()">+ ADD TEAM</button>
+        <div id="team-list"></div>
     </div>
-</div>
 
-<div class="main-container" id="mainUI">
-    <div class="metrics-grid">
-        <script>
-            for(let i=1; i<=25; i++) {
-                document.write(`
-                    <div class="team-box">
-                        <h2>${i}</h2>
-                        <div class="stat-input">
-                            <div style="display:flex; justify-content:space-between;">F: <input type="number" id="f-${i}" value="0" onchange="syncData(${i})"></div>
-                            <div style="display:flex; justify-content:space-between;">A: <input type="number" id="a-${i}" value="4" onchange="syncData(${i})"></div>
-                        </div>
-                    </div>
-                `);
+    <script>
+        const LIVE_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/liveData.json";
+        let teams = [];
+        let config = { "dark-blue": "#12193b", "row-bg": "#1a2245", "logo-name-bg": "#242f66", "cyan": "#00f2ff", "text-color": "#ffffff", "logo-size": "30", "name-width": "120", "col-gap": "5", "total-gap": "15" };
+
+        async function syncToFirebase() {
+            await fetch(LIVE_URL, {
+                method: 'PUT',
+                body: JSON.stringify({ teams, config })
+            });
+        }
+
+        async function loadData() {
+            const res = await fetch(LIVE_URL);
+            const data = await res.json();
+            if (data) {
+                teams = data.teams || [];
+                config = data.config || config;
+                draw();
             }
-        </script>
-    </div>
+        }
 
-    <div class="side-panel" id="sidePanel">
-        <div style="color:var(--blue); border-bottom:1px solid #333; margin-bottom:10px;">META & SOCIALS</div>
-        <input type="text" id="mInfo" value="M1 | ERANGEL" onchange="syncMeta()">
-        <input type="text" id="s1" value="YT: CASTER INDIAN" onchange="syncMeta()">
-        <input type="text" id="s2" value="IG: ONYX IS LIVE" onchange="syncMeta()">
+        function draw() {
+            const list = document.getElementById('team-list');
+            list.innerHTML = '';
+            teams.forEach((t, i) => {
+                t.total = parseInt(t.fin || 0) + parseInt(t.place || 0);
+                list.innerHTML += `<div class="team-card">
+                    <div class="edit-grid">
+                        <div><label>Name</label><input value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
+                        <div><label>Logo</label><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
+                        <div><label>Finishes</label><input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
+                        <div><label>Placement</label><input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
+                        <div><label>TOTAL</label><input type="number" value="${t.total}" readonly></div>
+                    </div>
+                    <div style="display:flex;">${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}</div>
+                    <button class="del-btn" onclick="removeTeam(${i})">REMOVE</button>
+                </div>`;
+            });
+        }
 
-        <div style="color:var(--orange); border-bottom:1px solid #333; margin:20px 0 10px;">SPECIAL CARDS</div>
-        <button class="card-btn" style="background: gold; color:#000;" onclick="trigger('WWCD')">🏆 WWCD CARD</button>
-        <button class="card-btn" style="background: #fff; color:#000;" onclick="trigger('MVP')">🌟 MVP CARD</button>
-        <button class="card-btn" style="background: var(--red);" onclick="trigger('CLEAR')">❌ CLEAR</button>
+        function edit(i, f, v) { teams[i][f] = v; syncToFirebase(); draw(); }
+        function tog(i, pi) { teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1; syncToFirebase(); draw(); }
+        function addTeam() { teams.push({ name: "NEW", logo: "", fin: 0, place: 0, alive: [1,1,1,1] }); syncToFirebase(); draw(); }
+        function removeTeam(i) { teams.splice(i, 1); syncToFirebase(); draw(); }
 
-        <button class="card-btn" style="background: var(--green); margin-top:20px;" onclick="calculatePoints()">📊 SYNC POINTS TABLE</button>
-    </div>
-</div>
-
-<script>
-    const LIVE_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/liveData.json";
-
-    function syncData(slot) {
-        const payload = {
-            type: 'METRIC', slot: slot,
-            f: document.getElementById(`f-${slot}`).value,
-            a: document.getElementById(`a-${slot}`).value,
-            ts: Date.now()
-        };
-        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(payload) });
-    }
-
-    function syncMeta() {
-        const payload = {
-            type: 'META',
-            m: document.getElementById('mInfo').value,
-            s1: document.getElementById('s1').value,
-            s2: document.getElementById('s2').value,
-            ts: Date.now()
-        };
-        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify(payload) });
-    }
-
-    function trigger(type) {
-        fetch(LIVE_URL, { method: "PUT", body: JSON.stringify({ type: 'CARD', val: type, ts: Date.now() }) });
-    }
-
-    function toggleCast(hide) {
-        document.getElementById('sidePanel').classList.toggle('hide-ui', hide);
-        if(hide) alert("Cast Mode Active! Side panel hidden.");
-    }
-
-    function calculatePoints() {
-        // Points calculation logic
-        alert("Points Table Sent to Firebase!");
-    }
-</script>
+        loadData();
+    </script>
 </body>
 </html>
