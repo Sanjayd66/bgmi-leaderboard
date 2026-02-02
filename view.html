@@ -3,15 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --logo-name-bg: #242f66; --cyan: #00f2ff; --text-color: #ffffff; --row-h: 38px; --logo-size: 30px; --name-width: 120px; }
-        body { font-family: 'Oswald', sans-serif; background: #00FF00; color: white; overflow: hidden; }
-        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 10px; border-radius: 8px; }
-        .header-row { display: flex; font-size: 11px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 5px; }
+        :root { 
+            --dark-blue: #12193b; --row-bg: #1a2245; --logo-name-bg: #242f66; 
+            --cyan: #00f2ff; --text-color: #ffffff; --row-h: 38px; --logo-size: 30px; --name-width: 120px; 
+            --col-gap: 5px; --total-gap: 15px; 
+        }
+        body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; color: var(--text-color); overflow: hidden; }
+        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 8px; border-radius: 8px; }
+        
+        .header-row { display: flex; align-items: center; height: 25px; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 6px; }
         .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; }
         .logo-name-section { display: flex; align-items: center; background: var(--logo-name-bg); height: 100%; }
-        .bar { width: 4px; height: 18px; margin: 0 1px; }
-        .total-val { background: var(--cyan); color: #000; font-weight: bold; width: 55px; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; }
+        
+        .rank { width: 30px; text-align: center; }
+        .logo { width: var(--logo-size); height: 80%; display: flex; justify-content: center; }
+        .name { width: var(--name-width); padding-left: 10px; font-weight: bold; text-transform: uppercase; overflow: hidden; white-space: nowrap; }
+        
+        .status { width: 50px; display: flex; gap: 2px; justify-content: center; margin-left: var(--col-gap); }
+        .bar { width: 4px; height: 18px; background: white; }
+        .bar.dead { opacity: 0.2; height: 5px; background: #445588; }
+        
+        .fin { width: 40px; text-align: center; font-weight: bold; }
+        .total-box { width: 60px; background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="board"></div>
@@ -19,39 +34,47 @@
     <script>
         const LIVE_URL = "https://bgmi-overlay-default-rtdb.firebaseio.com/liveData.json";
         
-        async function updateDisplay() {
+        async function update() {
             const res = await fetch(LIVE_URL);
             const data = await res.json();
-            if (!data) return;
+            if(!data) return;
 
-            const { teams, config } = data;
-            // Update CSS Variables from Firebase Config
-            Object.entries(config).forEach(([p, v]) => {
+            // Apply Config
+            Object.entries(data.config || {}).forEach(([p, v]) => {
                 document.documentElement.style.setProperty('--' + p, v + (isNaN(v) || v.startsWith('#') ? '' : 'px'));
             });
 
-            const sortedTeams = [...teams].sort((a, b) => (parseInt(b.fin)+parseInt(b.place)) - (parseInt(a.fin)+parseInt(a.place)));
+            // Auto Sort for Display
+            const sorted = [...(data.teams || [])].sort((a,b) => (parseInt(b.fin)+parseInt(b.place)) - (parseInt(a.fin)+parseInt(a.place)));
             
-            let html = `<div class="header-row"><div style="width:30px">#</div><div style="width:160px">TEAM</div><div style="width:50px">ALIVE</div><div style="width:40px">FIN</div><div style="width:55px">TOTAL</div></div>`;
-            
-            sortedTeams.forEach((t, i) => {
-                const total = parseInt(t.fin) + parseInt(t.place);
-                html += `<div class="team-row">
-                    <div class="logo-name-section">
-                        <div style="width:30px;text-align:center">${i+1}</div>
-                        <div style="width:var(--logo-size)"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div>
-                        <div style="width:var(--name-width);padding-left:10px">${t.name}</div>
-                    </div>
-                    <div style="width:50px;display:flex;justify-content:center">${t.alive.map(a => `<div class="bar" style="background:${a?'white':'#445588'};opacity:${a?1:0.3}"></div>`).join('')}</div>
-                    <div style="width:40px;text-align:center">${t.fin}</div>
-                    <div class="total-val">${total}</div>
+            let html = `
+                <div class="header-row">
+                    <div style="width:30px;text-align:center">#</div>
+                    <div style="width:calc(var(--logo-size) + var(--name-width) + 15px)">TEAM</div>
+                    <div style="width:50px;text-align:center;margin-left:var(--col-gap)">ALIVE</div>
+                    <div style="width:40px;text-align:center">FIN</div>
+                    <div style="width:60px;text-align:center;margin-left:var(--total-gap)">TOTAL</div>
                 </div>`;
+
+            sorted.forEach((t, i) => {
+                const tot = parseInt(t.fin) + parseInt(t.place);
+                html += `
+                    <div class="team-row">
+                        <div class="logo-name-section">
+                            <div class="rank">${i+1}</div>
+                            <div class="logo"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div>
+                            <div class="name">${t.name}</div>
+                        </div>
+                        <div class="status">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                        <div class="fin">${t.fin}</div>
+                        <div class="total-box">${tot}</div>
+                    </div>`;
             });
             document.getElementById('board').innerHTML = html;
         }
 
-        setInterval(updateDisplay, 2000); // Har 2 sec mein update
-        updateDisplay();
+        setInterval(update, 2000);
+        update();
     </script>
 </body>
 </html>
