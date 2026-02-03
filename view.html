@@ -4,48 +4,51 @@
     <meta charset="UTF-8">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --dark-blue: #12193b; --row-bg: #1a2245; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px; }
+        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --row-h: 38px; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
         /* Side Dashboard */
         #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 10px; border-radius: 8px; transition: 0.5s; }
-        .team-row { display: flex; align-items: center; height: 38px; background: var(--row-bg); margin-bottom: 2px; gap: var(--col-gap); }
-        .bar { width: 4px; height: 18px; background: var(--cyan); margin: 0 1px; }
-        .bar.dead { opacity: 0.2; height: 5px; background: #445588; }
+        .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; gap: var(--col-gap); }
+        .team-row.eliminated { opacity: 0.3; filter: grayscale(1); }
+        .bar { width: 4px; height: 18px; background: var(--cyan); margin: 0 1px; box-shadow: 0 0 5px var(--cyan); }
+        .bar.dead { opacity: 0.2; height: 5px; background: #445588; box-shadow: none; }
+        .total-box { background: var(--cyan); color: #000; height: 100%; width: 60px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); }
 
         /* ELIMINATION POPUP (Screenshot 1 Design) */
-        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 620px; height: 115px; background: #1c2227; border-radius: 12px; overflow: hidden; transition: top 0.7s; }
+        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 620px; height: 115px; background: #1c2227; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); transition: top 0.7s; }
         #elim-popup.show { top: 40px; }
 
         /* WINNING PREDICTION (Center Screen) */
         #prediction-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; gap: 20px; }
         #prediction-panel.show { display: flex; }
-        .pred-card { width: 220px; background: #000; border: 2px solid var(--cyan); border-radius: 10px; overflow: hidden; }
+        .pred-card { width: 220px; background: #000; border: 2px solid var(--cyan); border-radius: 10px; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .p-bars-mini { display: flex; gap: 3px; margin-top: 5px; }
 
-        /* WINNER ANIMATION */
-        #winner-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: rgba(0,0,0,0.9); flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
-        #winner-area.show { display: flex; animation: zoomIn 1s forwards; }
+        /* CHAMPIONS AREA */
+        #winner-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; }
+        #winner-area.show { display: flex; animation: zoomIn 0.8s forwards; }
         @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="elim-popup">
         <div style="background:white; width:160px; display:flex; justify-content:center; align-items:center;"><img id="pop-logo" src="" style="width:90px;"></div>
-        <div style="flex-grow:1; padding:20px; color:white;">
-            <p id="pop-name" style="font-size:38px; margin:0;"></p>
-            <p style="color:var(--cyan); margin:0;">ELIMINATED</p>
+        <div style="flex-grow:1; padding:15px 30px; display:flex; flex-direction:column; justify-content:center;">
+            <p id="pop-name" style="color:white; font-size:42px; text-transform:uppercase; margin:0; font-weight:700; line-height:1;"></p>
+            <p style="color:var(--cyan); font-size:20px; margin:5px 0 0; font-weight:700;">ELIMINATED</p>
         </div>
-        <div style="background:#2d3439; width:130px; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white;">
-            <div id="pop-fin-val" style="font-size:45px; color:#2b7fff;">0</div>
-            <div>FINISHES</div>
+        <div style="background:rgba(0,0,0,0.4); width:140px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+            <div id="pop-fin-val" style="font-size:50px; color:var(--cyan); font-weight:700;">0</div>
+            <div style="color:white; font-size:12px; font-weight:bold;">FINISHES</div>
         </div>
     </div>
 
     <div id="winner-area">
-        <div id="win-logo" style="width:350px; height:350px; background:white; border-radius:50%; display:flex; justify-content:center; align-items:center;"><img id="w-img" src="" style="width:80%;"></div>
-        <h1 style="color:gold; font-size:80px; text-shadow: 0 0 20px var(--cyan);">MATCH CHAMPIONS</h1>
+        <div id="win-logo-box" style="width:350px; height:350px; background:white; border-radius:50%; display:flex; justify-content:center; align-items:center;"><img id="win-img" src="" style="width:80%;"></div>
+        <h1 style="color:gold; font-size:80px; text-transform:uppercase; text-shadow: 0 0 20px rgba(255,215,0,0.5);">Match Champions</h1>
     </div>
 
     <div id="prediction-panel"></div>
@@ -60,7 +63,10 @@
         db.ref('liveData').on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
-            Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--'+p, v + (isNaN(v)?'':'px')); });
+            Object.entries(cfg).forEach(([p,v]) => { 
+                let unit = (isNaN(v) || String(v).startsWith('#')) ? '' : 'px';
+                document.documentElement.style.setProperty('--'+p, v + unit); 
+            });
             
             if(data.lastEliminated && data.lastEliminated.name !== lastElim) {
                 lastElim = data.lastEliminated.name;
@@ -74,34 +80,53 @@
         });
 
         function render(teams) {
-            const sorted = [...teams].sort((a,b) => (parseInt(b.fin)||0) - (parseInt(a.fin)||0));
-            const alive = sorted.filter(t => t.alive.some(a => a === 1));
+            const sorted = [...teams].sort((a,b) => {
+                let pA = (parseInt(a.fin)||0)+(parseInt(a.place)||0)+(a.matches?a.matches.reduce((x,y)=>x+parseInt(y),0):0);
+                let pB = (parseInt(b.fin)||0)+(parseInt(b.place)||0)+(b.matches?b.matches.reduce((x,y)=>x+parseInt(y),0):0);
+                return pB - pA;
+            });
+            const alive = sorted.filter(t => t.alive && t.alive.some(a => a === 1));
             const pPanel = document.getElementById('prediction-panel');
             const board = document.getElementById('board');
             const winArea = document.getElementById('winner-area');
 
             // Winner logic
             if (alive.length === 1 && sorted.length > 1) {
-                document.getElementById('w-img').src = alive[0].logo;
+                document.getElementById('win-img').src = alive[0].logo;
                 winArea.classList.add('show'); return;
             } else winArea.classList.remove('show');
 
-            // Prediction vs Alive Status logic
+            // Prediction vs Side Board Logic
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
                 alive.forEach(t => {
-                    pPanel.innerHTML += `<div class="pred-card"><div style="padding:15px; color:white;"><img src="${t.logo}" style="width:40px;"><p>${t.name}</p><div style="display:flex; gap:3px;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}" style="height:10px; width:4px;"></div>`).join('')}</div></div><div style="background:var(--cyan); padding:5px; text-align:center;">WIN PROBABILITY</div></div>`;
+                    const prob = (Math.random() * 30 + 10).toFixed(1);
+                    pPanel.innerHTML += `
+                        <div class="pred-card">
+                            <div style="padding:15px; display:flex; align-items:center;">
+                                <img src="${t.logo}" style="width:40px; height:40px; object-fit:contain;">
+                                <div style="margin-left:12px;">
+                                    <div style="color:white; font-weight:bold; font-size:15px;">${t.name}</div>
+                                    <div class="p-bars-mini">${t.alive.map(a => `<div class="bar ${a?'':'dead'}" style="height:10px; width:3px;"></div>`).join('')}</div>
+                                </div>
+                            </div>
+                            <div style="background:var(--cyan); color:black; padding:8px; text-align:center; font-weight:bold;">WIN PROB: ${prob}%</div>
+                        </div>`;
                 });
             } else {
                 pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div style="display:flex; color:var(--cyan); font-size:11px;"># TEAM STATUS FIN</div>`;
+                let h = `<div class="header-row"><div style="width:30px; text-align:center">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 40px)">TEAM NAME</div><div style="flex:1; text-align:center">STATUS</div><div style="width:40px; text-align:center">FIN</div><div style="width:60px; text-align:center; margin-left:var(--total-gap)">TOTAL</div></div>`;
                 sorted.forEach((t, i) => {
+                    let pts = (parseInt(t.fin)||0)+(parseInt(t.place)||0)+(t.matches?t.matches.reduce((x,y)=>x+parseInt(y),0):0);
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}">
-                        <div style="width:30px;">${i+1}</div>
-                        <img src="${t.logo}" style="width:var(--logo-size);">
-                        <div style="width:var(--name-width);">${t.name}</div>
-                        <div style="display:flex;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
-                        <div style="width:40px;">${t.fin}</div></div>`;
+                        <div style="display:flex; align-items:center; width:calc(var(--logo-size) + var(--name-width) + 40px); background:rgba(255,255,255,0.05); height:100%">
+                            <div style="width:30px; text-align:center; color:#888">${i+1}</div>
+                            <img src="${t.logo}" style="width:var(--logo-size); height:var(--logo-size); margin:0 12px; object-fit:contain;">
+                            <div style="width:var(--name-width); font-weight:bold; overflow:hidden;">${t.name}</div>
+                        </div>
+                        <div style="flex:1; display:flex; justify-content:center">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                        <div style="width:40px; text-align:center; font-weight:bold;">${t.fin}</div>
+                        <div class="total-box">${pts}</div></div>`;
                 });
                 board.innerHTML = h;
             }
