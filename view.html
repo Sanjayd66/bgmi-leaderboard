@@ -16,14 +16,18 @@
         .bar.dead { opacity: 0.2; height: 5px; background: #445588; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* Prediction Panel Fix */
-        #prediction-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; gap: 20px; z-index: 900; }
+        /* EXACT PREDICTION LAYOUT */
+        #prediction-panel { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); display: none; gap: 10px; z-index: 900; }
         #prediction-panel.show { display: flex; }
-        .pred-card { background: var(--dark-blue); border: 2px solid var(--cyan); width: 160px; text-align: center; border-radius: 8px; overflow: hidden; }
-        .pred-logo-container { height: 80px; display: flex; justify-content: center; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); }
-        .pred-logo-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .pred-team-name { padding: 5px; font-size: 14px; font-weight: bold; border-top: 1px solid rgba(0,242,255,0.2); }
-        .pred-body { background: var(--cyan); color: #000; padding: 10px 0; font-size: 24px; font-weight: 900; }
+        .pred-card { width: 180px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .pred-top { background: #000; display: flex; align-items: center; height: 30px; padding: 0 5px; border: 1px solid #c9a55c; }
+        .pred-top img { width: 22px; height: 22px; object-fit: contain; }
+        .pred-name { flex-grow: 1; padding-left: 8px; font-weight: bold; color: white; text-transform: uppercase; font-size: 14px; }
+        .pred-alive-dots { display: flex; gap: 2px; }
+        .p-dot { width: 3px; height: 12px; background: white; }
+        .pred-bottom { background: #f0e1a1; color: #000; display: flex; justify-content: space-between; padding: 2px 8px; align-items: center; border: 1px solid #c9a55c; border-top: none; }
+        .pred-label { font-size: 10px; font-weight: bold; }
+        .pred-val { font-size: 16px; font-weight: 900; }
 
         #winner-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; z-index: 2000; background: rgba(0,0,0,0.85); }
         #winner-area.show { display: flex; flex-direction: column; }
@@ -67,15 +71,31 @@
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); document.getElementById('board').style.display="none"; pPanel.innerHTML="";
                 const totalS = alive.reduce((a,c) => a+(parseInt(c.fin)+c.alive.filter(x=>x).length*2.5), 0) || 1;
-                alive.forEach(t => { const prob = (((parseInt(t.fin)+t.alive.filter(x=>x).length*2.5)/totalS)*100).toFixed(1);
-                    pPanel.innerHTML += `<div class="pred-card"><div class="pred-logo-container"><img src="${t.logo}" onerror="this.style.opacity='0'"></div><div class="pred-team-name">${t.name}</div><div class="pred-body">${prob}%</div></div>`;
+                alive.forEach(t => { 
+                    const prob = (((parseInt(t.fin)+t.alive.filter(x=>x).length*2.5)/totalS)*100).toFixed(1);
+                    pPanel.innerHTML += `
+                        <div class="pred-card">
+                            <div class="pred-top">
+                                <img src="${t.logo}" onerror="this.style.opacity='0'">
+                                <div class="pred-name">${t.name}</div>
+                                <div class="pred-alive-dots">${t.alive.map(a => `<div class="p-dot" style="opacity:${a?1:0.2}"></div>`).join('')}</div>
+                            </div>
+                            <div class="pred-bottom">
+                                <div class="pred-label">WIN PREDICTION</div>
+                                <div class="pred-val">${prob}%</div>
+                            </div>
+                        </div>`;
                 });
             } else {
                 pPanel.classList.remove('show'); document.getElementById('board').style.display="block";
                 let h = `<div class="header-row"><div style="width:30px;text-align:center">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 15px)">TEAM</div><div style="width:55px;text-align:center;margin-left:var(--col-gap)">ALIVE</div><div style="width:40px;text-align:center">FIN</div><div style="width:60px;text-align:center;margin-left:var(--total-gap)">TOTAL</div></div>`;
                 sorted.forEach((t, i) => {
                     let pts = parseInt(t.fin)+parseInt(t.place)+(t.matches?t.matches.reduce((x,y)=>x+parseInt(y),0):0);
-                    h += `<div class="team-row ${t.alive.every(a=>a===0)?'eliminated':''}"><div class="logo-name-section"><div style="width:30px;text-align:center">${i+1}</div><div style="width:var(--logo-size)"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div><div style="width:var(--name-width);padding-left:10px">${t.name}</div></div><div style="width:55px;display:flex;justify-content:center;margin-left:var(--col-gap)">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div><div style="width:40px;text-align:center;font-weight:bold">${t.fin}</div><div class="total-box" style="width:60px;margin-left:var(--total-gap)">${pts}</div></div>`;
+                    h += `<div class="team-row ${t.alive.every(a=>a===0)?'eliminated':''}">
+                        <div class="logo-name-section"><div style="width:30px;text-align:center">${i+1}</div><div style="width:var(--logo-size)"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div><div style="width:var(--name-width);padding-left:10px">${t.name}</div></div>
+                        <div style="width:55px;display:flex;justify-content:center;margin-left:var(--col-gap)">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                        <div style="width:40px;text-align:center;font-weight:bold">${t.fin}</div>
+                        <div class="total-box" style="width:60px;margin-left:var(--total-gap)">${pts}</div></div>`;
                 });
                 document.getElementById('board').innerHTML = h;
             }
