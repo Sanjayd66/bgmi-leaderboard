@@ -2,107 +2,114 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>BGMI Admin - Theme & Layout Control</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff;
-            --row-h: 38px; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px;
-            --elim-bg: #1c2227;
-        }
-        body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; color: var(--text-color); overflow: hidden; width: 1920px; height: 1080px; }
+        :root { --cyan: #00f2ff; }
+        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .admin-panel { background: #15191d; padding: 25px; border-radius: 12px; width: 950px; border: 1px solid #2d3439; box-shadow: 0 10px 30px rgba(0,0,0,0.5); height: 95vh; overflow-y: auto; }
         
-        /* Leaderboard Positioning */
-        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 10px; border-radius: 8px; }
-        .header-row { display: flex; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.2); margin-bottom: 8px; }
-        .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; gap: var(--col-gap); }
-        .team-row.eliminated { opacity: 0.3; filter: grayscale(1); }
-        
-        /* Side Dashboard Elements */
-        .logo-section { display: flex; align-items: center; background: rgba(255,255,255,0.05); height: 100%; width: calc(var(--logo-size) + var(--name-width) + 40px); }
-        .bar { width: 4px; height: 18px; background: var(--cyan); margin: 0 1px; box-shadow: 0 0 5px var(--cyan); }
-        .bar.dead { opacity: 0.2; height: 5px; background: #445588; box-shadow: none; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; width: 60px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); }
+        /* Theme Selector Styling */
+        .theme-box { background: #1c2227; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--cyan); display: flex; align-items: center; justify-content: space-between; }
+        select { background: #252c33; color: white; border: 1px solid var(--cyan); padding: 8px; border-radius: 5px; width: 60%; cursor: pointer; }
 
-        /* ELIMINATION POPUP (Top Center) */
-        #elim-popup { 
-            position: fixed; top: -200px; left: 50%; transform: translateX(-50%); 
-            display: flex; width: 620px; height: 115px; background: var(--elim-bg); 
-            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
-            transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000;
-        }
-        #elim-popup.show { top: 40px; }
-        .e-logo { background: white; width: 160px; display: flex; justify-content: center; align-items: center; }
-        #pop-name { color: #ffffff; font-size: 42px; text-transform: uppercase; margin: 0; font-weight: 700; line-height: 1; }
+        .setting-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; }
+        .team-card { background: #1c2227; padding: 15px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2d3439; position: relative; }
+        .edit-grid { display: grid; grid-template-columns: 120px 1fr 60px 60px 60px; gap: 10px; margin-bottom: 10px; }
+        input[type="range"] { width: 100px; accent-color: var(--cyan); }
+        .action-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
+        label { font-size: 9px; color: #8b959e; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
-    <div id="elim-popup">
-        <div class="e-logo"><img id="pop-logo" src="" style="width:90px; height:90px; object-fit:contain;"></div>
-        <div style="flex-grow:1; padding:15px 30px; display:flex; flex-direction:column; justify-content:center;">
-            <p id="pop-name"></p>
-            <p style="color:var(--cyan); font-size:20px; margin:5px 0 0; font-weight:700;">ELIMINATED</p>
+    <div class="admin-panel">
+        <h2 style="color:var(--cyan); text-align:center;">PRODUCTION CONTROL CENTER</h2>
+        
+        <div class="theme-box">
+            <label style="font-size: 14px; color: var(--cyan);">QUICK THEME SELECTOR</label>
+            <select onchange="applyTheme(this.value)">
+                <option value="cyan-dark">Default Cyan & Dark Blue</option>
+                <option value="gold-black">Gold & Midnight Black (Premium)</option>
+                <option value="red-sunset">Sunset Red & Maroon</option>
+                <option value="purple-gray">Purple & Slate Gray</option>
+                <option value="teal-ocean">Teal & Deep Ocean</option>
+            </select>
         </div>
-        <div style="background:rgba(0,0,0,0.4); width:140px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-            <div id="pop-fin-val" style="font-size:50px; color:var(--cyan); font-weight:700;">0</div>
-            <div style="color:white; font-size:13px; font-weight:bold;">FINISHES</div>
-        </div>
-    </div>
 
-    <div id="board"></div>
+        <div class="setting-grid">
+            <div class="item"><label>Logo Size</label> <input type="range" min="20" max="80" oninput="updateCfg('logo-size', this.value)"></div>
+            <div class="item"><label>Name Width</label> <input type="range" min="50" max="350" oninput="updateCfg('name-width', this.value)"></div>
+            <div class="item"><label>Col Gap</label> <input type="range" min="0" max="50" oninput="updateCfg('col-gap', this.value)"></div>
+            <div class="item"><label>Total Gap</label> <input type="range" min="0" max="100" oninput="updateCfg('total-gap', this.value)"></div>
+            <div class="item"><label>Row Height</label> <input type="range" min="25" max="65" oninput="updateCfg('row-h', this.value)"></div>
+            <div class="item"><label>Cyan Theme</label> <input type="color" oninput="updateCfg('cyan', this.value)"></div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button class="action-btn" style="background:#2ed573; color:white; flex:1;" onclick="addTeam()">+ TEAM</button>
+            <button class="action-btn" style="background:#ff4757; color:white; flex:1;" onclick="resetMatch()">RESET DATA</button>
+        </div>
+        <div id="team-list"></div>
+    </div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        let lastElim = "";
+        let teams = []; let config = {};
 
-        db.ref('liveData').on('value', (snap) => {
-            const data = snap.val(); if(!data) return;
-            const cfg = data.config || {};
-            // SYNC ALL GAP & SIZE SETTINGS
-            Object.entries(cfg).forEach(([p,v]) => { 
-                let unit = (isNaN(v) || String(v).startsWith('#')) ? '' : 'px';
-                document.documentElement.style.setProperty('--'+p, v + unit); 
-            });
-            
-            if(data.lastEliminated && data.lastEliminated.name !== lastElim) {
-                lastElim = data.lastEliminated.name;
-                document.getElementById('pop-logo').src = data.lastEliminated.logo;
-                document.getElementById('pop-name').innerText = data.lastEliminated.name;
-                document.getElementById('pop-fin-val').innerText = data.lastEliminated.finishes;
-                const p = document.getElementById('elim-popup');
-                p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 6000);
-            }
-            render(data.teams || []);
-        });
+        function sync(elimData = null) { db.ref('liveData').update({ teams, config, lastEliminated: elimData || "" }); }
+        function updateCfg(p, v) { config[p] = v; sync(); }
 
-        function render(teams) {
-            const board = document.getElementById('board');
-            const sorted = [...teams].sort((a,b) => {
-                let pA = (parseInt(a.fin)||0)+(parseInt(a.place)||0);
-                let pB = (parseInt(b.fin)||0)+(parseInt(b.place)||0);
-                return pB - pA;
-            });
-
-            let h = `<div class="header-row"><div style="width:30px; text-align:center">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 40px)">TEAM NAME</div><div style="flex:1; text-align:center">STATUS</div><div style="width:40px; text-align:center">FIN</div><div style="width:60px; text-align:center; margin-left:var(--total-gap)">TOTAL</div></div>`;
-            
-            sorted.forEach((t, i) => {
-                let pts = (parseInt(t.fin)||0)+(parseInt(t.place)||0);
-                const isOut = t.alive.every(a => a === 0);
-                h += `<div class="team-row ${isOut?'eliminated':''}">
-                    <div class="logo-section">
-                        <div style="width:30px; text-align:center; font-weight:bold; color:#666;">${i+1}</div>
-                        <img src="${t.logo}" style="width:var(--logo-size); height:var(--logo-size); object-fit:contain; margin:0 12px">
-                        <div style="width:var(--name-width); font-weight:bold; overflow:hidden;">${t.name}</div>
-                    </div>
-                    <div style="flex:1; display:flex; justify-content:center">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
-                    <div style="width:40px; text-align:center; font-weight:bold">${t.fin}</div>
-                    <div class="total-box">${pts}</div></div>`;
-            });
-            board.innerHTML = h;
+        function applyTheme(theme) {
+            const presets = {
+                'cyan-dark': { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'elim-bg': '#1c2227' },
+                'gold-black': { 'cyan': '#ffd700', 'dark-blue': '#000000', 'row-bg': '#111111', 'elim-bg': '#0a0a0a' },
+                'red-sunset': { 'cyan': '#ff4d4d', 'dark-blue': '#2d0a0a', 'row-bg': '#4a1515', 'elim-bg': '#2d0a0a' },
+                'purple-gray': { 'cyan': '#bf00ff', 'dark-blue': '#1a1a1a', 'row-bg': '#2d2d2d', 'elim-bg': '#1a1a1a' },
+                'teal-ocean': { 'cyan': '#008080', 'dark-blue': '#002b2b', 'row-bg': '#004d4d', 'elim-bg': '#002b2b' }
+            };
+            const p = presets[theme];
+            Object.entries(p).forEach(([key, val]) => { config[key] = val; });
+            sync();
         }
+
+        function resetMatch() { if(confirm("Reset all points?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
+        
+        function draw() {
+            const list = document.getElementById('team-list'); list.innerHTML = '';
+            teams.forEach((t, i) => {
+                let total = (parseInt(t.fin) || 0) + (parseInt(t.place) || 0);
+                list.innerHTML += `<div class="team-card">
+                    <div class="edit-grid">
+                        <div><label>Team</label><input style="width:90%" value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
+                        <div><label>Logo URL</label><input style="width:90%" value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
+                        <div><label>Finishes</label><input style="width:80%" type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
+                        <div><label>Placement</label><input style="width:80%" type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
+                        <div><label>Total</label><input style="width:80%" value="${total}" readonly></div>
+                    </div>
+                    <div style="display:flex;">
+                        ${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" style="width:35px;height:35px;margin-right:5px;border:none;background:var(--cyan);border-radius:4px;cursor:pointer;font-weight:bold;opacity:${a?1:0.3}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}
+                    </div>
+                </div>`;
+            });
+        }
+
+        function edit(i, f, v) { teams[i][f] = v; sync(); }
+        function tog(i, pi) {
+            teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
+            const aliveCount = teams[i].alive.filter(a => a === 1).length;
+            let elim = null;
+            if (aliveCount === 0 && !teams[i].elim) {
+                teams[i].elim = true;
+                elim = { name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin) || 0) };
+            } else if (aliveCount > 0) { teams[i].elim = false; }
+            sync(elim);
+        }
+        function addTeam() { teams.push({ name: "NEW", logo: "", fin: 0, place: 0, alive: [1,1,1,1], elim: false }); sync(); }
+        db.ref('liveData').on('value', (snap) => { if(snap.exists()){ teams = snap.val().teams || []; config = snap.val().config || {}; draw(); } });
     </script>
 </body>
 </html>
