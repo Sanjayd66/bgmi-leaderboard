@@ -8,33 +8,35 @@
     <style>
         :root { 
             --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff;
-            --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px;
+            --row-h: 38px; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px;
+            --elim-bg: #1c2227; --pred-bg: #000;
         }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
-        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 10px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .header-row { display: flex; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 8px; }
-        .team-row { display: flex; align-items: center; height: 38px; background: var(--row-bg); margin-bottom: 2px; gap: var(--col-gap); }
+        /* Side Leaderboard (Screenshot 2 Accuracy) */
+        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 8px; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .header-row { display: flex; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.2); margin-bottom: 5px; }
+        .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; gap: var(--col-gap); }
         .team-row.eliminated { opacity: 0.3; filter: grayscale(1); }
+        
+        .rank-col { width: 30px; text-align: center; font-weight: bold; }
+        .logo-col { width: var(--logo-size); display: flex; justify-content: center; }
+        .name-col { width: var(--name-width); padding-left: 10px; font-weight: bold; text-transform: uppercase; overflow: hidden; }
+        .status-col { width: 60px; display: flex; justify-content: center; }
         .bar { width: 4px; height: 18px; background: var(--cyan); margin: 0 1px; box-shadow: 0 0 5px var(--cyan); }
-        .bar.dead { opacity: 0.2; height: 5px; background: #445588; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; width: 60px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); }
+        .bar.dead { opacity: 0.2; height: 5px; background: #445588; box-shadow: none; }
+        .fin-col { width: 40px; text-align: center; font-weight: bold; }
+        .total-box { background: var(--cyan); color: #000; height: 100%; width: 60px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); font-size: 18px; }
 
         /* ELIMINATION POPUP (Screenshot 1 Design) */
-        #elim-popup { 
-            position: fixed; top: -200px; left: 50%; transform: translateX(-50%); 
-            display: flex; width: 620px; height: 115px; background: #1c2227; 
-            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
-            transition: top 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 620px; height: 115px; background: var(--elim-bg); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); transition: top 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         #elim-popup.show { top: 40px; }
 
-        /* PREDICTION (Center Screen) */
+        /* CENTER PREDICTION */
         #prediction-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; gap: 20px; }
         #prediction-panel.show { display: flex; }
-        .pred-card { width: 220px; background: #000; border: 2px solid var(--cyan); border-radius: 10px; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .pred-card { width: 230px; background: var(--pred-bg); border: 2px solid var(--cyan); border-radius: 12px; overflow: hidden; }
 
-        /* WINNER WWCD */
         #winner-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; }
         #winner-area.show { display: flex; animation: zoomIn 0.8s forwards; }
         @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -54,8 +56,8 @@
     </div>
 
     <div id="winner-area">
-        <div style="width:350px; height:350px; background:white; border-radius:50%; display:flex; justify-content:center; align-items:center;"><img id="win-img" src="" style="width:80%; object-fit:contain;"></div>
-        <h1 style="color:gold; font-size:80px; text-transform:uppercase; text-shadow: 0 0 20px rgba(255,215,0,0.5); margin-top:20px;">Match Champions</h1>
+        <div style="width:350px; height:350px; background:white; border-radius:50%; display:flex; justify-content:center; align-items:center;"><img id="win-img" src="" style="width:85%; object-fit:contain;"></div>
+        <h1 style="color:gold; font-size:85px; text-transform:uppercase; text-shadow: 0 0 20px rgba(255,215,0,0.5);">Match Champions</h1>
     </div>
 
     <div id="prediction-panel"></div>
@@ -70,6 +72,7 @@
         db.ref('liveData').on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
+            // Sync all settings (Theme colors + Gap settings)
             Object.entries(cfg).forEach(([p,v]) => { 
                 let unit = (isNaN(v) || String(v).startsWith('#')) ? '' : 'px';
                 document.documentElement.style.setProperty('--'+p, v + unit); 
@@ -98,43 +101,36 @@
             const board = document.getElementById('board');
             const winArea = document.getElementById('winner-area');
 
-            // Winner logic
             if (alive.length === 1 && sorted.length > 1) {
                 document.getElementById('win-img').src = alive[0].logo;
                 winArea.classList.add('show'); return;
             } else winArea.classList.remove('show');
 
-            // Prediction logic
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
-                const totalS = alive.reduce((a,c) => a+(parseInt(c.fin)+c.alive.filter(x=>x).length*3), 0) || 1;
                 alive.forEach(t => {
-                    const prob = (((parseInt(t.fin)+t.alive.filter(x=>x).length*3)/totalS)*100).toFixed(1);
-                    pPanel.innerHTML += `
-                        <div class="pred-card">
-                            <div style="padding:15px; display:flex; align-items:center; color:white;">
-                                <img src="${t.logo}" style="width:45px; height:45px; object-fit:contain;">
-                                <div style="margin-left:15px;">
-                                    <div style="font-weight:bold; font-size:16px; text-transform:uppercase;">${t.name}</div>
-                                    <div style="display:flex; gap:3px; margin-top:5px;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}" style="height:12px; width:4px;"></div>`).join('')}</div>
-                                </div>
+                    pPanel.innerHTML += `<div class="pred-card">
+                        <div style="padding:15px; display:flex; align-items:center; color:white;">
+                            <img src="${t.logo}" style="width:45px; height:45px; object-fit:contain;">
+                            <div style="margin-left:15px;">
+                                <div style="font-weight:bold; font-size:16px; text-transform:uppercase;">${t.name}</div>
+                                <div style="display:flex; gap:3px; margin-top:5px;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}" style="height:12px; width:4px;"></div>`).join('')}</div>
                             </div>
-                            <div style="background:var(--cyan); color:black; padding:8px; text-align:center; font-weight:bold;">WIN PROB: ${prob}%</div>
-                        </div>`;
+                        </div>
+                        <div style="background:var(--cyan); color:black; padding:8px; text-align:center; font-weight:bold;">WINNING PREDICTION</div>
+                    </div>`;
                 });
             } else {
                 pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div class="header-row"><div style="width:30px; text-align:center">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 40px)">TEAM NAME</div><div style="flex:1; text-align:center">STATUS</div><div style="width:40px; text-align:center">FIN</div><div style="width:60px; text-align:center; margin-left:var(--total-gap)">TOTAL</div></div>`;
+                let h = `<div class="header-row"><div class="rank-col">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 10px)">TEAM</div><div class="status-col">STATUS</div><div class="fin-col">FIN.</div><div class="total-box" style="background:transparent;color:var(--cyan);font-weight:bold">TOTAL</div></div>`;
                 sorted.forEach((t, i) => {
                     let pts = (parseInt(t.fin)||0)+(parseInt(t.place)||0)+(t.matches?t.matches.reduce((x,y)=>x+parseInt(y),0):0);
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}">
-                        <div style="display:flex; align-items:center; width:calc(var(--logo-size) + var(--name-width) + 40px); background:rgba(255,255,255,0.05); height:100%">
-                            <div style="width:30px; text-align:center; font-weight:bold; color:#777;">${i+1}</div>
-                            <img src="${t.logo}" style="width:var(--logo-size); height:var(--logo-size); object-fit:contain; margin:0 12px">
-                            <div style="width:var(--name-width); font-weight:bold; overflow:hidden; text-transform:uppercase;">${t.name}</div>
-                        </div>
-                        <div style="flex:1; display:flex; justify-content:center">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
-                        <div style="width:40px; text-align:center; font-weight:bold">${t.fin}</div>
+                        <div class="rank-col">${i+1}</div>
+                        <div class="logo-col"><img src="${t.logo}" style="width:var(--logo-size);height:var(--logo-size);object-fit:contain;"></div>
+                        <div class="name-col">${t.name}</div>
+                        <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                        <div class="fin-col">${t.fin}</div>
                         <div class="total-box">${pts}</div></div>`;
                 });
                 board.innerHTML = h;
