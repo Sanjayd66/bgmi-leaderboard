@@ -2,39 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Pro Admin - Fixed All</title>
+    <title>BGMI Admin - Fixed All Features</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --cyan: #00f2ff; }
-        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .admin-panel { background: #15191d; padding: 25px; border-radius: 12px; width: 1000px; border: 1px solid #2d3439; box-shadow: 0 10px 30px rgba(0,0,0,0.5); height: 95vh; overflow-y: auto; }
-        .setting-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #1c2227; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--cyan); }
+        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 20px; }
+        .admin-panel { background: #15191d; padding: 25px; border-radius: 12px; max-width: 1100px; margin: auto; border: 1px solid #2d3439; }
+        .color-grid, .setting-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #1c2227; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; font-size: 11px; }
         .team-card { background: #1c2227; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #2d3439; position: relative; }
-        .edit-grid { display: grid; grid-template-columns: 140px 1fr 70px 70px 70px; gap: 12px; margin-bottom: 15px; }
         .match-history { background: #0b0e11; padding: 10px; border-radius: 6px; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; border: 1px solid #252c33; }
         .m-input { width: 45px; text-align: center; background: #1c2227; border: 1px solid var(--cyan); color: white; border-radius: 4px; padding: 5px; }
         input[type="range"] { width: 80px; accent-color: var(--cyan); }
-        .action-btn { width: 100%; padding: 15px; margin-bottom: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 8px; text-transform: uppercase; }
-        .p-btn { width: 38px; height: 38px; border: none; background: var(--cyan); font-weight: bold; cursor: pointer; border-radius: 5px; margin-right: 6px; }
+        .action-btn { padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
+        .p-btn { width: 35px; height: 35px; border: none; background: var(--cyan); font-weight: bold; cursor: pointer; border-radius: 4px; margin-right: 5px; }
         .p-btn.off { background: #3e474f; opacity: 0.3; }
     </style>
 </head>
 <body>
     <div class="admin-panel">
-        <h2 style="color:var(--cyan); text-align:center;">PRODUCTION ADMIN - FULL FIX</h2>
+        <h2 style="color:var(--cyan); text-align:center;">PRODUCTION ADMIN - FULL RECOVERY</h2>
         
+        <div class="color-grid">
+            <div class="item"><label>Theme Cyan</label> <input type="color" oninput="updateCfg('cyan', this.value)"></div>
+            <div class="item"><label>Board BG</label> <input type="color" oninput="updateCfg('dark-blue', this.value)"></div>
+            <div class="item"><label>Row BG</label> <input type="color" oninput="updateCfg('row-bg', this.value)"></div>
+            <div class="item"><label>Pred BG</label> <input type="color" oninput="updateCfg('pred-bg', this.value)"></div>
+        </div>
+
         <div class="setting-grid">
             <div class="item"><label>Logo Size</label> <input type="range" min="20" max="80" oninput="updateCfg('logo-size', this.value)"></div>
             <div class="item"><label>Name Width</label> <input type="range" min="50" max="350" oninput="updateCfg('name-width', this.value)"></div>
             <div class="item"><label>Col Gap</label> <input type="range" min="0" max="50" oninput="updateCfg('col-gap', this.value)"></div>
             <div class="item"><label>Total Gap</label> <input type="range" min="0" max="100" oninput="updateCfg('total-gap', this.value)"></div>
-            <div class="item"><label>Row Height</label> <input type="range" min="25" max="70" oninput="updateCfg('row-h', this.value)"></div>
-            <div class="item"><label>Theme Cyan</label> <input type="color" oninput="updateCfg('cyan', this.value)"></div>
         </div>
 
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
             <button class="action-btn" style="background:#2ed573; color:white; flex:1.5;" onclick="addTeam()">+ Add Team</button>
             <button class="action-btn" style="background:#ffa502; color:white; flex:1;" onclick="globalNewMatch()">+ NEW MATCH (RESET)</button>
             <button class="action-btn" style="background:#ff4757; color:white; flex:1;" onclick="resetAll()">Reset All</button>
@@ -52,11 +56,11 @@
         function updateCfg(p, v) { config[p] = v; sync(); }
 
         function globalNewMatch() {
-            if(confirm("New Match? Current score history mein jayega aur status reset hoga.")){
+            if(confirm("New Match reset?")){
                 teams.forEach(t => {
-                    let matchPts = (parseInt(t.fin) || 0) + (parseInt(t.place) || 0);
+                    let mTotal = (parseInt(t.fin) || 0) + (parseInt(t.place) || 0);
                     if(!t.matches) t.matches = [];
-                    t.matches.push(matchPts);
+                    t.matches.push(mTotal);
                     t.fin = 0; t.place = 0; t.alive = [1,1,1,1]; t.elim = false;
                 });
                 sync();
@@ -69,17 +73,18 @@
                 let mPts = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
                 let total = (parseInt(t.fin) || 0) + (parseInt(t.place) || 0) + mPts;
                 list.innerHTML += `<div class="team-card">
-                    <button style="position:absolute; right:15px; top:15px; color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
-                    <div class="edit-grid">
-                        <div><label>Name</label><input style="width:90%" value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
-                        <div><label>Logo</label><input style="width:90%" value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
-                        <div><label>Fin</label><input style="width:80%" type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
-                        <div><label>Place</label><input style="width:80%" type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
-                        <div style="font-weight:bold; color:var(--cyan)">Total: ${total}</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 60px 60px 60px; gap:10px; margin-bottom:10px;">
+                        <input value="${t.name}" onchange="edit(${i},'name',this.value)" placeholder="Name">
+                        <input value="${t.logo}" onchange="edit(${i},'logo',this.value)" placeholder="Logo URL">
+                        <input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)">
+                        <input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)">
+                        <input value="${total}" readonly style="font-weight:bold; color:var(--cyan)">
                     </div>
-                    <div style="display:flex; align-items:center; gap:20px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
                         <div style="display:flex;">${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}</div>
-                        <div class="match-history">${(t.matches || []).map((m, mi) => `<input type="number" class="m-input" value="${m}" onchange="editMatch(${ti=i},${mi},this.value)">`).join('')}</div>
+                        <div class="match-history"><label style="color:var(--cyan);font-size:10px;">MATCHES:</label>
+                        ${(t.matches || []).map((m, mi) => `<input type="number" class="m-input" value="${m}" onchange="editMatch(${ti=i},${mi},this.value)">`).join('')}
+                        </div>
                     </div>
                 </div>`;
             });
@@ -88,17 +93,19 @@
         function editMatch(ti, mi, v) { teams[ti].matches[mi] = v; sync(); }
         function tog(i, pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
-            const aliveTeams = teams.filter(t => t.alive.some(a => a === 1)).length;
+            const aliveCount = teams.filter(t => t.alive.some(a => a === 1)).length;
             let elim = null;
-            if (teams[i].alive.every(a => a === 0) && !teams[i].elim && aliveTeams > 1) {
+            if (teams[i].alive.every(a => a === 0) && !teams[i].elim && aliveCount > 1) {
                 teams[i].elim = true;
                 elim = { name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(t.fin) || 0) };
             } else if (teams[i].alive.some(a => a === 1)) { teams[i].elim = false; }
             sync(elim);
         }
-        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, place: 0, matches: [], alive: [1,1,1,1], elim: false }); sync(); }
-        function removeTeam(i) { teams.splice(i, 1); sync(); }
-        function resetAll() { if(confirm("Reset All?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.matches=[]; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
+        function addTeam() { 
+            let mc = teams.length > 0 && teams[0].matches ? teams[0].matches.length : 0;
+            teams.push({ name: "TEAM", logo: "", fin: 0, place: 0, matches: new Array(mc).fill(0), alive: [1,1,1,1], elim: false }); sync(); 
+        }
+        function resetAll() { if(confirm("Reset?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.matches=[]; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
         db.ref('liveData').on('value', (snap) => { if(snap.exists()){ teams = snap.val().teams || []; config = snap.val().config || {}; draw(); } });
     </script>
 </body>
