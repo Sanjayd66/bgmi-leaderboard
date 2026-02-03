@@ -8,38 +8,26 @@
     <style>
         :root { --cyan: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 20px; }
-        .admin-panel { background: #15191d; padding: 25px; border-radius: 12px; max-width: 1100px; margin: auto; border: 1px solid #2d3439; }
-        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #1c2227; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-bottom: 3px solid var(--cyan); }
-        .setting-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .admin-panel { background: #15191d; padding: 25px; border-radius: 12px; max-width: 1000px; margin: auto; border: 1px solid #2d3439; }
+        .setting-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; }
         .item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; font-size: 11px; }
-        .team-card { background: #1c2227; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #2d3439; position: relative; }
-        .match-history { background: #0b0e11; padding: 8px; border-radius: 6px; display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
-        .m-input { width: 40px; text-align: center; background: #1c2227; border: 1px solid var(--cyan); color: white; border-radius: 4px; }
-        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: transparent; }
+        .team-card { background: #1c2227; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #2d3439; }
+        input { background: #2d3439; border: 1px solid #3e474f; color: white; padding: 5px; border-radius: 4px; }
         .action-btn { padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
-        .p-btn { width: 35px; height: 35px; border: none; background: var(--cyan); font-weight: bold; cursor: pointer; border-radius: 4px; margin-right: 5px; }
-        .p-btn.off { background: #3e474f; opacity: 0.3; }
     </style>
 </head>
 <body>
     <div class="admin-panel">
-        <h2 style="color:var(--cyan); text-align:center;">TOURNAMENT ADMIN PANEL</h2>
-        <div class="color-grid">
-            <div class="item"><label>Theme Cyan</label> <input type="color" oninput="updateCfg('cyan', this.value)"></div>
-            <div class="item"><label>Board BG</label> <input type="color" oninput="updateCfg('dark-blue', this.value)"></div>
-            <div class="item"><label>Row BG</label> <input type="color" oninput="updateCfg('row-bg', this.value)"></div>
-            <div class="item"><label>Elim BG</label> <input type="color" oninput="updateCfg('elim-bg', this.value)"></div>
-            <div class="item"><label>Pred BG</label> <input type="color" oninput="updateCfg('pred-bg', this.value)"></div>
-            <div class="item"><label>Pred Accent</label> <input type="color" oninput="updateCfg('pred-accent', this.value)"></div>
-        </div>
+        <h2 style="color:var(--cyan); text-align:center;">BGMI PRODUCTION ADMIN</h2>
         <div class="setting-grid">
             <div class="item"><label>Logo Size</label> <input type="range" min="20" max="80" oninput="updateCfg('logo-size', this.value)"></div>
             <div class="item"><label>Name Width</label> <input type="range" min="50" max="350" oninput="updateCfg('name-width', this.value)"></div>
-            <div class="item"><label>Row Height</label> <input type="range" min="25" max="70" oninput="updateCfg('row-h', this.value)"></div>
+            <div class="item"><label>Col Gap</label> <input type="range" min="0" max="50" oninput="updateCfg('col-gap', this.value)"></div>
+            <div class="item"><label>Total Gap</label> <input type="range" min="0" max="100" oninput="updateCfg('total-gap', this.value)"></div>
+            <div class="item"><label>Cyan Theme</label> <input type="color" oninput="updateCfg('cyan', this.value)"></div>
         </div>
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
             <button class="action-btn" style="background:#2ed573; color:white; flex:1;" onclick="addTeam()">+ Add Team</button>
-            <button class="action-btn" style="background:#ffa502; color:white; flex:1;" onclick="globalAddMatch()">+ Add Match Col</button>
             <button class="action-btn" style="background:#ff4757; color:white; flex:1;" onclick="resetAll()">Reset All</button>
         </div>
         <div id="team-list"></div>
@@ -52,45 +40,34 @@
 
         function sync(elimData = null) { db.ref('liveData').update({ teams, config, lastEliminated: elimData || "" }); }
         function updateCfg(p, v) { config[p] = v; sync(); }
-        function globalAddMatch() { teams.forEach(t => { if(!t.matches) t.matches = []; t.matches.push(0); }); sync(); }
         
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
-                let mPts = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
-                let total = (parseInt(t.fin) || 0) + (parseInt(t.place) || 0) + mPts;
                 list.innerHTML += `<div class="team-card">
-                    <button style="position:absolute; right:10px; top:10px; color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 60px 60px 60px; gap:10px; margin-bottom:10px;">
-                        <input value="${t.name}" onchange="edit(${i},'name',this.value)" placeholder="Name">
-                        <input value="${t.logo}" onchange="edit(${i},'logo',this.value)" placeholder="Logo URL">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 60px 60px; gap:10px;">
+                        <input value="${t.name}" onchange="edit(${i},'name',this.value)">
+                        <input value="${t.logo}" onchange="edit(${i},'logo',this.value)">
                         <input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)">
-                        <input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)">
-                        <input value="${total}" readonly style="font-weight:bold; color:var(--cyan)">
-                    </div>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <div style="display:flex;">${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}</div>
-                        <div class="match-history">${(t.matches || []).map((m, mi) => `<input type="number" class="m-input" value="${m}" onchange="editMatch(${ti=i},${mi},this.value)">`).join('')}</div>
+                        <div style="display:flex;">${t.alive.map((a,pi)=>`<button style="width:25px; height:25px; opacity:${a?1:0.3}; background:var(--cyan); border:none; margin:2px;" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}</div>
                     </div>
                 </div>`;
             });
         }
         function edit(i, f, v) { teams[i][f] = v; sync(); }
-        function editMatch(ti, mi, v) { teams[ti].matches[mi] = v; sync(); }
         function tog(i, pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
-            const aliveTeams = teams.filter(t => t.alive.some(a => a === 1)).length;
+            const aliveTeamsCount = teams.filter(t => t.alive.some(a => a === 1)).length;
             let elim = null;
-            // TOP 2 LOGIC: Only show elim if more than 2 teams are alive
-            if (teams[i].alive.every(a => a === 0) && !teams[i].elim && aliveTeams > 1) {
+            // TOP 2 Logic: No broadcast if only 2 teams left
+            if (teams[i].alive.every(a => a === 0) && !teams[i].elim && aliveTeamsCount > 1) {
                 teams[i].elim = true;
-                elim = { name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin) || 0) };
+                elim = { name: teams[i].name, logo: teams[i].logo, finishes: t.fin };
             } else if (teams[i].alive.some(a => a === 1)) { teams[i].elim = false; }
             sync(elim);
         }
-        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, place: 0, matches: [], alive: [1,1,1,1], elim: false }); sync(); }
-        function removeTeam(i) { teams.splice(i, 1); sync(); }
-        function resetAll() { if(confirm("Reset?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.matches=[]; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
+        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, alive: [1,1,1,1], elim: false }); sync(); }
+        function resetAll() { if(confirm("Reset?")){ teams.forEach(t=>{ t.fin=0; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
         db.ref('liveData').on('value', (snap) => { if(snap.exists()){ teams = snap.val().teams || []; config = snap.val().config || {}; draw(); } });
     </script>
 </body>
