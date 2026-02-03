@@ -5,32 +5,41 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --logo-name-bg: #242f66; --cyan: #00f2ff; --text-color: #ffffff; --row-h: 38px; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px; }
+        :root { --dark-blue: #0b0e11; --row-bg: #1c2227; --logo-name-bg: #12193b; --cyan: #00f2ff; --text-color: #ffffff; --row-h: 38px; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; color: var(--text-color); overflow: hidden; }
-        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 8px; border-radius: 8px; }
-        .header-row { display: flex; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 8px; }
+        
+        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        .header-row { display: flex; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
         .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; }
         .team-row.eliminated { opacity: 0.3; filter: grayscale(1); }
-        .logo-name-section { display: flex; align-items: center; background: var(--logo-name-bg); height: 100%; }
+        .logo-name-section { display: flex; align-items: center; background: var(--logo-name-bg); height: 100%; border-right: 2px solid var(--dark-blue); }
+        .rank { width: 30px; text-align: center; font-weight: bold; }
+        .logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .name { padding-left: 10px; font-weight: bold; text-transform: uppercase; overflow: hidden; white-space: nowrap; }
+        .status { display: flex; gap: 2px; justify-content: center; }
         .bar { width: 4px; height: 18px; background: white; margin: 0 1px; }
         .bar.dead { opacity: 0.2; height: 5px; background: #445588; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* Elimination Popup with Finishes */
-        #elim-popup { position: fixed; top: -150px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; background: rgba(18, 25, 59, 0.95); padding: 10px 25px; border-radius: 12px; transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid var(--cyan); z-index: 1000; box-shadow: 0 0 30px rgba(0, 242, 255, 0.4); }
-        #elim-popup.show { top: 30px; }
-        #pop-finishes { color: #ffd700; font-weight: bold; font-size: 18px; margin: 0; }
+        /* MODERN CURVED ELIMINATION POP-UP */
+        #elim-popup { position: fixed; top: -150px; left: 50px; display: flex; align-items: center; background: rgba(11, 14, 17, 0.95); padding: 8px; border-radius: 15px; transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid var(--cyan); z-index: 1000; box-shadow: 0 0 30px rgba(0, 242, 255, 0.4); width: 350px; }
+        #elim-popup.show { top: 50px; }
+        #pop-logo-box { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 12px; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.2); }
+        #pop-info { padding-left: 20px; flex: 1; }
+        #pop-header { background: var(--cyan); color: #000; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
 
-        /* Prediction Horizontal */
+        /* HORIZONTAL WIN PREDICTION */
         #prediction-panel { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); display: none; gap: 10px; z-index: 900; }
         #prediction-panel.show { display: flex; }
-        .pred-card { width: 180px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .pred-top { background: #000; display: flex; align-items: center; height: 30px; padding: 0 5px; border: 1px solid #c9a55c; }
-        .pred-top img { width: 22px; height: 22px; object-fit: contain; }
-        .pred-name { flex-grow: 1; padding-left: 8px; font-weight: bold; color: white; text-transform: uppercase; font-size: 14px; }
-        .pred-bottom { background: #f0e1a1; color: #000; display: flex; justify-content: space-between; padding: 2px 8px; align-items: center; border: 1px solid #c9a55c; border-top: none; }
-        .pred-label { font-size: 10px; font-weight: bold; }
-        .pred-val { font-size: 16px; font-weight: 900; }
+        .pred-card { width: 190px; }
+        .pred-top { background: #000; display: flex; align-items: center; height: 32px; padding: 0 8px; border: 1.5px solid #c9a55c; border-radius: 3px 3px 0 0; }
+        .pred-top img { width: 24px; height: 24px; object-fit: contain; }
+        .pred-name { flex-grow: 1; padding-left: 10px; font-weight: bold; color: white; text-transform: uppercase; font-size: 15px; }
+        .pred-alive-dots { display: flex; gap: 3px; }
+        .p-dot { width: 4px; height: 14px; background: white; }
+        .pred-bottom { background: #f0e1a1; color: #000; display: flex; justify-content: space-between; padding: 4px 10px; align-items: center; border: 1.5px solid #c9a55c; border-top: none; border-radius: 0 0 3px 3px; }
+        .pred-label { font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+        .pred-val { font-size: 18px; font-weight: 900; }
 
         #winner-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; z-index: 2000; background: rgba(0,0,0,0.85); }
         #winner-area.show { display: flex; flex-direction: column; }
@@ -38,8 +47,13 @@
 </head>
 <body>
     <div id="elim-popup">
-        <div style="width:80px;height:80px;padding:5px;background:rgba(255,255,255,0.1);border-radius:8px;"><img id="pop-logo" src="" style="width:100%;height:100%;object-fit:contain;"></div>
-        <div style="padding-left:20px;"><p id="pop-name" style="font-size:28px;font-weight:bold;margin:0;"></p><p style="color:var(--cyan);margin:0;font-size:14px;">ELIMINATED</p><p id="pop-finishes"></p></div>
+        <div id="pop-logo-box"><img id="pop-logo" src="" style="width:80%; height:80%; object-fit:contain;"></div>
+        <div id="pop-info">
+            <div id="pop-header">ELIMINATION POP-UP</div>
+            <p id="pop-name" style="font-size:24px; font-weight:bold; margin:0; text-transform:uppercase;"></p>
+            <p style="color:var(--cyan); margin:0; font-size:12px; font-weight:bold;">ELIMINATED</p>
+            <p id="pop-finishes" style="color:#ffd700; margin:0; font-size:16px; font-weight:bold;"></p>
+        </div>
     </div>
     <div id="winner-area"><div id="win-logo" style="width:400px;height:400px;"></div><h1 style="color:gold;font-size:60px;">CHAMPION</h1></div>
     <div id="prediction-panel"></div><div id="board"></div>
@@ -54,7 +68,6 @@
             const data = snap.val(); if(!data) return;
             Object.entries(data.config || {}).forEach(([p,v]) => { document.documentElement.style.setProperty('--'+p, v+(isNaN(v)||v.startsWith('#')?'':'px')); });
             
-            // Pop-up logic with Finishes
             if(data.lastEliminated && data.lastEliminated.name !== lastElim) {
                 lastElim = data.lastEliminated.name;
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
@@ -78,15 +91,31 @@
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); document.getElementById('board').style.display="none"; pPanel.innerHTML="";
                 const totalS = alive.reduce((a,c) => a+(parseInt(c.fin)+c.alive.filter(x=>x).length*2.5), 0) || 1;
-                alive.forEach(t => { const prob = (((parseInt(t.fin)+t.alive.filter(x=>x).length*2.5)/totalS)*100).toFixed(1);
-                    pPanel.innerHTML += `<div class="pred-card"><div class="pred-top"><img src="${t.logo}" onerror="this.style.opacity='0'"><div class="pred-name">${t.name}</div></div><div class="pred-bottom"><div class="pred-label">WIN PREDICTION</div><div class="pred-val">${prob}%</div></div></div>`;
+                alive.forEach(t => { 
+                    const prob = (((parseInt(t.fin)+t.alive.filter(x=>x).length*2.5)/totalS)*100).toFixed(1);
+                    pPanel.innerHTML += `
+                        <div class="pred-card">
+                            <div class="pred-top">
+                                <img src="${t.logo}" onerror="this.style.opacity='0'">
+                                <div class="pred-name">${t.name}</div>
+                                <div class="pred-alive-dots">${t.alive.map(a => `<div class="p-dot" style="opacity:${a?1:0.2}"></div>`).join('')}</div>
+                            </div>
+                            <div class="pred-bottom">
+                                <div class="pred-label">WIN PREDICTION</div>
+                                <div class="pred-val">${prob}%</div>
+                            </div>
+                        </div>`;
                 });
             } else {
                 pPanel.classList.remove('show'); document.getElementById('board').style.display="block";
                 let h = `<div class="header-row"><div style="width:30px;text-align:center">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 15px)">TEAM</div><div style="width:55px;text-align:center;margin-left:var(--col-gap)">ALIVE</div><div style="width:40px;text-align:center">FIN</div><div style="width:60px;text-align:center;margin-left:var(--total-gap)">TOTAL</div></div>`;
                 sorted.forEach((t, i) => {
                     let pts = parseInt(t.fin)+parseInt(t.place)+(t.matches?t.matches.reduce((x,y)=>x+parseInt(y),0):0);
-                    h += `<div class="team-row ${t.alive.every(a=>a===0)?'eliminated':''}"><div class="logo-name-section"><div style="width:30px;text-align:center">${i+1}</div><div style="width:var(--logo-size)"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div><div style="width:var(--name-width);padding-left:10px">${t.name}</div></div><div style="width:55px;display:flex;justify-content:center;margin-left:var(--col-gap)">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div><div style="width:40px;text-align:center;font-weight:bold">${t.fin}</div><div class="total-box" style="width:60px;margin-left:var(--total-gap)">${pts}</div></div>`;
+                    h += `<div class="team-row ${t.alive.every(a=>a===0)?'eliminated':''}">
+                        <div class="logo-name-section"><div style="width:30px;text-align:center">${i+1}</div><div style="width:var(--logo-size)"><img src="${t.logo}" style="width:100%" onerror="this.style.opacity='0'"></div><div style="width:var(--name-width);padding-left:10px">${t.name}</div></div>
+                        <div style="width:55px;display:flex;justify-content:center;margin-left:var(--col-gap)">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                        <div style="width:40px;text-align:center;font-weight:bold">${t.fin}</div>
+                        <div class="total-box" style="width:60px;margin-left:var(--total-gap)">${pts}</div></div>`;
                 });
                 document.getElementById('board').innerHTML = h;
             }
