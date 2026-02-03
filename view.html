@@ -2,117 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Ultimate Overlay</title>
+    <title>BGMI Pro Production Overlay</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            background: #00ff00; /* Pure Green Screen */
-            font-family: 'Oswald', sans-serif;
-            width: 1920px;
-            height: 1080px;
-            overflow: hidden;
-            position: relative;
-        }
+        :root { --cyan: #00f2ff; --dark: #15191d; --row-bg: #1c2227; }
+        body { margin: 0; background: #00ff00; font-family: 'Oswald', sans-serif; overflow: hidden; height: 1080px; width: 1920px; }
 
-        /* 1. ALIVE STATUS (Top Left) */
-        #alive-status {
-            position: absolute;
-            top: 40px;
-            left: 40px;
-            display: flex;
-            gap: 15px;
-        }
-        .status-box {
-            background: rgba(21, 25, 29, 0.9);
-            padding: 10px 25px;
-            border-bottom: 4px solid #00f2ff;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .status-val { color: #00f2ff; font-size: 35px; line-height: 1; }
-        .status-lbl { color: white; font-size: 14px; text-transform: uppercase; }
+        /* SIDE ALIVE STATUS (Screenshot 2 Logic) */
+        .side-status { position: absolute; top: 50px; left: 20px; width: 350px; background: rgba(11, 14, 17, 0.95); border-radius: 4px; overflow: hidden; }
+        .s-header { display: grid; grid-template-columns: 40px 1fr 80px 40px 50px; background: #0b0e11; color: var(--cyan); font-size: 12px; padding: 10px 5px; text-align: center; border-bottom: 2px solid var(--cyan); }
+        .s-row { display: grid; grid-template-columns: 40px 1fr 80px 40px 50px; padding: 8px 5px; border-bottom: 1px solid #2d3439; align-items: center; color: white; }
+        .s-row.out { opacity: 0.4; filter: grayscale(1); }
+        .rank-num { font-weight: bold; color: #5c6b79; }
+        .p-bars { display: flex; gap: 3px; justify-content: center; }
+        .bar { width: 4px; height: 18px; background: #3e474f; border-radius: 1px; }
+        .bar.active { background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
+        .total-box { background: var(--cyan); color: black; font-weight: bold; height: 100%; display: flex; align-items: center; justify-content: center; }
 
-        /* 2. ELIMINATION POPUP (Top Middle) */
-        #elim-container {
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-        }
-        .elim-card {
-            display: flex;
-            background: #15191d;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            min-width: 450px;
-            border-bottom: 4px solid #00f2ff;
-            animation: dropDown 0.5s ease-out;
-        }
-        .logo-box { background: white; width: 100px; display: flex; justify-content: center; align-items: center; }
-        .logo-box img { width: 70px; height: 70px; object-fit: contain; }
-        .info-box { padding: 15px 25px; flex-grow: 1; }
-        .team-name { font-size: 28px; color: white; margin: 0; }
-        .status-txt { color: #00f2ff; font-size: 18px; }
-        .fin-box { background: #252c33; padding: 10px 20px; text-align: center; }
-        .fin-val { color: #2b7fff; font-size: 35px; display: block; }
+        /* ELIMINATION POPUP (Screenshot 1 Design) */
+        #elim-box { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); display: none; }
+        .elim-card { display: flex; background: #1c2227; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.6); min-width: 650px; height: 120px; border: 1px solid #2d3439; }
+        .e-logo-side { background: white; width: 180px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .e-logo-side img { width: 100px; height: 100px; object-fit: contain; }
+        .e-info { flex-grow: 1; padding: 20px 30px; display: flex; flex-direction: column; justify-content: center; }
+        .e-team-name { color: white; font-size: 45px; text-transform: uppercase; line-height: 1; margin: 0; font-weight: 700; letter-spacing: 1px; }
+        .e-status { color: var(--cyan); font-size: 22px; text-transform: uppercase; margin-top: 5px; font-weight: 700; }
+        .e-fin-side { background: #2d3439; width: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-left: 1px solid #3e474f; }
+        .e-fin-num { font-size: 55px; color: #2b7fff; line-height: 1; font-weight: 700; }
+        .e-fin-lbl { color: white; font-size: 16px; margin-top: 5px; font-weight: 500; }
 
-        /* 3. WINNING PREDICTION (Bottom Right) */
-        #prediction-box {
-            position: absolute;
-            bottom: 40px;
-            right: 40px;
-            background: rgba(21, 25, 29, 0.9);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 5px solid #ffaa00;
-            width: 250px;
-        }
-        .pred-title { color: #ffaa00; font-size: 14px; margin-bottom: 5px; }
-        .pred-team { color: white; font-size: 20px; display: flex; align-items: center; gap: 10px; }
-        .pred-logo { width: 30px; height: 30px; border-radius: 50%; }
-
-        @keyframes dropDown { from { transform: translateY(-150px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes slideIn { from { transform: translate(-50%, -150%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        @keyframes slideOut { from { opacity: 1; } to { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="alive-status">
-        <div class="status-box">
-            <span class="status-val" id="alive-teams">0</span>
-            <div class="status-lbl">Teams Alive</div>
+    <div class="side-status">
+        <div class="s-header">
+            <div>#</div><div>TEAM NAME</div><div>STATUS</div><div>FIN.</div><div style="background:var(--cyan);color:black">TOTAL</div>
         </div>
-        <div class="status-box">
-            <span class="status-val" id="alive-players">0</span>
-            <div class="status-lbl">Players Alive</div>
-        </div>
+        <div id="status-list"></div>
     </div>
 
-    <div id="elim-container">
+    <div id="elim-box">
         <div class="elim-card">
-            <div class="logo-box"><img id="e-logo" src=""></div>
-            <div class="info-box">
-                <div class="team-name" id="e-name">TEAM NAME</div>
-                <div class="status-txt">ELIMINATED</div>
+            <div class="e-logo-side"><img id="e-img" src=""></div>
+            <div class="e-info">
+                <div class="e-team-name" id="e-name">NEW TEAMW</div>
+                <div class="e-status">ELIMINATED</div>
             </div>
-            <div class="fin-box">
-                <span class="fin-val" id="e-fin">0</span>
-                <span style="color:white; font-size:10px;">FINISHES</span>
+            <div class="e-fin-side">
+                <div class="e-fin-num" id="e-fin">0</div>
+                <div class="e-fin-lbl">FINISHES</div>
             </div>
-        </div>
-    </div>
-
-    <div id="prediction-box">
-        <div class="pred-title">WINNING PREDICTION</div>
-        <div class="pred-team">
-            <img class="pred-logo" id="p-logo" src="https://via.placeholder.com/30">
-            <span id="p-name">Calculating...</span>
         </div>
     </div>
 
@@ -120,55 +64,56 @@
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        let lastElimStr = "";
+        let lastElimData = "";
 
         db.ref('liveData').on('value', (snap) => {
-            if (!snap.exists()) return;
+            if(!snap.exists()) return;
             const data = snap.val();
             const teams = data.teams || [];
 
-            // 1. Calculate Alive Status
-            let aliveTeams = 0;
-            let alivePlayers = 0;
-            teams.forEach(t => {
-                const pAlive = t.alive.filter(a => a === 1).length;
-                if(pAlive > 0) {
-                    aliveTeams++;
-                    alivePlayers += pAlive;
-                }
-            });
-            document.getElementById('alive-teams').innerText = aliveTeams;
-            document.getElementById('alive-players').innerText = alivePlayers;
+            // Render Side Table (Logic from Screenshot 2)
+            const list = document.getElementById('status-list');
+            const sorted = teams.map(t => {
+                let mPts = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
+                let total = (parseInt(t.fin)||0) + (parseInt(t.place)||0) + mPts;
+                return {...t, total};
+            }).sort((a,b) => b.total - a.total);
 
-            // 2. Elimination Popup Trigger
-            if (data.lastEliminated && JSON.stringify(data.lastEliminated) !== lastElimStr) {
-                lastElimStr = JSON.stringify(data.lastEliminated);
-                triggerElim(data.lastEliminated);
-            }
+            list.innerHTML = sorted.map((t, i) => {
+                const aliveCount = t.alive ? t.alive.filter(a => a == 1).length : 0;
+                const bars = [1,1,1,1].map((_, idx) => `<div class="bar ${idx < aliveCount ? 'active' : ''}"></div>`).join('');
+                
+                return `
+                    <div class="s-row ${aliveCount === 0 ? 'out' : ''}">
+                        <div class="rank-num">${i+1}</div>
+                        <div style="text-align:left; padding-left:10px; font-weight:700">${t.name}</div>
+                        <div class="p-bars">${bars}</div>
+                        <div style="text-align:center">${t.fin}</div>
+                        <div class="total-box">${t.total}</div>
+                    </div>
+                `;
+            }).join('');
 
-            // 3. Winning Prediction Logic (Highest Finishes + Alive)
-            const contenders = teams.filter(t => t.alive.includes(1));
-            if(contenders.length > 0) {
-                const top = contenders.sort((a,b) => (parseInt(b.fin)||0) - (parseInt(a.fin)||0))[0];
-                document.getElementById('p-name').innerText = top.name;
-                document.getElementById('p-logo').src = top.logo || 'https://via.placeholder.com/30';
+            // Elimination Logic (Logic from Screenshot 1)
+            if(data.lastEliminated && JSON.stringify(data.lastEliminated) !== lastElimData) {
+                lastElimData = JSON.stringify(data.lastEliminated);
+                showElim(data.lastEliminated);
             }
         });
 
-        function triggerElim(data) {
-            const el = document.getElementById('elim-container');
-            document.getElementById('e-name').innerText = data.name;
-            document.getElementById('e-logo').src = data.logo || '';
-            document.getElementById('e-fin').innerText = data.finishes || 0;
-
-            el.style.display = 'block';
-            el.style.animation = 'dropDown 0.5s ease-out';
-
+        function showElim(d) {
+            const box = document.getElementById('elim-box');
+            document.getElementById('e-name').innerText = d.name;
+            document.getElementById('e-img').src = d.logo || '';
+            document.getElementById('e-fin').innerText = d.finishes || 0;
+            
+            box.style.display = 'block';
+            box.style.animation = 'slideIn 0.5s forwards';
+            
             setTimeout(() => {
-                el.style.animation = 'fadeOut 0.5s forwards';
-                setTimeout(() => { el.style.display = 'none'; }, 500);
-            }, 5000);
+                box.style.animation = 'slideOut 0.5s forwards';
+                setTimeout(() => box.style.display = 'none', 500);
+            }, 6000);
         }
     </script>
 </body>
