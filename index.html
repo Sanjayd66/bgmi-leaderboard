@@ -2,22 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI PRO ADMIN - FINAL FIX</title>
+    <title>BGMI Admin - Final Fix All Features</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --cyan: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 20px; }
         .admin-panel { background: #15191d; padding: 25px; border-radius: 12px; max-width: 1150px; margin: auto; border: 1px solid #2d3439; }
-        
         .grid-layout { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #1c2227; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-bottom: 3px solid var(--cyan); }
         .item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; font-size: 11px; }
-        
         .team-card { background: #1c2227; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #2d3439; position: relative; }
         .m-history { background: #0b0e11; padding: 10px; border-radius: 6px; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; border: 1px solid #252c33; }
         .m-input { width: 45px; text-align: center; background: #1c2227; border: 1px solid var(--cyan); color: white; border-radius: 4px; padding: 5px; }
-        
-        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: transparent; }
+        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; }
         input[type="range"] { width: 80px; accent-color: var(--cyan); }
         .action-btn { padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
     </style>
@@ -57,18 +54,22 @@
         const db = firebase.database();
         let teams = []; let config = {};
 
-        function sync(elimData = null) { db.ref('liveData').update({ teams, config, lastEliminated: elimData || "" }); }
+        function sync(elimData = null) { 
+            // Important: New match par elimData empty string bhej rahe hain
+            db.ref('liveData').update({ teams, config, lastEliminated: elimData || "" }); 
+        }
+        
         function updateCfg(p, v) { config[p] = v; sync(); }
 
         function globalNewMatch() {
-            if(confirm("New Match reset? Current score history mein save ho jayega.")){
+            if(confirm("New Match reset karein? Current score history mein save ho jayega.")){
                 teams.forEach(t => {
                     let mTotal = (parseInt(t.fin) || 0) + (parseInt(t.place) || 0);
                     if(!t.matches) t.matches = [];
                     t.matches.push(mTotal);
                     t.fin = 0; t.place = 0; t.alive = [1,1,1,1]; t.elim = false;
                 });
-                sync();
+                sync(""); // Clear lastEliminated on new match
             }
         }
 
@@ -95,22 +96,25 @@
         }
         function edit(i, f, v) { teams[i][f] = v; sync(); }
         function editMatch(ti, mi, v) { teams[ti].matches[mi] = v; sync(); }
+        
         function tog(i, pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             const aliveCount = teams.filter(t => t.alive.some(a => a === 1)).length;
             let elim = null;
+            // Top 2 Logic: 2 teams bachegi toh broadcast nahi aayega
             if (teams[i].alive.every(a => a === 0) && !teams[i].elim && aliveCount > 1) {
                 teams[i].elim = true;
                 elim = { name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin) || 0) };
             } else if (teams[i].alive.some(a => a === 1)) { teams[i].elim = false; }
             sync(elim);
         }
+        
         function addTeam() { 
             let mc = teams.length > 0 && teams[0].matches ? teams[0].matches.length : 0;
             teams.push({ name: "TEAM", logo: "", fin: 0, place: 0, matches: new Array(mc).fill(0), alive: [1,1,1,1], elim: false }); sync(); 
         }
         function removeTeam(i) { teams.splice(i, 1); sync(); }
-        function resetAll() { if(confirm("Full Reset?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.matches=[]; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
+        function resetAll() { if(confirm("Sab uda dein?")){ teams=[]; sync(); }}
         db.ref('liveData').on('value', (snap) => { if(snap.exists()){ teams = snap.val().teams || []; config = snap.val().config || {}; draw(); } });
     </script>
 </body>
