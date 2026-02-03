@@ -2,105 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Leaderboard Display</title>
+    <title>Elimination Broadcast</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --cyan: #00f2ff;
-            --dark-blue: #0b0e11;
-            --row-bg: rgba(28, 34, 39, 0.9);
-            --text-color: #ffffff;
-            --logo-name-bg: #15191d;
-            --logo-size: 40px;
-            --name-width: 250px;
-            --col-gap: 10px;
-            --total-gap: 20px;
+        body { margin: 0; overflow: hidden; background: transparent; font-family: 'Oswald', sans-serif; }
+        
+        #broadcast-container {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none; /* Default hidden */
         }
 
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Oswald', sans-serif;
-            background: transparent; /* OBS transparency ke liye */
-            color: var(--text-color);
-        }
-
-        #leaderboard {
-            width: fit-content;
-            margin: 50px auto;
-            background: var(--dark-blue);
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-
-        .header {
-            display: flex;
-            background: var(--cyan);
-            color: black;
-            font-weight: bold;
-            text-transform: uppercase;
-            padding: 10px;
-            gap: var(--col-gap);
-            border-radius: 5px 5px 0 0;
-        }
-
-        .row {
+        .elim-card {
             display: flex;
             align-items: center;
-            background: var(--row-bg);
-            margin-top: 5px;
-            padding: 8px 10px;
-            gap: var(--col-gap);
-            transition: all 0.5s ease-in-out;
-            border-left: 4px solid transparent;
+            background: #15191d;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            min-width: 500px;
+            border-bottom: 4px solid #00f2ff;
+            animation: slideUp 0.5s ease-out;
         }
 
-        .row.eliminated {
-            opacity: 0.5;
-            filter: grayscale(1);
-            border-left-color: #ff4757;
+        .logo-box {
+            background: white;
+            width: 120px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .rank { width: 40px; text-align: center; font-weight: bold; color: var(--cyan); }
-        
-        .team-info { 
-            display: flex; 
-            align-items: center; 
-            width: var(--name-width); 
-            background: var(--logo-name-bg);
-            padding: 5px 10px;
-            border-radius: 4px;
+        .logo-box img { max-width: 80%; max-height: 80%; object-fit: contain; }
+
+        .info-box {
+            padding: 0 30px;
+            flex-grow: 1;
         }
 
-        .logo { 
-            width: var(--logo-size); 
-            height: var(--logo-size); 
-            object-fit: contain; 
-            margin-right: 10px; 
+        .team-name { font-size: 32px; color: white; text-transform: uppercase; line-height: 1; margin: 0; }
+        .status { font-size: 20px; color: #00f2ff; text-transform: uppercase; margin-top: 5px; }
+
+        .finish-box {
+            background: #252c33;
+            width: 120px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        .stats { width: 80px; text-align: center; }
-        .total { width: 100px; text-align: center; font-weight: bold; color: var(--cyan); margin-left: var(--total-gap); }
+        .fin-count { font-size: 40px; color: #2b7fff; line-height: 1; }
+        .fin-text { font-size: 14px; color: white; margin-top: 5px; }
 
-        /* Animation for rank changes */
-        .flip-list-move { transition: transform 0.8s; }
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="leaderboard">
-        <div class="header">
-            <div style="width: 40px;">#</div>
-            <div style="width: var(--name-width);">Team Name</div>
-            <div style="width: 80px;">Matches</div>
-            <div style="width: 80px;">Finishes</div>
-            <div style="width: 80px;">Place</div>
-            <div style="width: 100px; margin-left: var(--total-gap);">Total</div>
+    <div id="broadcast-container">
+        <div class="elim-card">
+            <div class="logo-box">
+                <img id="elim-logo" src="" alt="">
+            </div>
+            <div class="info-box">
+                <p class="team-name" id="elim-name">TEAM NAME</p>
+                <p class="status">ELIMINATED</p>
+            </div>
+            <div class="finish-box">
+                <div class="fin-count" id="elim-fin">0</div>
+                <div class="fin-text">FINISHES</div>
+            </div>
         </div>
-        <div id="table-content"></div>
     </div>
 
     <script>
@@ -108,46 +95,36 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        db.ref('liveData').on('value', (snap) => {
-            if (snap.exists()) {
+        let lastSeenElim = "";
+
+        db.ref('liveData/lastEliminated').on('value', (snap) => {
+            if (snap.exists() && snap.val() !== "") {
                 const data = snap.val();
-                updateUI(data.teams || [], data.config || {});
+                
+                // Duplicate alert check
+                if (JSON.stringify(data) === lastSeenElim) return;
+                lastSeenElim = JSON.stringify(data);
+
+                showBroadcast(data);
             }
         });
 
-        function updateUI(teams, config) {
-            // Update CSS Variables from Admin Panel
-            const root = document.documentElement;
-            if(config['cyan']) root.style.setProperty('--cyan', config['cyan']);
-            if(config['dark-blue']) root.style.setProperty('--dark-blue', config['dark-blue']);
-            if(config['row-bg']) root.style.setProperty('--row-bg', config['row-bg']);
-            if(config['logo-name-bg']) root.style.setProperty('--logo-name-bg', config['logo-name-bg']);
-            if(config['logo-size']) root.style.setProperty('--logo-size', config['logo-size'] + "px");
-            if(config['name-width']) root.style.setProperty('--name-width', config['name-width'] + "px");
-            if(config['col-gap']) root.style.setProperty('--col-gap', config['col-gap'] + "px");
-            if(config['total-gap']) root.style.setProperty('--total-gap', config['total-gap'] + "px");
+        function showBroadcast(data) {
+            const container = document.getElementById('broadcast-container');
+            document.getElementById('elim-name').innerText = data.name;
+            document.getElementById('elim-logo').src = data.logo || 'https://via.placeholder.com/100';
+            document.getElementById('elim-fin').innerText = data.finishes || 0;
 
-            const content = document.getElementById('table-content');
-            
-            // Calculate and Sort
-            const sortedTeams = teams.map(t => {
-                let mPts = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
-                return { ...t, total: (parseInt(t.fin) || 0) + (parseInt(t.place) || 0) + mPts };
-            }).sort((a, b) => b.total - a.total);
+            container.style.display = 'block';
+            container.style.animation = 'slideUp 0.5s ease-out';
 
-            content.innerHTML = sortedTeams.map((t, i) => `
-                <div class="row ${t.elim ? 'eliminated' : ''}">
-                    <div class="rank">${i + 1}</div>
-                    <div class="team-info">
-                        <img class="logo" src="${t.logo || 'https://via.placeholder.com/40'}" onerror="this.src='https://via.placeholder.com/40'">
-                        <div class="name">${t.name}</div>
-                    </div>
-                    <div class="stats">${t.matches ? t.matches.length : 0}</div>
-                    <div class="stats">${t.fin}</div>
-                    <div class="stats">${t.place}</div>
-                    <div class="total">${t.total}</div>
-                </div>
-            `).join('');
+            // 5 Seconds baad gayab ho jayega
+            setTimeout(() => {
+                container.style.animation = 'fadeOut 0.5s forwards';
+                setTimeout(() => {
+                    container.style.display = 'none';
+                }, 500);
+            }, 5000);
         }
     </script>
 </body>
