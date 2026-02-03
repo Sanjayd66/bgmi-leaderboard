@@ -6,79 +6,34 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --logo-size: 30px; --name-width: 120px; --total-gap: 15px; }
+        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --logo-size: 30px; --name-width: 120px; --total-gap: 15px; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
-        
-        /* SIDE DASHBOARD (Accurate to Screenshot 2025-10-18 044849.png) */
         #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 8px; border-radius: 4px; }
-        .header-row { display: flex; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.2); margin-bottom: 5px; padding-bottom: 2px; }
         .team-row { display: flex; align-items: center; height: 36px; background: var(--row-bg); margin-bottom: 2px; }
-        .team-row.eliminated { opacity: 0.3; filter: grayscale(1); }
-        
-        .rank-col { width: 30px; text-align: center; font-weight: bold; font-size: 14px; }
+        .rank-col { width: 30px; text-align: center; font-weight: bold; color: white; }
         .logo-col { width: var(--logo-size); display: flex; justify-content: center; }
-        .name-col { width: var(--name-width); padding-left: 10px; font-weight: bold; font-size: 15px; text-transform: uppercase; overflow: hidden; }
+        .name-col { width: var(--name-width); padding-left: 10px; font-weight: bold; color: white; text-transform: uppercase; }
         .status-col { width: 60px; display: flex; justify-content: center; }
         .bar { width: 4px; height: 18px; background: var(--cyan); margin: 0 1px; }
         .bar.dead { opacity: 0.2; height: 5px; background: #445588; }
-        .fin-col { width: 40px; text-align: center; font-weight: bold; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; width: 55px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); font-size: 16px; }
-
-        /* ELIMINATION POPUP */
-        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 600px; height: 110px; background: #1c2227; border-radius: 12px; overflow: hidden; transition: top 0.7s; z-index: 1000; }
-        #elim-popup.show { top: 40px; }
-
-        /* CENTER PREDICTION */
-        #prediction-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; gap: 15px; }
-        #prediction-panel.show { display: flex; }
-        .pred-card { width: 210px; background: #000; border: 2px solid var(--cyan); border-radius: 10px; overflow: hidden; }
-
-        /* WINNER ANIMATION */
-        #winner-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; }
-        #winner-area.show { display: flex; animation: zoomIn 0.8s forwards; }
-        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .fin-col { width: 40px; text-align: center; font-weight: bold; color: white; }
+        .total-box { background: var(--cyan); color: #000; height: 100%; width: 55px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); }
     </style>
 </head>
 <body>
-    <div id="elim-popup">
-        <div style="background:white; width:150px; display:flex; justify-content:center; align-items:center;"><img id="pop-logo" src="" style="width:85px;"></div>
-        <div style="flex-grow:1; padding:20px; color:white;">
-            <p id="pop-name" style="font-size:38px; margin:0; font-weight:700; text-transform:uppercase;"></p>
-            <p style="color:var(--cyan); margin:0; font-weight:bold;">ELIMINATED</p>
-        </div>
-        <div style="background:rgba(0,0,0,0.4); width:130px; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; border-left:1px solid rgba(255,255,255,0.1);">
-            <div id="pop-fin-val" style="font-size:50px; color:var(--cyan); font-weight:bold;">0</div>
-            <div style="font-size:12px;">FINISHES</div>
-        </div>
-    </div>
-
-    <div id="winner-area">
-        <div style="width:300px; height:300px; background:white; border-radius:50%; display:flex; justify-content:center; align-items:center;"><img id="win-img" src="" style="width:80%;"></div>
-        <h1 style="color:gold; font-size:70px; text-transform:uppercase;">Match Champions</h1>
-    </div>
-
-    <div id="prediction-panel"></div>
     <div id="board"></div>
-
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        let lastElim = "";
 
         db.ref('liveData').on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
-            Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--'+p, v + (isNaN(v)?'':'px')); });
-            
-            if(data.lastEliminated && data.lastEliminated.name !== lastElim) {
-                lastElim = data.lastEliminated.name;
-                document.getElementById('pop-logo').src = data.lastEliminated.logo;
-                document.getElementById('pop-name').innerText = data.lastEliminated.name;
-                document.getElementById('pop-fin-val').innerText = data.lastEliminated.finishes;
-                const p = document.getElementById('elim-popup');
-                p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 5000);
-            }
+            Object.entries(cfg).forEach(([p,v]) => { 
+                let unit = (isNaN(v) || String(v).startsWith('#')) ? '' : 'px';
+                document.documentElement.style.setProperty('--'+p, v + unit); 
+            });
             render(data.teams || []);
         });
 
@@ -88,36 +43,25 @@
                 let pB = (parseInt(b.fin)||0)+(parseInt(b.place)||0)+(b.matches?b.matches.reduce((x,y)=>x+parseInt(y),0):0);
                 return pB - pA;
             });
-            const alive = sorted.filter(t => t.alive && t.alive.some(a => a === 1));
-            const pPanel = document.getElementById('prediction-panel');
-            const board = document.getElementById('board');
-            const winArea = document.getElementById('winner-area');
 
-            if (alive.length === 1 && sorted.length > 1) {
-                document.getElementById('win-img').src = alive[0].logo;
-                winArea.classList.add('show'); return;
-            } else winArea.classList.remove('show');
-
-            if (alive.length >= 2 && alive.length <= 5) {
-                pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
-                alive.forEach(t => {
-                    pPanel.innerHTML += `<div class="pred-card"><div style="padding:15px; color:white; display:flex; align-items:center;"><img src="${t.logo}" style="width:40px;height:40px;object-fit:contain;"><div style="margin-left:15px;"><div style="font-weight:bold;font-size:15px;">${t.name}</div><div style="display:flex;margin-top:5px;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}" style="height:10px; width:3px;"></div>`).join('')}</div></div></div><div style="background:var(--cyan);color:black;padding:5px;text-align:center;font-weight:bold;">WINNING PREDICTION</div></div>`;
-                });
-            } else {
-                pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div class="header-row"><div class="rank-col">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 10px)">TEAM NAME</div><div class="status-col">STATUS</div><div class="fin-col">FIN.</div><div class="total-box" style="background:transparent;color:var(--cyan);font-size:11px;font-weight:bold">TOTAL</div></div>`;
-                sorted.forEach((t, i) => {
-                    let pts = (parseInt(t.fin)||0)+(parseInt(t.place)||0)+(t.matches?t.matches.reduce((x,y)=>x+parseInt(y),0):0);
-                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}">
-                        <div class="rank-col">${i+1}</div>
-                        <div class="logo-col"><img src="${t.logo}" style="width:var(--logo-size);height:var(--logo-size);object-fit:contain;"></div>
-                        <div class="name-col">${t.name}</div>
-                        <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
-                        <div class="fin-col">${t.fin}</div>
-                        <div class="total-box">${pts}</div></div>`;
-                });
-                board.innerHTML = h;
-            }
+            let h = `<div style="display:flex; color:var(--cyan); font-size:10px; font-weight:bold; margin-bottom:5px;">
+                        <div style="width:30px">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 10px)">TEAM</div>
+                        <div style="width:60px; text-align:center">ALIVE</div><div style="width:40px">FIN</div><div style="margin-left:var(--total-gap)">TOT</div>
+                    </div>`;
+            
+            sorted.forEach((t, i) => {
+                let mPts = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
+                let pts = (parseInt(t.fin)||0) + (parseInt(t.place)||0) + mPts;
+                h += `<div class="team-row" style="opacity:${t.alive.every(a=>a==0)?0.4:1}">
+                    <div class="rank-col">${i+1}</div>
+                    <div class="logo-col"><img src="${t.logo}" style="width:var(--logo-size);height:var(--logo-size);object-fit:contain;"></div>
+                    <div class="name-col">${t.name}</div>
+                    <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                    <div class="fin-col">${t.fin}</div>
+                    <div class="total-box">${pts}</div>
+                </div>`;
+            });
+            document.getElementById('board').innerHTML = h;
         }
     </script>
 </body>
