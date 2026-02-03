@@ -80,15 +80,20 @@
         }
         function edit(i, f, v) { teams[i][f] = v; sync(); }
         function editMatch(ti, mi, v) { teams[ti].matches[mi] = v; sync(); }
+        
+        // Elimination with Finishes Logic
         function tog(i, pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             const aliveCount = teams[i].alive.filter(a => a === 1).length;
             let elim = null;
             if (aliveCount === 0 && !teams[i].elim) {
-                teams[i].elim = true; elim = { name: teams[i].name, logo: teams[i].logo };
+                teams[i].elim = true; 
+                let totalFin = parseInt(teams[i].fin || 0) + (teams[i].matches ? teams[i].matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0);
+                elim = { name: teams[i].name, logo: teams[i].logo, finishes: totalFin };
             } else if (aliveCount > 0) { teams[i].elim = false; }
             sync(elim);
         }
+
         function addTeam() { 
             let mc = teams.length > 0 && teams[0].matches ? teams[0].matches.length : 0;
             teams.push({ name: "NEW", logo: "", fin: 0, place: 0, matches: new Array(mc).fill(0), alive: [1,1,1,1], elim: false }); sync(); 
