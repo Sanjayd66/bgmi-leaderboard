@@ -57,7 +57,8 @@
         }
         function updateCfg(p, v) { config[p] = v; sync(); }
         function globalAddMatch() { teams.forEach(t => { if(!t.matches) t.matches = []; t.matches.push(0); }); sync(); }
-        function resetMatch() { if(confirm("Reset all?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.matches=[]; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
+        function resetMatch() { if(confirm("Reset all data?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.matches=[]; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
+        
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
@@ -67,8 +68,8 @@
                     <div class="edit-grid">
                         <div><label>Name</label><input value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
                         <div><label>Logo</label><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
-                        <div><label>Fin</label><input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
-                        <div><label>Place</label><input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
+                        <div><label>Finishes</label><input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
+                        <div><label>Placement</label><input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
                         <div><label>Total</label><input value="${t.total}" readonly style="color:var(--cyan);font-weight:bold"></div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
