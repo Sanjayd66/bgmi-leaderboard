@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Caster Indian - Zero Delay Admin</title>
+    <title>Caster Indian - Pro Admin</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -13,8 +13,8 @@
         .item { display: flex; align-items: center; justify-content: space-between; background: #333; padding: 5px 10px; border-radius: 4px; }
         .team-card { background: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #333; position: relative; }
         .edit-grid { display: grid; grid-template-columns: 120px 1fr 60px 60px 60px; gap: 10px; margin-bottom: 10px; }
-        input { background: #444; border: 1px solid #666; color: white; padding: 6px; border-radius: 4px; font-size: 12px; }
-        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: transparent; }
+        input { background: #444; border: 1px solid #666; color: white; padding: 6px; border-radius: 4px; font-size: 12px; width: 100%; }
+        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: transparent; padding: 0; }
         input[type="range"] { width: 100px; accent-color: var(--cyan); }
         .match-section { background: #111; padding: 8px; border-radius: 4px; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
         .m-input { width: 45px !important; text-align: center; background: #222 !important; border: 1px solid #444 !important; color: var(--cyan) !important; font-weight: bold; }
@@ -27,7 +27,7 @@
 </head>
 <body>
     <div class="admin-panel">
-        <h2 style="color:var(--cyan); text-align:center; margin-bottom:20px;">BGMI ZERO DELAY ADMIN</h2>
+        <h2 style="color:var(--cyan); text-align:center; margin-bottom:20px;">BGMI PRO FIREBASE ADMIN</h2>
         <div class="setting-grid">
             <div class="item"><label>Board BG</label> <input type="color" oninput="updateCfg('dark-blue', this.value)"></div>
             <div class="item"><label>Row BG Color</label> <input type="color" oninput="updateCfg('row-bg', this.value)"></div>
@@ -46,7 +46,6 @@
         </div>
         <div id="team-list"></div>
     </div>
-
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
@@ -56,33 +55,21 @@
         function sync(elimData = null) {
             db.ref('liveData').update({ teams, config, lastEliminated: elimData || "" });
         }
-
         function updateCfg(p, v) { config[p] = v; sync(); }
-
-        function globalAddMatch() {
-            teams.forEach(t => { if(!t.matches) t.matches = []; t.matches.push(0); });
-            sync();
-        }
-
-        function resetMatch() {
-            if(confirm("Reset all data?")) {
-                teams.forEach(t => { t.fin = 0; t.place = 0; t.matches = []; t.alive = [1,1,1,1]; t.elim = false; });
-                sync();
-            }
-        }
-
+        function globalAddMatch() { teams.forEach(t => { if(!t.matches) t.matches = []; t.matches.push(0); }); sync(); }
+        function resetMatch() { if(confirm("Reset all?")){ teams.forEach(t=>{ t.fin=0; t.place=0; t.matches=[]; t.alive=[1,1,1,1]; t.elim=false; }); sync(); }}
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
-                let mPoints = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
-                t.total = parseInt(t.fin || 0) + parseInt(t.place || 0) + mPoints;
+                let mPts = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
+                t.total = parseInt(t.fin || 0) + parseInt(t.place || 0) + mPts;
                 list.innerHTML += `<div class="team-card"><button class="del-btn" onclick="removeTeam(${i})">X</button>
                     <div class="edit-grid">
-                        <div><label>Name</label><input style="width:100%" value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
-                        <div><label>Logo</label><input style="width:100%" value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
-                        <div><label>Finishes</label><input style="width:100%" type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
-                        <div><label>Placement</label><input style="width:100%" type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
-                        <div><label>Total</label><input style="width:100%" value="${t.total}" readonly style="color:var(--cyan)"></div>
+                        <div><label>Name</label><input value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
+                        <div><label>Logo</label><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
+                        <div><label>Fin</label><input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)"></div>
+                        <div><label>Place</label><input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)"></div>
+                        <div><label>Total</label><input value="${t.total}" readonly style="color:var(--cyan);font-weight:bold"></div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div style="display:flex;">${t.alive.map((a,pi)=>`<button class="p-btn ${a?'':'off'}" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}</div>
@@ -90,7 +77,6 @@
                     </div></div>`;
             });
         }
-
         function edit(i, f, v) { teams[i][f] = v; sync(); }
         function editMatch(ti, mi, v) { teams[ti].matches[mi] = v; sync(); }
         function tog(i, pi) {
@@ -104,11 +90,9 @@
         }
         function addTeam() { 
             let mc = teams.length > 0 && teams[0].matches ? teams[0].matches.length : 0;
-            teams.push({ name: "NEW", logo: "", fin: 0, place: 0, matches: new Array(mc).fill(0), alive: [1,1,1,1], elim: false }); 
-            sync(); 
+            teams.push({ name: "NEW", logo: "", fin: 0, place: 0, matches: new Array(mc).fill(0), alive: [1,1,1,1], elim: false }); sync(); 
         }
         function removeTeam(i) { teams.splice(i, 1); sync(); }
-
         db.ref('liveData').on('value', (snap) => { if(snap.exists()){ teams = snap.val().teams || []; config = snap.val().config || {}; draw(); } });
     </script>
 </body>
