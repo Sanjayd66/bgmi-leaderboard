@@ -12,9 +12,7 @@
         .grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #1c2227; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-bottom: 2px solid var(--cyan); }
         .item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 5px 8px; border-radius: 6px; font-size: 11px; }
         .team-card { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; position: relative; }
-        input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 4px; border-radius: 4px; }
-        .m-history { background: #0b0e11; padding: 5px; border-radius: 6px; display: flex; gap: 5px; }
-        .m-input { width: 35px; text-align: center; border: 1px solid var(--cyan); }
+        input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 4px; border-radius: 4px; font-size: 14px; }
         .action-btn { padding: 10px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; font-size: 12px; }
     </style>
 </head>
@@ -47,52 +45,60 @@
             if (snap.exists()) {
                 const data = snap.val();
                 teams = data.teams || []; config = data.config || {};
-                const ids = ['cyan','dark-blue','row-bg','text-color','elim-bg','pred-bg'];
-                ids.forEach(id => { if(config[id] && document.getElementById('cfg-'+id)) document.getElementById('cfg-'+id).value = config[id]; });
-                if(config['cyan']) document.documentElement.style.setProperty('--cyan', config['cyan']);
                 draw();
             }
         });
 
-        function sync(elimData = null) { db.ref('liveData').set({ teams, config, lastEliminated: elimData !== null ? elimData : (window.lastElim || "") }); }
-        function updateCfg(p,v) { config[p]=v; if(p==='cyan') document.documentElement.style.setProperty('--cyan',v); sync(); }
+        function sync(elimData = null) { 
+            db.ref('liveData').set({ 
+                teams, 
+                config, 
+                lastEliminated: elimData ? elimData : (teams.lastElim || "") 
+            }); 
+        }
+
+        function updateCfg(p,v) { config[p]=v; sync(); }
 
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
-                let mPts = t.matches ? t.matches.reduce((a, b) => a + parseInt(b || 0), 0) : 0;
-                let total = (parseInt(t.fin) || 0) + (parseInt(t.place) || 0) + mPts;
                 list.innerHTML += `
                 <div class="team-card">
                     <button style="position:absolute; right:10px; top:10px; color:red; background:none; border:none;" onclick="removeTeam(${i})">✖</button>
-                    <div style="display:grid; grid-template-columns: 1.5fr 1fr 50px 50px 50px; gap:8px; margin-bottom:8px;">
+                    <div style="display:grid; grid-template-columns: 1.5fr 1fr 60px 60px; gap:8px;">
                         <input value="${t.name}" onchange="edit(${i},'name',this.value)">
-                        <input value="${t.logo}" onchange="edit(${i},'logo',this.value)">
+                        <input value="${t.logo}" onchange="edit(${i},'logo',this.value)" placeholder="Logo URL">
                         <input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)">
-                        <input type="number" value="${t.place}" onchange="edit(${i},'place',this.value)">
-                        <input value="${total}" readonly style="color:var(--cyan); border:none; text-align:center;">
-                    </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        ${t.alive.map((a,pi)=>`<button style="width:28px;height:28px;opacity:${a?1:0.2};background:var(--cyan);border-radius:4px;" onclick="tog(${i},${pi})">${pi+1}</button>`).join('')}
-                        <div class="m-history">${(t.matches || []).map((m, mi) => `<input type="number" class="m-input" value="${m}" onchange="editMatch(${i},${mi},this.value)">`).join('')}</div>
+                        <div style="display:flex; gap:2px;">
+                            ${t.alive.map((a,pi)=>`<button style="width:25px;height:25px;opacity:${a?1:0.2};background:var(--cyan);border:none;border-radius:3px;" onclick="tog(${i},${pi})"></button>`).join('')}
+                        </div>
                     </div>
                 </div>`;
             });
         }
+
         function edit(i,f,v) { teams[i][f]=v; sync(); }
-        function editMatch(ti,mi,v) { teams[ti].matches[mi]=parseInt(v)||0; sync(); }
+        
         function tog(i,pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             let elim = null;
+            // Agar team puri out ho gayi
             if (teams[i].alive.every(a=>a==0) && !teams[i].elim) {
                 teams[i].elim = true;
-                elim = { name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
-                window.lastElim = elim;
-            } else if (teams[i].alive.some(a=>a==1)) { teams[i].elim = false; }
+                elim = { 
+                    id: Date.now().toString(), // Unique ID to force trigger
+                    name: teams[i].name, 
+                    logo: teams[i].logo, 
+                    finishes: (parseInt(teams[i].fin)||0) 
+                };
+            } else if (teams[i].alive.some(a=>a==1)) { 
+                teams[i].elim = false; 
+            }
             sync(elim);
         }
-        function addTeam() { let mc = teams.length>0 && teams[0].matches?teams[0].matches.length:0; teams.push({ name: "TEAM", logo: "", fin: 0, place: 0, matches: new Array(mc).fill(0), alive: [1,1,1,1], elim: false }); sync(); }
-        function globalNewMatch() { teams.forEach(t => { let cur = (parseInt(t.fin)||0)+(parseInt(t.place)||0); if(!t.matches) t.matches=[]; t.matches.push(cur); t.fin=0; t.place=0; t.alive=[1,1,1,1]; t.elim=false; }); window.lastElim=""; sync(""); }
+
+        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, place: 0, alive: [1,1,1,1], elim: false }); sync(); }
+        function globalNewMatch() { teams.forEach(t => { t.fin=0; t.alive=[1,1,1,1]; t.elim=false; }); sync(""); }
         function removeTeam(i) { if(confirm("Delete?")) { teams.splice(i, 1); sync(); } }
         function resetAll() { if(confirm("RESET?")) { teams=[]; config={}; sync(); }}
     </script>
