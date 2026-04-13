@@ -2,22 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI ADMIN - ALL FEATURES RESTORED</title>
+    <title>BGMI ADMIN - POINTS PERSISTENT</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --cyan: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1000px; margin: auto; border: 1px solid #2d3439; }
-        
-        /* 6 Color Pickers Grid */
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px; border-radius: 6px; font-size: 12px; }
-        
-        .main-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .btn { flex: 1; min-width: 140px; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
-        
-        /* Team Row Fix */
+        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.5fr 1fr 60px 100px 40px; gap: 10px; align-items: center; }
         input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: none; border-radius: 4px; cursor: pointer; }
@@ -26,8 +20,7 @@
 </head>
 <body>
     <div class="admin-panel">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI PRO MASTER ADMIN</h2>
-        
+        <h2 style="text-align:center; color:var(--cyan);">BGMI POINTS PERSIST ADMIN</h2>
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" oninput="updateCfg('cyan',this.value)"></div>
             <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" oninput="updateCfg('dark-blue',this.value)"></div>
@@ -36,13 +29,11 @@
             <div class="color-item"><span>Elim Popup</span><input type="color" id="cfg-elim-bg" oninput="updateCfg('elim-bg',this.value)"></div>
             <div class="color-item"><span>Prediction</span><input type="color" id="cfg-pred-bg" oninput="updateCfg('pred-bg',this.value)"></div>
         </div>
-
-        <div class="main-actions">
+        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
             <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ Add Team</button>
-            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match</button>
-            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Reset All Data</button>
+            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match (Keep Points)</button>
+            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Full Reset (Clear All)</button>
         </div>
-
         <div id="team-list"></div>
     </div>
 
@@ -51,37 +42,28 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
-
         let teams = []; let config = {};
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
-            config = data.config || { 'cyan': '#00f2ff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
-            
-            Object.keys(config).forEach(k => { 
-                if(document.getElementById('cfg-'+k)) document.getElementById('cfg-'+k).value = config[k]; 
-            });
+            config = data.config || { 'cyan': '#00f2ff' };
+            Object.keys(config).forEach(k => { if(document.getElementById('cfg-'+k)) document.getElementById('cfg-'+k).value = config[k]; });
             document.documentElement.style.setProperty('--cyan', config.cyan);
             draw();
         });
 
-        function sync(elim = null) { 
-            db.ref(SYNC_PATH).set({ teams, config, lastEliminated: elim || (window.lastE || "") }); 
-        }
-
+        function sync(elim = null) { db.ref(SYNC_PATH).set({ teams, config, lastEliminated: elim || (window.lastE || "") }); }
         function updateCfg(p,v) { config[p]=v; if(p==='cyan') document.documentElement.style.setProperty('--cyan', v); sync(); }
-
+        
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
                 list.innerHTML += `<div class="team-row">
-                    <input value="${t.name}" onchange="edit(${i},'name',this.value)" placeholder="Team Name">
-                    <input value="${t.logo}" onchange="edit(${i},'logo',this.value)" placeholder="Logo URL">
+                    <input value="${t.name}" onchange="edit(${i},'name',this.value)">
+                    <input value="${t.logo}" onchange="edit(${i},'logo',this.value)">
                     <input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)">
-                    <div style="display:flex; gap:4px;">
-                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}; opacity:${a?1:0.3}" onclick="tog(${i},${pi})"></button>`).join('')}
-                    </div>
+                    <div style="display:flex; gap:4px;">${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}</div>
                     <button class="del-btn" onclick="removeTeam(${i})">✖</button>
                 </div>`;
             });
@@ -100,14 +82,15 @@
         }
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, alive: [1,1,1,1], elim: false }); sync(); }
+        
+        // FIXED LOGIC: Points stay, status resets
         function globalNewMatch() { 
-            if(confirm("New Match? Scores will reset.")) {
-                teams.forEach(t => { t.fin=0; t.alive=[1,1,1,1]; t.elim=false; }); 
-                sync(""); 
+            if(confirm("New Match? Status will reset, Points will remain.")) {
+                teams.forEach(t => { t.alive=[1,1,1,1]; t.elim=false; }); sync(""); 
             }
         }
-        function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("RESET ALL DATA? Everything will be deleted.")) { db.ref(SYNC_PATH).set(null); } }
+        function removeTeam(i) { if(confirm("Delete?")) { teams.splice(i, 1); sync(); } }
+        function resetAll() { if(confirm("Full Reset? Everything will be deleted.")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
