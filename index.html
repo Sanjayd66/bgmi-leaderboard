@@ -2,151 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI PRO ADMIN - All Options Restored</title>
+    <title>BGMI CLOUD ADMIN - FIXED SYNC</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --cyan: #00f2ff; }
-        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 20px; margin: 0; }
-        .admin-panel { background: #15191d; padding: 25px; border-radius: 15px; max-width: 1100px; margin: auto; border: 1px solid #2d3439; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        
-        /* Saare 6 Color Options yaha hain */
-        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 10px; border-bottom: 3px solid var(--cyan); }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: bold; }
-        
-        .main-actions { display: flex; gap: 15px; margin-bottom: 25px; }
-        .btn { flex: 1; padding: 15px; border: none; cursor: pointer; font-weight: 900; border-radius: 8px; text-transform: uppercase; transition: 0.3s; }
-        .btn-add { background: #2ed573; color: white; }
-        .btn-match { background: #ffa502; color: white; }
-        .btn-reset { background: #ff4757; color: white; }
-        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
-
-        /* Team Row Design - No Overlap */
-        .team-row { background: #1c2227; padding: 15px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.8fr 1.2fr 80px 110px 40px; gap: 15px; align-items: center; }
-        input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; font-family: 'Oswald'; }
-        
-        .status-container { display: flex; gap: 5px; justify-content: center; }
-        .player-dot { width: 22px; height: 22px; border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        .delete-icon { color: #ff4757; background: none; border: none; font-size: 24px; cursor: pointer; font-weight: bold; }
-        
-        h2 { text-align: center; color: var(--cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 25px; }
+        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
+        .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1000px; margin: auto; border: 1px solid #2d3439; }
+        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; }
+        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px; border-radius: 6px; font-size: 12px; }
+        .main-actions { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
+        .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.5fr 1fr 60px 100px 40px; gap: 10px; align-items: center; }
+        input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        .status-dot { width: 22px; height: 22px; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="admin-panel">
-        <h2>BGMI Master Cloud Admin</h2>
-        
+        <h2 style="text-align:center; color:var(--cyan);">BGMI SYNC ADMIN</h2>
         <div class="color-grid">
-            <div class="color-item"><span>Theme Color</span><input type="color" id="cfg-cyan" oninput="updateCfg('cyan',this.value)"></div>
+            <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" oninput="updateCfg('cyan',this.value)"></div>
             <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" oninput="updateCfg('dark-blue',this.value)"></div>
             <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" oninput="updateCfg('row-bg',this.value)"></div>
-            <div class="color-item"><span>Text Color</span><input type="color" id="cfg-text-color" oninput="updateCfg('text-color',this.value)"></div>
-            <div class="color-item"><span>Elim Popup</span><input type="color" id="cfg-elim-bg" oninput="updateCfg('elim-bg',this.value)"></div>
-            <div class="color-item"><span>Prediction</span><input type="color" id="cfg-pred-bg" oninput="updateCfg('pred-bg',this.value)"></div>
+            <div class="color-item"><span>Text</span><input type="color" id="cfg-text-color" oninput="updateCfg('text-color',this.value)"></div>
+            <div class="color-item"><span>Elim</span><input type="color" id="cfg-elim-bg" oninput="updateCfg('elim-bg',this.value)"></div>
+            <div class="color-item"><span>Pred</span><input type="color" id="cfg-pred-bg" oninput="updateCfg('pred-bg',this.value)"></div>
         </div>
-
         <div class="main-actions">
-            <button class="btn btn-add" onclick="addTeam()">+ Add New Team</button>
-            <button class="btn btn-match" onclick="globalNewMatch()">Start New Match</button>
-            <button class="btn btn-reset" onclick="resetAll()">Reset All Data</button>
+            <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ Add Team</button>
+            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match</button>
+            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Reset All</button>
         </div>
-
         <div id="team-list"></div>
     </div>
 
     <script>
-        // Firebase Configuration
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const CLOUD_PATH = 'TournamentData/FinalSession'; 
+        const SYNC_PATH = 'TournamentData/LiveSession'; // Yeh path important hai!
 
         let teams = []; let config = {};
 
-        // Real-time Sync from Cloud
-        db.ref(CLOUD_PATH).on('value', (snap) => {
+        db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
-            config = data.config || { cyan: '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
-            
-            // Update Color Pickers
-            Object.keys(config).forEach(key => {
-                if(document.getElementById('cfg-'+key)) document.getElementById('cfg-'+key).value = config[key];
-            });
-            if(config.cyan) document.documentElement.style.setProperty('--cyan', config.cyan);
-            
+            config = data.config || { cyan: '#00f2ff' };
+            Object.keys(config).forEach(k => { if(document.getElementById('cfg-'+k)) document.getElementById('cfg-'+k).value = config[k]; });
+            document.documentElement.style.setProperty('--cyan', config.cyan);
             draw();
         });
 
-        function sync(elimData = null) { 
-            db.ref(CLOUD_PATH).set({ 
-                teams, 
-                config, 
-                lastEliminated: elimData ? elimData : (window.lastE || "") 
-            }); 
-        }
-
-        function updateCfg(p,v) { config[p]=v; if(p==='cyan') document.documentElement.style.setProperty('--cyan', v); sync(); }
-
+        function sync(elim = null) { db.ref(SYNC_PATH).set({ teams, config, lastEliminated: elim || (window.lastE || "") }); }
+        function updateCfg(p,v) { config[p]=v; sync(); }
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
-                list.innerHTML += `
-                <div class="team-row">
-                    <input value="${t.name}" onchange="edit(${i},'name',this.value)" placeholder="Team Name">
+                list.innerHTML += `<div class="team-row">
+                    <input value="${t.name}" onchange="edit(${i},'name',this.value)">
                     <input value="${t.logo}" onchange="edit(${i},'logo',this.value)" placeholder="Logo URL">
-                    <input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)" style="text-align:center;">
-                    <div class="status-container">
-                        ${t.alive.map((a,pi)=>`
-                            <button class="player-dot" 
-                                style="background:${a ? config.cyan : '#333'}; opacity:${a?1:0.3};" 
-                                onclick="tog(${i},${pi})">
-                            </button>`).join('')}
-                    </div>
-                    <button class="delete-icon" onclick="removeTeam(${i})">✖</button>
+                    <input type="number" value="${t.fin}" onchange="edit(${i},'fin',this.value)">
+                    <div style="display:flex; gap:4px;">${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}</div>
+                    <button style="color:red; background:none; border:none; font-size:20px; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
                 </div>`;
             });
         }
-
         function edit(i,f,v) { teams[i][f]=v; sync(); }
-
         function tog(i,pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             let elim = null;
             if (teams[i].alive.every(a=>a==0) && !teams[i].elim) {
                 teams[i].elim = true;
-                elim = { 
-                    id: Date.now().toString(), 
-                    name: teams[i].name, 
-                    logo: teams[i].logo, 
-                    finishes: (parseInt(teams[i].fin)||0) 
-                };
+                elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
                 window.lastE = elim;
-            } else if (teams[i].alive.some(a=>a==1)) { 
-                teams[i].elim = false; 
-            }
+            } else if (teams[i].alive.some(a=>a==1)) { teams[i].elim = false; }
             sync(elim);
         }
-
-        function addTeam() { 
-            teams.push({ name: "TEAM", logo: "", fin: 0, alive: [1,1,1,1], elim: false }); 
-            sync(); 
-        }
-
-        function globalNewMatch() {
-            if(confirm("Start New Match? Scores will reset but teams remain.")) {
-                teams.forEach(t => { t.fin=0; t.alive=[1,1,1,1]; t.elim=false; });
-                sync("");
-            }
-        }
-
-        function removeTeam(i) { if(confirm("Delete this team?")) { teams.splice(i, 1); sync(); } }
-        
-        function resetAll() { 
-            if(confirm("DANGER: This will delete EVERYTHING. Are you sure?")) { 
-                db.ref(CLOUD_PATH).set(null); 
-            }
-        }
+        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, alive: [1,1,1,1], elim: false }); sync(); }
+        function globalNewMatch() { teams.forEach(t => { t.fin=0; t.alive=[1,1,1,1]; t.elim=false; }); sync(""); }
+        function removeTeam(i) { if(confirm("Delete?")) { teams.splice(i, 1); sync(); } }
+        function resetAll() { if(confirm("Reset?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
