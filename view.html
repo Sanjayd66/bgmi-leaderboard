@@ -6,30 +6,33 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; }
+        :root { 
+            --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; 
+            --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11;
+        }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
-        #board { position: absolute; right: 40px; bottom: 40px; background: var(--dark-blue); padding: 8px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .header-row, .team-row { display: grid; grid-template-columns: 20px 30px 40px 30px 25px 30px; align-items: center; gap: 2px; color: var(--text-color); }
-        .header-row { font-size: 11px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 4px; text-align: center; }
-        .team-row { background: var(--row-bg); height: 32px; margin-bottom: 2px; }
-        .team-row.eliminated { opacity: 0.4; filter: grayscale(1); }
-        .logo-col { width: 22px; height: 22px; background: white; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
-        .logo-col img { width: 90%; object-fit: contain; }
-        .bar-container { display: flex; gap: 2px; justify-content: center; }
-        .bar { width: 4px; height: 14px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
-        .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 500px; height: 90px; background: #15191d; border-radius: 8px; border: 2px solid var(--cyan); transition: top 0.4s; }
+        /* Board Colors */
+        #board { position: absolute; right: 40px; bottom: 40px; background: var(--dark-blue); padding: 8px; border-radius: 4px; }
+        .team-row { background: var(--row-bg); height: 32px; margin-bottom: 2px; display: grid; grid-template-columns: 25px 30px 40px 30px 25px 30px; align-items: center; gap: 4px; color: var(--text-color); }
+        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+        .bar { width: 4px; height: 14px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
+        .bar.dead { background: #444; box-shadow: none; opacity: 0.1; }
+
+        /* Elimination Popup Color Fixed */
+        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 500px; height: 90px; background: var(--elim-bg) !important; border-radius: 8px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
         #elim-popup.show { top: 40px; }
+
+        /* Prediction Panel Color Fixed */
         #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 8px; }
         #prediction-panel.show { display: flex; }
+        .pred-card { width: 240px; background: var(--pred-bg) !important; border-left: 4px solid var(--cyan); padding: 10px; display: flex; align-items: center; gap: 10px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
     <div id="elim-popup">
         <div style="background:white; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
-        <div style="flex:1; padding:15px; color:white;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase;"></p><p style="color:var(--cyan); margin:0;">ELIMINATED</p></div>
+        <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase;"></p><p style="color:var(--cyan); margin:0;">ELIMINATED</p></div>
         <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan);">0</div></div>
     </div>
     <div id="prediction-panel"></div>
@@ -39,13 +42,14 @@
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const SYNC_PATH = 'TournamentData/LiveSession'; // Same path as Admin
+        const SYNC_PATH = 'TournamentData/LiveSession';
 
         let currentElimId = "";
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
-            Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v + (v.toString().includes('#')?'':'px')); });
+            // Yeh loop Admin se aane wale saare colors ko CSS variables mein set karega
+            Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
             
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
@@ -66,19 +70,19 @@
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
                 alive.forEach(t => {
-                    pPanel.innerHTML += `<div style="width:240px; background:#0b0e11; border-left:4px solid var(--cyan); padding:10px; display:flex; align-items:center; gap:10px; color:white;">
+                    pPanel.innerHTML += `<div class="pred-card">
                         <img src="${t.logo}" style="width:30px; height:30px; background:white;">
-                        <div style="flex:1;"><div style="font-size:12px;">${t.name}</div><div class="bar-container">${t.alive.map(a=>`<div class="bar ${a?'':'dead'}" style="height:8px;"></div>`).join('')}</div></div>
+                        <div style="flex:1;"><div style="font-size:12px;">${t.name}</div><div style="display:flex; gap:2px;">${t.alive.map(a=>`<div class="bar ${a?'':'dead'}" style="height:8px;"></div>`).join('')}</div></div>
                     </div>`;
                 });
             } else {
                 pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div>STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+                let h = `<div class="team-row" style="background:none; height:20px; font-size:11px; color:var(--cyan); border-bottom:1px solid rgba(0,242,255,0.3);"><div style="text-align:center;">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div>STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
                 [...teams].sort((a,b)=> (parseInt(b.fin)||0) - (parseInt(a.fin)||0)).forEach((t, i) => {
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}">
                         <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
                         <div style="padding-left:5px; font-weight:bold; overflow:hidden;">${t.name}</div>
-                        <div class="bar-container">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                        <div style="display:flex; gap:2px; justify-content:center;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
                         <div style="text-align:center;">${t.fin}</div><div class="total-box">${t.fin}</div>
                     </div>`;
                 });
