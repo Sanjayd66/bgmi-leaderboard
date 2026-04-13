@@ -8,57 +8,57 @@
     <style>
         :root { 
             --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff;
-            --row-h: 38px; --logo-size: 30px; --name-width: 120px; --col-gap: 5px; --total-gap: 15px;
-            --elim-bg: #1c2227; --pred-bg: #000;
+            --row-h: 35px; --logo-size: 28px; --name-width: 130px; --col-gap: 5px; --total-gap: 10px;
+            --elim-bg: #15191d; --pred-bg: #0b0e11;
         }
-        body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
+        body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; color: var(--text-color); }
         
-        /* Board Design Screenshot 2 */
-        #board { position: absolute; left: 20px; bottom: 20px; background: var(--dark-blue); padding: 10px; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .header-row { display: flex; font-size: 11px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.2); margin-bottom: 5px; }
-        .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; gap: var(--col-gap); }
-        .team-row.eliminated { opacity: 0.3; filter: grayscale(1); }
+        /* Board Design - Compact and Clean */
+        #board { position: absolute; left: 30px; bottom: 30px; background: var(--dark-blue); padding: 8px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05); }
+        .header-row { display: flex; font-size: 10px; font-weight: bold; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.2); margin-bottom: 4px; padding-bottom: 2px; }
+        .team-row { display: flex; align-items: center; height: var(--row-h); background: var(--row-bg); margin-bottom: 2px; gap: var(--col-gap); transition: 0.3s; }
+        .team-row.eliminated { opacity: 0.4; filter: grayscale(0.8); }
         
-        .rank-col { width: 30px; text-align: center; font-weight: bold; }
-        .logo-col { width: var(--logo-size); display: flex; justify-content: center; }
-        .name-col { width: var(--name-width); padding-left: 10px; font-weight: bold; text-transform: uppercase; overflow: hidden; }
-        .status-col { width: 60px; display: flex; justify-content: center; }
-        .bar { width: 4px; height: 18px; background: var(--cyan); margin: 0 1px; box-shadow: 0 0 5px var(--cyan); }
-        .bar.dead { opacity: 0.2; height: 5px; background: #445588; box-shadow: none; }
-        .fin-col { width: 40px; text-align: center; font-weight: bold; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; width: 60px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); font-size: 18px; }
+        .rank-col { width: 25px; text-align: center; font-weight: bold; font-size: 14px; }
+        .logo-col { width: var(--logo-size); display: flex; justify-content: center; background: white; height: 80%; margin: 0 5px; border-radius: 2px; }
+        .logo-col img { width: 90%; height: 90%; object-fit: contain; }
+        .name-col { width: var(--name-width); font-weight: 700; text-transform: uppercase; font-size: 14px; white-space: nowrap; overflow: hidden; }
+        .status-col { width: 50px; display: flex; justify-content: center; gap: 2px; }
+        .bar { width: 4px; height: 16px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
+        .bar.dead { opacity: 0.2; height: 6px; background: #445588; box-shadow: none; align-self: center; }
+        .fin-col { width: 35px; text-align: center; font-weight: bold; font-size: 15px; }
+        .total-box { background: var(--cyan); color: #000; height: 100%; width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-left: var(--total-gap); font-size: 18px; }
 
-        /* Elim Design Screenshot 1 */
-        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 620px; height: 115px; background: var(--elim-bg); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); transition: top 0.7s; }
-        #elim-popup.show { top: 40px; }
+        /* Elim Alert */
+        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 580px; height: 100px; background: var(--elim-bg); border-radius: 8px; overflow: hidden; border: 2px solid var(--cyan); transition: top 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000; }
+        #elim-popup.show { top: 50px; }
 
-        /* Center Prediction */
-        #prediction-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; gap: 20px; }
+        /* Prediction Styles */
+        #prediction-panel { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); display: none; gap: 15px; }
         #prediction-panel.show { display: flex; }
-        .pred-card { width: 230px; background: var(--pred-bg); border: 2px solid var(--cyan); border-radius: 12px; overflow: hidden; }
+        .pred-card { width: 200px; background: var(--pred-bg); border-top: 3px solid var(--cyan); border-radius: 4px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
 
-        /* WWCD Champions */
-        #winner-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; }
-        #winner-area.show { display: flex; animation: zoomIn 0.8s forwards; }
-        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        #winner-area { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; }
+        #winner-area.show { display: flex; animation: zoomIn 0.5s ease-out; }
+        @keyframes zoomIn { from { transform: scale(1.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="elim-popup">
-        <div style="background:white; width:160px; display:flex; justify-content:center; align-items:center;"><img id="pop-logo" src="" style="width:90px; height:90px; object-fit:contain;"></div>
-        <div style="flex-grow:1; padding:20px; color:white;">
-            <p id="pop-name" style="font-size:42px; margin:0; font-weight:700; text-transform:uppercase; line-height:1;"></p>
-            <p style="color:var(--cyan); font-size:20px; margin:5px 0 0; font-weight:700;">ELIMINATED</p>
+        <div style="background:white; width:140px; display:flex; justify-content:center; align-items:center;"><img id="pop-logo" src="" style="width:80px; height:80px; object-fit:contain;"></div>
+        <div style="flex-grow:1; padding:15px; color:white; display:flex; flex-direction:column; justify-content:center;">
+            <p id="pop-name" style="font-size:32px; margin:0; font-weight:700; text-transform:uppercase; line-height:1;"></p>
+            <p style="color:var(--cyan); font-size:16px; margin:5px 0 0; font-weight:700; letter-spacing:2px;">ELIMINATED</p>
         </div>
-        <div style="background:rgba(0,0,0,0.4); width:140px; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; border-left:1px solid rgba(255,255,255,0.1);">
-            <div id="pop-fin-val" style="font-size:55px; color:var(--cyan); font-weight:700; line-height:1;">0</div>
-            <div style="font-size:12px; font-weight:bold;">FINISHES</div>
+        <div style="background:rgba(255,255,255,0.05); width:120px; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white;">
+            <div id="pop-fin-val" style="font-size:45px; color:var(--cyan); font-weight:700; line-height:1;">0</div>
+            <div style="font-size:10px; font-weight:bold; opacity:0.7;">FINISHES</div>
         </div>
     </div>
 
     <div id="winner-area">
-        <div style="width:350px; height:350px; background:white; border-radius:50%; display:flex; justify-content:center; align-items:center;"><img id="win-img" src="" style="width:85%; object-fit:contain;"></div>
-        <h1 style="color:gold; font-size:85px; text-transform:uppercase; text-shadow: 0 0 30px rgba(255,215,0,0.5);">Match Champions</h1>
+        <div style="width:300px; height:300px; background:white; border-radius:50%; display:flex; justify-content:center; align-items:center; border: 8px solid gold; box-shadow: 0 0 50px gold;"><img id="win-img" src="" style="width:80%; object-fit:contain;"></div>
+        <h1 style="color:gold; font-size:70px; text-transform:uppercase; text-shadow: 0 0 30px rgba(255,215,0,0.8); margin-top:20px;">Match Champions</h1>
     </div>
 
     <div id="prediction-panel"></div>
@@ -73,21 +73,23 @@
         db.ref('liveData').on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
+            
+            // Sync CSS Config
             Object.entries(cfg).forEach(([p,v]) => { 
-                let unit = (isNaN(v) || String(v).startsWith('#')) ? '' : 'px';
-                document.documentElement.style.setProperty('--'+p, v + unit); 
+                let unit = (v.toString().includes('#') || isNaN(v)) ? '' : 'px';
+                document.documentElement.style.setProperty('--' + p, v + unit); 
             });
             
-            // Fixed Trigger Logic
+            // Elimination Popup Logic
             if(data.lastEliminated && JSON.stringify(data.lastEliminated) !== lastElimStr) {
                 lastElimStr = JSON.stringify(data.lastEliminated);
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
                 document.getElementById('pop-name').innerText = data.lastEliminated.name;
                 document.getElementById('pop-fin-val').innerText = data.lastEliminated.finishes;
                 const p = document.getElementById('elim-popup');
-                p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 6000);
+                p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 5000);
             } else if (!data.lastEliminated) {
-                lastElimStr = ""; // Reset on new match
+                lastElimStr = "";
             }
             render(data.teams || []);
         });
@@ -99,41 +101,44 @@
                 return pB - pA;
             });
 
-            const alive = sorted.filter(t => t.alive && t.alive.some(a => a === 1));
+            const aliveTeams = sorted.filter(t => t.alive && t.alive.some(a => a === 1));
             const pPanel = document.getElementById('prediction-panel');
             const board = document.getElementById('board');
             const winArea = document.getElementById('winner-area');
 
-            if (alive.length === 1 && sorted.length > 1) {
-                document.getElementById('win-img').src = alive[0].logo;
+            // Winner logic
+            if (aliveTeams.length === 1 && sorted.length > 1) {
+                document.getElementById('win-img').src = aliveTeams[0].logo;
                 winArea.classList.add('show'); return;
             } else winArea.classList.remove('show');
 
-            if (alive.length >= 2 && alive.length <= 5) {
+            // Prediction logic (Top 2-5)
+            if (aliveTeams.length >= 2 && aliveTeams.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
-                const totalS = alive.reduce((a,c) => a+(parseInt(c.fin)+c.alive.filter(x=>x).length*3), 0) || 1;
-                alive.forEach(t => {
-                    const prob = (((parseInt(t.fin)+t.alive.filter(x=>x).length*3)/totalS)*100).toFixed(1);
+                const totalPower = aliveTeams.reduce((a,c) => a + (parseInt(c.fin) + c.alive.filter(x=>x==1).length * 2), 0) || 1;
+                aliveTeams.forEach(t => {
+                    const prob = (((parseInt(t.fin) + t.alive.filter(x=>x==1).length * 2)/totalPower)*100).toFixed(0);
                     pPanel.innerHTML += `
                         <div class="pred-card">
-                            <div style="padding:15px; display:flex; align-items:center; color:white;">
-                                <img src="${t.logo}" style="width:45px; height:45px; object-fit:contain;">
-                                <div style="margin-left:15px;">
-                                    <div style="font-weight:bold; font-size:16px; text-transform:uppercase;">${t.name}</div>
-                                    <div style="display:flex; gap:3px; margin-top:5px;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}" style="height:12px; width:4px;"></div>`).join('')}</div>
+                            <div style="padding:10px; display:flex; align-items:center; color:white; background:rgba(255,255,255,0.05)">
+                                <img src="${t.logo}" style="width:35px; height:35px; object-fit:contain; background:white; border-radius:2px;">
+                                <div style="margin-left:10px;">
+                                    <div style="font-weight:bold; font-size:13px; text-transform:uppercase;">${t.name}</div>
+                                    <div style="display:flex; gap:2px; margin-top:3px;">${t.alive.map(a => `<div class="bar ${a?'':'dead'}" style="height:8px; width:3px;"></div>`).join('')}</div>
                                 </div>
                             </div>
-                            <div style="background:var(--cyan); color:black; padding:8px; text-align:center; font-weight:bold;">WINNING PREDICTION: ${prob}%</div>
+                            <div style="background:var(--cyan); color:black; padding:5px; text-align:center; font-weight:900; font-size:12px;">WIN CHANCE: ${prob}%</div>
                         </div>`;
                 });
             } else {
                 pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div class="header-row"><div class="rank-col">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 10px)">TEAM NAME</div><div class="status-col">STATUS</div><div class="fin-col">FIN.</div><div class="total-box" style="background:transparent;color:var(--cyan);font-weight:bold">TOTAL</div></div>`;
+                let h = `<div class="header-row"><div class="rank-col">#</div><div style="width:calc(var(--logo-size) + var(--name-width) + 20px)">TEAM NAME</div><div class="status-col">STATUS</div><div class="fin-col">FIN.</div><div class="total-box" style="background:transparent;color:var(--cyan);font-weight:bold">TOTAL</div></div>`;
                 sorted.forEach((t, i) => {
                     let pts = (parseInt(t.fin)||0)+(parseInt(t.place)||0)+(t.matches?t.matches.reduce((x,y)=>x+parseInt(y),0):0);
-                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}">
+                    let isElim = t.alive.every(a=>a==0);
+                    h += `<div class="team-row ${isElim?'eliminated':''}">
                         <div class="rank-col">${i+1}</div>
-                        <div class="logo-col"><img src="${t.logo}" style="width:var(--logo-size);height:var(--logo-size);object-fit:contain;"></div>
+                        <div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
                         <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
                         <div class="fin-col">${t.fin}</div>
