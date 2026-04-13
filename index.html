@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <div class="admin-panel">
+    <div id="admin-content" class="admin-panel" style="display:none;">
         <h2 style="text-align:center; color:var(--cyan);">BGMI POINTS PERSIST ADMIN</h2>
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" oninput="updateCfg('cyan',this.value)"></div>
@@ -38,6 +38,16 @@
     </div>
 
     <script>
+        // --- PASSWORD LOGIC START ---
+        const pass = prompt("Sanjay Bhai, Password daalo Admin access ke liye:");
+        if(pass === "SURAJ009") { // Aap yahan apna password change kar sakte ho
+            document.getElementById('admin-content').style.display = 'block';
+        } else {
+            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>ACCESS DENIED! Sahi password daalein.</h1>";
+            window.stop();
+        }
+        // --- PASSWORD LOGIC END ---
+
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -83,7 +93,6 @@
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
-        // FIXED LOGIC: Points stay, status resets
         function globalNewMatch() { 
             if(confirm("New Match? Status will reset, Points will remain.")) {
                 teams.forEach(t => { t.alive=[1,1,1,1]; t.elim=false; }); sync(""); 
