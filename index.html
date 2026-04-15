@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI ADMIN - PERSISTENT SCORING</title>
+    <title>BGMI ADMIN - TOTAL PERSISTENT</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -10,39 +10,35 @@
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1100px; margin: auto; border: 1px solid #2d3439; }
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px; border-radius: 6px; font-size: 12px; }
+        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px; border-radius: 6px; font-size: 11px; }
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
-        /* Adjusted Grid for Previous Points Column */
-        .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1fr 1fr 80px 80px 100px 40px; gap: 10px; align-items: center; }
+        .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1fr 1fr 70px 70px 100px 30px; gap: 10px; align-items: center; }
         input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: none; border-radius: 4px; cursor: pointer; }
-        .label-tag { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
+        .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan);">BGMI CASTER ADMIN (SCORE PERSIST)</h2>
+        <h2 style="text-align:center; color:var(--cyan);">BGMI CASTER MASTER ADMIN</h2>
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" oninput="updateCfg('cyan',this.value)"></div>
             <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" oninput="updateCfg('dark-blue',this.value)"></div>
             <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" oninput="updateCfg('row-bg',this.value)"></div>
             <div class="color-item"><span>Text</span><input type="color" id="cfg-text-color" oninput="updateCfg('text-color',this.value)"></div>
-            <div class="color-item"><span>Elim Popup</span><input type="color" id="cfg-elim-bg" oninput="updateCfg('elim-bg',this.value)"></div>
-            <div class="color-item"><span>Prediction</span><input type="color" id="cfg-pred-bg" oninput="updateCfg('pred-bg',this.value)"></div>
+            <div class="color-item"><span>Elim BG</span><input type="color" id="cfg-elim-bg" oninput="updateCfg('elim-bg',this.value)"></div>
+            <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" oninput="updateCfg('pred-bg',this.value)"></div>
         </div>
-
         <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
             <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ Add Team</button>
-            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match (Score Moves to Previous)</button>
-            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Hard Reset (Everything 0)</button>
+            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match (Score Moves to Prev)</button>
+            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Full Reset (Everything 0)</button>
         </div>
-
         <div id="team-list"></div>
     </div>
 
     <script>
-        // Password Logic
-        const pass = prompt("Enter Password:");
+        const pass = prompt("Sanjay Bhai, Password daalo:");
         if(pass === "Sanjay@77") {
             document.getElementById('admin-content').style.display = 'block';
         } else {
@@ -66,10 +62,7 @@
         });
 
         function sync(elim = null) { 
-            // Total score calculation for overlay sync
-            teams.forEach(t => {
-                t.totalFin = (parseInt(t.fin) || 0) + (parseInt(t.prevFin) || 0);
-            });
+            teams.forEach(t => { t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); });
             db.ref(SYNC_PATH).set({ teams, config, lastEliminated: elim || (window.lastE || "") }); 
         }
 
@@ -77,12 +70,12 @@
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
                 list.innerHTML += `<div class="team-row">
-                    <div><span class="label-tag">TEAM NAME</span><input value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
-                    <div><span class="label-tag">LOGO URL</span><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
-                    <div><span class="label-tag">PREV KILLS</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
-                    <div><span class="label-tag">CURRENT KILLS</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
-                    <div><span class="label-tag">STATUS</span><div style="display:flex; gap:4px;">${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}</div></div>
-                    <button style="color:red; background:none; border:none; cursor:pointer; font-size:20px;" onclick="removeTeam(${i})">✖</button>
+                    <div><span class="label-tag">Team</span><input value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
+                    <div><span class="label-tag">Logo</span><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
+                    <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
+                    <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
+                    <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}</div></div>
+                    <button style="color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
                 </div>`;
             });
         }
@@ -93,8 +86,7 @@
             let elim = null;
             if (teams[i].alive.every(a=>a==0) && !teams[i].elim) {
                 teams[i].elim = true;
-                // Popup uses current match finishes
-                elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
+                elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(t.fin)||0) };
                 window.lastE = elim;
             } else if (teams[i].alive.some(a=>a==1)) { teams[i].elim = false; }
             sync(elim);
@@ -102,21 +94,17 @@
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
-        // NEW LOGIC: Current points move to Previous, Current becomes 0
         function globalNewMatch() { 
-            if(confirm("New Match? Current points will be added to Previous, and Current will reset to 0.")) {
+            if(confirm("New Match? Current points Previous mein add honge.")) {
                 teams.forEach(t => { 
-                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); // Purane points mein current add kar diya
-                    t.fin = 0; // Current match zero kar diya
-                    t.alive = [1,1,1,1]; 
-                    t.elim = false; 
+                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
+                    t.fin = 0; t.alive = [1,1,1,1]; t.elim = false; 
                 }); 
                 sync(""); 
             }
         }
-
         function removeTeam(i) { if(confirm("Delete?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("HARD RESET? This will zero EVERYTHING.")) { db.ref(SYNC_PATH).set(null); } }
+        function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
