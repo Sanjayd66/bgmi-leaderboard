@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI ADMIN - TOTAL PERSISTENT</title>
+    <title>BGMI ADMIN - FIXED BROADCAST</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -11,16 +11,17 @@
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1100px; margin: auto; border: 1px solid #2d3439; }
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px; border-radius: 6px; font-size: 11px; }
-        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
+        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
+        .btn:hover { opacity: 0.8; }
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1fr 1fr 70px 70px 100px 30px; gap: 10px; align-items: center; }
         input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        .status-dot { width: 22px; height: 22px; border: none; border-radius: 4px; cursor: pointer; }
+        .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; transition: 0.2s; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan);">BGMI CASTER MASTER ADMIN</h2>
+        <h2 style="text-align:center; color:var(--cyan);">BGMI ADMIN - FIX EDITION</h2>
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" oninput="updateCfg('cyan',this.value)"></div>
             <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" oninput="updateCfg('dark-blue',this.value)"></div>
@@ -31,8 +32,8 @@
         </div>
         <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
             <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ Add Team</button>
-            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match (Score Moves to Prev)</button>
-            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Full Reset (Everything 0)</button>
+            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match (Reset Status)</button>
+            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Full Reset</button>
         </div>
         <div id="team-list"></div>
     </div>
@@ -61,9 +62,18 @@
             draw();
         });
 
-        function sync(elim = null) { 
-            teams.forEach(t => { t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); });
-            db.ref(SYNC_PATH).set({ teams, config, lastEliminated: elim || (window.lastE || "") }); 
+        function sync(elimData = null) { 
+            teams.forEach(t => { 
+                t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
+            });
+            // Agar elimData null hai, toh purana lastEliminated database se uda do
+            const payload = { teams, config };
+            if(elimData) {
+                payload.lastEliminated = elimData;
+            } else {
+                db.ref(SYNC_PATH + '/lastEliminated').remove();
+            }
+            db.ref(SYNC_PATH).update(payload);
         }
 
         function draw() {
@@ -74,37 +84,51 @@
                     <div><span class="label-tag">Logo</span><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
-                    <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}</div></div>
+                    <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
+                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
+                    </div></div>
                     <button style="color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
                 </div>`;
             });
         }
 
-        function edit(i,f,v) { teams[i][f]=v; sync(); }
+        function edit(i,f,v) { teams[i][f]=v; sync(window.lastE || null); }
+        
         function tog(i,pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             let elim = null;
-            if (teams[i].alive.every(a=>a==0) && !teams[i].elim) {
-                teams[i].elim = true;
-                elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(t.fin)||0) };
-                window.lastE = elim;
-            } else if (teams[i].alive.some(a=>a==1)) { teams[i].elim = false; }
+            // Check if team just got eliminated
+            if (teams[i].alive.every(a => a == 0)) {
+                if (!teams[i].elim) { // Trigger only if not already marked as eliminated
+                    teams[i].elim = true;
+                    elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
+                    window.lastE = elim;
+                }
+            } else {
+                teams[i].elim = false;
+            }
             sync(elim);
         }
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
         function globalNewMatch() { 
-            if(confirm("New Match? Current points Previous mein add honge.")) {
+            if(confirm("New Match? Status reset hoga, points save rahenge.")) {
+                window.lastE = null; // Clear local variable
                 teams.forEach(t => { 
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                    t.fin = 0; t.alive = [1,1,1,1]; t.elim = false; 
+                    t.fin = 0; 
+                    t.alive = [1,1,1,1]; 
+                    t.elim = false; 
                 }); 
-                sync(""); 
+                // Forcefully clear lastEliminated from DB
+                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => {
+                    sync();
+                });
             }
         }
-        function removeTeam(i) { if(confirm("Delete?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
+        function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
+        function resetAll() { if(confirm("HARD RESET? Sab uda duga!")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
