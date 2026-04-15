@@ -2,38 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI ADMIN - FIXED BROADCAST</title>
+    <title>BGMI ADMIN - COLOR FIX</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --cyan: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1100px; margin: auto; border: 1px solid #2d3439; }
-        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px; border-radius: 6px; font-size: 11px; }
+        
+        /* Fixed Color Grid Styling */
+        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
+        .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
+        
+        /* Fixing the "Line" Glitch in inputs */
+        input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
+        
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
-        .btn:hover { opacity: 0.8; }
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1fr 1fr 70px 70px 100px 30px; gap: 10px; align-items: center; }
-        input { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan);">BGMI ADMIN - FIX EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - FIX EDITION</h2>
+        
         <div class="color-grid">
-            <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" oninput="updateCfg('cyan',this.value)"></div>
-            <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" oninput="updateCfg('dark-blue',this.value)"></div>
-            <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" oninput="updateCfg('row-bg',this.value)"></div>
-            <div class="color-item"><span>Text</span><input type="color" id="cfg-text-color" oninput="updateCfg('text-color',this.value)"></div>
-            <div class="color-item"><span>Elim BG</span><input type="color" id="cfg-elim-bg" oninput="updateCfg('elim-bg',this.value)"></div>
-            <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" oninput="updateCfg('pred-bg',this.value)"></div>
+            <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
+            <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
+            <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
+            <div class="color-item"><span>Text</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
+            <div class="color-item"><span>Elim BG</span><input type="color" id="cfg-elim-bg" onchange="updateCfg('elim-bg',this.value)"></div>
+            <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
         </div>
-        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-            <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ Add Team</button>
-            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">New Match (Reset Status)</button>
-            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">Full Reset</button>
+
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
+            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">NEW MATCH (RESET STATUS)</button>
+            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">FULL RESET</button>
         </div>
         <div id="team-list"></div>
     </div>
@@ -53,26 +61,37 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
         let teams = []; let config = {};
 
+        // Listen for data
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
-            config = data.config || { 'cyan': '#00f2ff' };
-            Object.keys(config).forEach(k => { if(document.getElementById('cfg-'+k)) document.getElementById('cfg-'+k).value = config[k]; });
+            config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
+            
+            // Update the color pickers in admin to match database
+            Object.keys(config).forEach(k => {
+                const el = document.getElementById('cfg-' + k);
+                if(el) el.value = config[k];
+            });
+            
             document.documentElement.style.setProperty('--cyan', config.cyan);
             draw();
         });
+
+        // FIXED: This function now properly pushes colors to Firebase
+        function updateCfg(param, value) {
+            config[param] = value;
+            if(param === 'cyan') document.documentElement.style.setProperty('--cyan', value);
+            
+            // Immediate sync to Firebase
+            db.ref(SYNC_PATH + '/config').set(config);
+        }
 
         function sync(elimData = null) { 
             teams.forEach(t => { 
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
             });
-            // Agar elimData null hai, toh purana lastEliminated database se uda do
             const payload = { teams, config };
-            if(elimData) {
-                payload.lastEliminated = elimData;
-            } else {
-                db.ref(SYNC_PATH + '/lastEliminated').remove();
-            }
+            if(elimData) payload.lastEliminated = elimData;
             db.ref(SYNC_PATH).update(payload);
         }
 
@@ -80,8 +99,8 @@
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
                 list.innerHTML += `<div class="team-row">
-                    <div><span class="label-tag">Team</span><input value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
-                    <div><span class="label-tag">Logo</span><input value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
+                    <div><span class="label-tag">Team</span><input type="text" value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
+                    <div><span class="label-tag">Logo</span><input type="text" value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
                     <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
@@ -92,17 +111,15 @@
             });
         }
 
-        function edit(i,f,v) { teams[i][f]=v; sync(window.lastE || null); }
+        function edit(i,f,v) { teams[i][f]=v; sync(); }
         
         function tog(i,pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             let elim = null;
-            // Check if team just got eliminated
             if (teams[i].alive.every(a => a == 0)) {
-                if (!teams[i].elim) { // Trigger only if not already marked as eliminated
+                if (!teams[i].elim) {
                     teams[i].elim = true;
                     elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
-                    window.lastE = elim;
                 }
             } else {
                 teams[i].elim = false;
@@ -114,21 +131,15 @@
         
         function globalNewMatch() { 
             if(confirm("New Match? Status reset hoga, points save rahenge.")) {
-                window.lastE = null; // Clear local variable
                 teams.forEach(t => { 
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                    t.fin = 0; 
-                    t.alive = [1,1,1,1]; 
-                    t.elim = false; 
+                    t.fin = 0; t.alive = [1,1,1,1]; t.elim = false; 
                 }); 
-                // Forcefully clear lastEliminated from DB
-                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => {
-                    sync();
-                });
+                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
             }
         }
         function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("HARD RESET? Sab uda duga!")) { db.ref(SYNC_PATH).set(null); } }
+        function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
