@@ -1,248 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>BGMI Style Scoreboard (Image Match)</title>
-<style>
-    /* --- GENERAL STYLES --- */
-    :root {
-        --dark-bg: #001429;      /* Main Table Background */
-        --header-bg: #003d73;    /* Header Row Background */
-        --row-bg-odd: #002142;   /* Odd Rows Background */
-        --row-bg-even: #001a33;  /* Even Rows Background */
-        --total-bg: #00bad2;     /* Cyan/Blue for Total Column */
-        --alive-color: #00ffff;  /* Status: Cyan */
-        --knocked-color: #ffc107; /* Status: Gold */
-        --eliminated-color: #6c757d; /* Status: Gray */
-        --rank-width: 25px;
-        --logo-width: 30px;
-        --status-width: 70px;
-        --fin-width: 35px;
-        --total-width: 45px;
-        --row-height: 28px;      /* Very compact height */
-        --font-size: 13px;
-    }
-
-    body {
-        margin: 0;
-        background: #0a0f24;
-        font-family: 'Segoe UI', Arial, sans-serif;
-        color: white;
-        padding: 20px;
-    }
-
-    .table-container {
-        width: auto; /* Width auto-calculates based on columns */
-        background: var(--dark-bg);
-        border-radius: 6px;
-        overflow: hidden;
-        border: 1px solid #083863;
-    }
-
-    /* --- FLEX-GRID FOR ROWS (Replaced Table for better gap control) --- */
-
-    .row-wrapper {
-        display: flex;
-        align-items: center;
-        /* Define column layout using fixed widths for tight packing */
-        /* Columns: Rank | Logo | Team Name | Status | FIN | TOTAL */
-        
-        /* Set default row background */
-        background: var(--row-bg-odd); 
-        height: var(--row-height);
-        font-size: var(--font-size);
-        border-bottom: 1px solid rgba(255,255,255,0.05); /* Faint separator */
-    }
-
-    /* Alternating row colors for visual separation */
-    .row-wrapper:nth-child(even) {
-        background: var(--row-bg-even);
-    }
-    
-    /* Highlighted row style (Example: Rank 4 - NBE) */
-    .highlighted-row {
-        background: #003d73 !important; /* Darker blue highlight */
-        border-top: 1px solid #00569a;
-        border-bottom: 1px solid #00569a;
-    }
-    .highlighted-row .total-cell {
-        background: #00ffff !important; /* Brighter highlight */
-        color: black !important;
-    }
-
-    /* --- HEADER STYLES --- */
-    .header-row {
-        background: var(--header-bg);
-        font-weight: bold;
-        color: #a0c0ff; /* Lighter header text */
-    }
-
-    /* --- CELL STYLES --- */
-
-    .rank-cell {
-        width: var(--rank-width);
-        text-align: center;
-        font-weight: bold;
-        flex-shrink: 0;
-        padding-left: 5px;
-    }
-    .logo-cell {
-        width: var(--logo-width);
-        text-align: center;
-        flex-shrink: 0;
-        padding: 0 2px;
-    }
-    .logo-cell img {
-        height: 22px; /* Small logo size */
-        width: 22px;
-        object-fit: contain;
-    }
-
-    .team-cell {
-        /* KEY: Allows team name to take space, pushing status bar to the right edge */
-        flex-grow: 1; 
-        font-weight: 600;
-        padding-left: 4px; /* Minimal padding */
-        padding-right: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .status-cell {
-        width: var(--status-width);
-        display: flex;
-        justify-content: flex-start;
-        flex-shrink: 0;
-        padding: 0; /* NO PADDING HERE */
-    }
-
-    /* Status Bars (The colored blocks) */
-    .bar {
-        width: 9px; /* Very small bar width */
-        height: 18px; /* Bar height */
-        display: block; 
-        flex-shrink: 0;
-        /* Bars are now flush against each other */
-    }
-    .bar.alive { background: var(--alive-color); }
-    .bar.knocked { background: var(--knocked-color); }
-    .bar.eliminated { background: var(--eliminated-color); }
-
-    .fin-cell {
-        width: var(--fin-width);
-        text-align: center;
-        font-weight: bold;
-        flex-shrink: 0;
-    }
-
-    .total-cell {
-        width: var(--total-width);
-        text-align: center;
-        font-weight: bold;
-        flex-shrink: 0;
-        
-        /* Final look styling */
-        background: var(--total-bg);
-        color: black;
-        height: var(--row-height);
-        line-height: var(--row-height); /* Center text vertically */
-        padding: 0; /* NO PADDING HERE */
-    }
-    
-    /* Total cell in Header Row needs different color */
-    .header-row .total-cell {
-        background: var(--header-bg);
-        color: #a0c0ff;
-    }
-</style>
+    <meta charset="UTF-8">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
+        body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
+        #board { position: absolute; right: 40px; bottom: 40px; background: var(--dark-blue); padding: 8px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 40px 30px 25px 30px; align-items: center; gap: 3px; color: var(--text-color); }
+        .header-row { font-size: 10px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 4px; text-align: center; }
+        .team-row { background: var(--row-bg); height: 32px; margin-bottom: 2px; }
+        .team-row.eliminated { opacity: 0.4; filter: grayscale(1); }
+        .logo-col { width: 22px; height: 22px; background: white; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
+        .logo-col img { width: 90%; height: 90%; object-fit: contain; }
+        .name-col { padding-left: 5px; font-weight: bold; font-size: 13px; overflow: hidden; white-space: nowrap; text-transform: uppercase; }
+        .status-col { display: flex; gap: 3px; justify-content: start; padding-left: 5px; }
+        .bar { width: 4px; height: 14px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
+        .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
+        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+        #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 10px; }
+        #prediction-panel.show { display: flex; }
+        .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
+        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 300px; height: 90px; background: var(--elim-bg) !important; border-radius: 2px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
+        #elim-popup.show { top: 30px; }
+    </style>
 </head>
 <body>
-
-<div class="table-container">
-    <div class="header-row row-wrapper">
-        <div class="rank-cell">#</div>
-        <div class="logo-cell"></div>
-        <div class="team-cell">TEAM NAME</div>
-        <div class="status-cell">STATUS</div>
-        <div class="fin-cell">FIN.</div>
-        <div class="total-cell">TOTAL</div>
+    <div id="elim-popup">
+        <div style="background:white; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
+        <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase;"></p><p style="color:var(--cyan); margin:0;">ELIMINATED</p></div>
+        <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan);">0</div></div>
     </div>
+    <div id="prediction-panel"></div>
+    <div id="board"></div>
 
-    <div class="data-rows" id="data-rows">
-        </div>
-</div>
+    <script>
+        const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const SYNC_PATH = 'TournamentData/LiveSession';
 
-<script>
-// --- Data and Logic ---
+        let currentElimId = "";
+        db.ref(SYNC_PATH).on('value', (snap) => {
+            const data = snap.val(); if(!data) return;
+            const cfg = data.config || {};
+            Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
+            if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
+                currentElimId = data.lastEliminated.id;
+                document.getElementById('pop-logo').src = data.lastEliminated.logo;
+                document.getElementById('pop-name').innerText = data.lastEliminated.name;
+                document.getElementById('pop-fin').innerText = data.lastEliminated.finishes;
+                const p = document.getElementById('elim-popup');
+                p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 4000);
+            }
+            render(data.teams || []);
+        });
 
-// Sample Data (Matching the provided images)
-let teams = [
-    { rank: 1, name: "OG", logo: "", alive: 4, knocked: 0, finished: 1, total: 71 },
-    { rank: 2, name: "SOUL", logo: "", alive: 2, knocked: 2, finished: 1, total: 67, highlight: true }, /* Example highlight */
-    { rank: 3, name: "TR", logo: "", alive: 4, knocked: 0, finished: 0, total: 44 },
-    { rank: 4, name: "NBE", logo: "", alive: 4, knocked: 0, finished: 0, total: 44 },
-    { rank: 5, name: "K9", logo: "", alive: 4, knocked: 0, finished: 0, total: 37 },
-    { rank: 6, name: "M4", logo: "", alive: 2, knocked: 0, finished: 0, total: 35 },
-    { rank: 7, name: "8BIT", logo: "", alive: 4, knocked: 0, finished: 1, total: 34 },
-    { rank: 8, name: "FS", logo: "", alive: 4, knocked: 0, finished: 4, total: 33 },
-    { rank: 9, name: "VS", logo: "", alive: 3, knocked: 0, finished: 2, total: 33 },
-    { rank: 10, name: "MAD", logo: "", alive: 4, knocked: 0, finished: 4, total: 32 },
-    { rank: 11, name: "GOOL", logo: "", alive: 4, knocked: 0, finished: 1, total: 32 },
-    { rank: 12, name: "WW", logo: "", alive: 4, knocked: 0, finished: 1, total: 30 },
-    { rank: 13, name: "CK", logo: "", alive: 4, knocked: 0, finished: 0, total: 30 },
-    { rank: 14, name: "GDR", logo: "", alive: 4, knocked: 0, finished: 0, total: 30 },
-    // Total players per squad is assumed to be 4 for status bars
-];
+        function render(teams) {
+            const board = document.getElementById('board');
+            const pPanel = document.getElementById('prediction-panel');
+            const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
 
-
-// Generates the visual status bars (4 bars total)
-function statusBars(alive, knocked) {
-    let html = "";
-    // Total squad size is 4. Eliminated = 4 - Alive - Knocked
-    const eliminated = 4 - alive - knocked; 
-    
-    // Alive (Cyan/Blue)
-    for(let i=0;i<alive;i++) html+=`<div class="bar alive"></div>`; 
-    
-    // Knocked (Gold/Yellow)
-    for(let i=0;i<knocked;i++) html+=`<div class="bar knocked"></div>`; 
-    
-    // Eliminated (Gray)
-    for(let i=0;i<eliminated;i++) html+=`<div class="bar eliminated"></div>`;
-    
-    return html;
-}
-
-
-function renderBoard() {
-    const container = document.getElementById("data-rows");
-    container.innerHTML = ''; // Clear previous content
-
-    teams.forEach((t, i) => {
-        const row = document.createElement('div');
-        row.className = `row-wrapper ${(t.highlight ? 'highlighted-row' : '')}`;
-
-        // Ensure rank is based on index for simplicity in this static example
-        t.rank = i + 1; 
-
-        row.innerHTML = `
-            <div class="rank-cell">${t.rank}</div>
-            <div class="logo-cell"><img src="${t.logo || ''}" alt=""></div>
-            <div class="team-cell">${t.name}</div>
-            <div class="status-cell">
-                ${statusBars(t.alive, t.knocked)}
-            </div>
-            <div class="fin-cell">${t.finished}</div>
-            <div class="total-cell">${t.total}</div>
-        `;
-        container.appendChild(row);
-    });
-}
-
-// Initial call
-renderBoard();
-</script>
-
+            if (alive.length >= 2 && alive.length <= 5) {
+                pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
+                let totalS = alive.reduce((a,c) => a + (parseInt(c.totalFin) + c.alive.filter(x=>x==1).length * 3), 0) || 1;
+                alive.forEach(t => {
+                    let winPerc = Math.round((((parseInt(t.totalFin) + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
+                    pPanel.innerHTML += `<div class="pred-card">
+                        <img src="${t.logo}" style="width:35px; height:35px; background:white;">
+                        <div style="flex:1;">
+                            <div style="font-size:14px;">${t.name}</div>
+                            <div style="font-size:10px; color:#aaa;">${t.totalFin || 0} TOTAL KILLS</div>
+                        </div>
+                        <div style="color:var(--cyan); font-size:20px; font-weight:900;">${winPerc}%</div>
+                    </div>`;
+                });
+            } else {
+                pPanel.classList.remove('show'); board.style.display="block";
+                let h = `<div class="header-row" style="background:none;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+                [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0)).forEach((t, i) => {
+                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}">
+                        <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
+                        <div class="name-col">${t.name}</div>
+                        <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                        <div style="text-align:center;">${t.fin || 0}</div>
+                        <div class="total-box">${t.totalFin || 0}</div>
+                    </div>`;
+                });
+                board.innerHTML = h;
+            }
+        }
+    </script>
 </body>
 </html>
