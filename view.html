@@ -9,6 +9,7 @@
         :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
+        /* Main board container background items me 0px gap rakhta hai */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -17,7 +18,8 @@
             padding: 0; 
             display: flex;
             flex-direction: column;
-            gap: 4px; /* Exact spacing matched to your video frame */
+            gap: 0px; /* BACKGROUND BOX KE BEECH MEIN KOI GAP NHI HAI */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
@@ -34,24 +36,43 @@
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        /* THE EXACT SLICED COMBINED UNIT ANIMATION FROM VIDEO */
+        /* EXACT COMBINED BACKGROUND WALL SETUP WITH 0PX STRUCTURAL GAP */
         .team-row { 
-            background: var(--row-bg) !important; /* Linked to dynamic admin configuration directly */
+            background: var(--row-bg) !important; /* Admin panel color seamlessly reactive */
             height: 32px; 
-            border-radius: 2px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             opacity: 0; 
             transform: translateX(450px); 
+            
+            /* Background box aur content dono sath mein right se slide honge */
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        /* Visual inner padding adjust kar rha hai text lines me vertical spacing maintain karne ke liye */
+        .team-row > div {
+            padding-top: 2px;
+            padding-bottom: 2px;
         }
         
         .team-row.eliminated { filter: grayscale(1); opacity: 0.4; }
         
+        /* Slide transition keyframes matching video timeline */
         @keyframes teamSliceIn {
-            0% { opacity: 0; transform: translateX(450px); }
-            4% { opacity: 1; transform: translateX(0); }
-            60% { opacity: 1; transform: translateX(0); }
-            64%, 100% { opacity: 0; transform: translateX(450px); }
+            0% {
+                opacity: 0;
+                transform: translateX(450px);
+            }
+            4% { 
+                opacity: 1;
+                transform: translateX(0);
+            }
+            60% { 
+                opacity: 1;
+                transform: translateX(0);
+            }
+            64%, 100% { 
+                opacity: 0;
+                transform: translateX(450px);
+            }
         }
         
         .logo-col { width: 22px; height: 22px; background: transparent; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
@@ -61,13 +82,13 @@
         
         .bar { width: 4px; height: 14px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 0 2px 2px 0; }
+        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
         #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 10px; }
         #prediction-panel.show { display: flex; }
         .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         
-        /* ELIMINATION POPUP UNTOUCHED */
+        /* ORIGINAL ELIMINATION POPUP PRESERVED */
         #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 300px; height: 90px; background: var(--elim-bg) !important; border-radius: 2px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
         #elim-popup.show { top: 30px; }
     </style>
@@ -131,9 +152,9 @@
                 
                 const sortedTeams = [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 
-                // FIXED OVERWRITE PROTECTION: Agar teams list update ho rahi hai tabhi innerHTML reset hoga
                 if (sortedTeams.length !== existingTeamsLength) {
                     let h = `<div class="header-row" style="animation-delay: 0s;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+                    
                     sortedTeams.forEach((t, i) => {
                         let delay = ((i + 1) * 0.05).toFixed(2);
                         h += `<div class="team-row id-row-${i} ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${delay}s;">
@@ -147,7 +168,6 @@
                     board.innerHTML = h;
                     existingTeamsLength = sortedTeams.length;
                 } else {
-                    // Agar properties real-time update ho rahi hain bina data rotation block reset hue, toh update smooth cells context directly bina structure reset kiye
                     sortedTeams.forEach((t, i) => {
                         const row = board.querySelector(`.id-row-${i}`);
                         if(row) {
@@ -166,5 +186,3 @@
     </script>
 </body>
 </html>
-
-```
