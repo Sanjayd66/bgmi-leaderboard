@@ -19,7 +19,7 @@
             border-radius: 4px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
             opacity: 0;
-            animation: slideUpFade 0.5s ease-out forwards; /* Pure board ka background slide animation */
+            animation: slideUpFade 0.5s ease-out forwards;
         }
         
         .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
@@ -71,27 +71,58 @@
             animation: slideUpFade 0.4s ease-out forwards;
         }
         
-        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 300px; height: 90px; background: var(--elim-bg) !important; border-radius: 2px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
-        #elim-popup.show { top: 30px; }
+        /* NEW UPDATED DYNAMIC ELIMINATION POPUP STYLES */
+        #elim-popup { 
+            position: fixed; 
+            top: -200px; 
+            left: 50%; 
+            transform: translateX(-50%) scale(0.9); 
+            display: flex; 
+            width: 340px; 
+            height: 95px; 
+            background: var(--elim-bg) !important; 
+            border-radius: 4px; 
+            border: 2px solid var(--cyan); 
+            color: white; 
+            opacity: 0;
+            box-shadow: 0 0 0px rgba(0,242,255,0);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bounce/Elastic entry drop effect */
+        }
+        
+        /* Jab popup show hoga tab ka active bounce state aur glow effect */
+        #elim-popup.show { 
+            top: 40px; 
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 25px rgba(0,242,255,0.4);
+        }
+
+        /* Inner text elements fade animation trigger karne ke liye class */
+        #elim-popup.show #pop-name, #elim-popup.show #pop-logo, #elim-popup.show #pop-fin {
+            animation: popInText 0.4s 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        }
+        
+        #pop-name, #pop-fin { opacity: 0; transform: scale(0.8); }
+        #pop-logo { opacity: 0; transform: translateY(-10px); transition: all 0.3s; }
 
         /* KEYFRAMES FOR THE SLIDE-UP EFFECT */
         @keyframes slideUpFade {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* KEYFRAMES FOR POPUP INNER ELEMENTS TEXT POP-IN */
+        @keyframes popInText {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
 <body>
     <div id="elim-popup">
         <div style="background:transparent; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
-        <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase;"></p><p style="color:var(--cyan); margin:0;">ELIMINATED</p></div>
-        <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan);">0</div></div>
+        <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase; font-weight: 900; letter-spacing: 1px;"></p><p style="color:var(--cyan); margin:0; font-size: 14px; letter-spacing: 2px;">ELIMINATED</p></div>
+        <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan); font-weight: 900;">0</div></div>
     </div>
     <div id="prediction-panel"></div>
     <div id="board"></div>
@@ -103,22 +134,33 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
 
         let currentElimId = "";
-        let cachedTeamsData = []; // Firebase data ko store karne ke liye global variable
+        let cachedTeamsData = []; 
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
+            
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
+                
+                // Element state reset before popping up to re-trigger inner entry animations
+                document.getElementById('pop-name').style.opacity = "0";
+                document.getElementById('pop-fin').style.opacity = "0";
+                document.getElementById('pop-logo').style.opacity = "0";
+
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
                 document.getElementById('pop-name').innerText = data.lastEliminated.name;
                 document.getElementById('pop-fin').innerText = data.lastEliminated.finishes;
+                
                 const p = document.getElementById('elim-popup');
-                p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 4000);
+                p.classList.add('show'); 
+                
+                setTimeout(() => {
+                    p.classList.remove('show');
+                }, 4000);
             }
             
-            // Data save karke pehli baar render trigger karte hain
             cachedTeamsData = data.teams || [];
             render(cachedTeamsData);
         });
@@ -128,10 +170,8 @@
             const pPanel = document.getElementById('prediction-panel');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
 
-            // Jab data refresh hoga, to CSS animation restart karne ke liye style reset setup kiya hai
             board.style.animation = 'none';
             pPanel.style.animation = 'none';
-            // Trigger reflow/trick to restart CSS animations
             void board.offsetWidth; 
             void pPanel.offsetWidth;
             
@@ -145,7 +185,6 @@
                 alive.forEach((t, index) => {
                     let winPerc = Math.round((((parseInt(t.totalFin) + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
                     
-                    // Har card back-to-back animated ho kar aayega background container ke andar
                     pPanel.innerHTML += `<div class="pred-card" style="animation-delay: ${(index * 0.05) + 0.2}s">
                         <img src="${t.logo}" style="width:35px; height:35px; background:transparent; object-fit:contain;">
                         <div style="flex:1;">
@@ -162,7 +201,6 @@
                 const sortedTeams = [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 
                 sortedTeams.forEach((t, i) => {
-                    // Delay ko 0.2s badha diya taaki main background pehle smoothly upar aaye, fir rows aane shuru ho
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${(i * 0.04) + 0.2}s">
                         <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
@@ -175,24 +213,19 @@
             }
         }
 
-        // --- AUTOMATIC REFRESH LOOP LOGIC ---
-        // Har 20 seconds mein board clear hoga, kuch der screen se hatega, aur phir se slide-in hokar aayega
+        // AUTOMATIC REFRESH LOOP LOGIC
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
-            
-            // Step 1: Board ko gayab karo screen se 
             board.style.display = "none";
             pPanel.classList.remove('show');
             
-            // Step 2: 2.5 seconds ke break ke baad database data ka use karke animation ke sath wapas dikhao
             setTimeout(() => {
                 if(cachedTeamsData.length > 0) {
                     render(cachedTeamsData);
                 }
             }, 2500); 
-
-        }, 20000); // Yeh code har 20,000ms (20 seconds) par execute hoga
+        }, 20000);
     </script>
 </body>
 </html>
