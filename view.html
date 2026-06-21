@@ -9,7 +9,7 @@
         :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
-        /* PURE POINTS TABLE BOARD PAR DYNAMIC ANIMATION */
+        /* PREMIUM ESPORTS SLIDING ANIMATION FOR PURE BOARD */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -18,28 +18,33 @@
             padding: 8px; 
             border-radius: 4px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            animation: slideToggleBoard 25s infinite ease-in-out;
+            /* 20 Seconds loop with smooth broadcast timing */
+            animation: esportsSlideToggle 20s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* 25 Seconds ka Loop: 10s dikhega, 2-3s aane-jaane ka animation, aur 10-12s gayab rahega */
-        @keyframes slideToggleBoard {
+        /* Video jaisa smooth professional entry aur exit slide logic */
+        @keyframes esportsSlideToggle {
             0% {
                 opacity: 0;
-                transform: translateX(100px); /* Screen ke baahar right side se start hoga */
+                transform: translateX(450px) scaleX(0.95); /* Screen ke baahar right side se start */
             }
-            4%, 44% {
+            4% {
                 opacity: 1;
-                transform: translateX(0); /* 10 Seconds tak screen par rahega */
+                transform: translateX(0) scaleX(1); /* Smoothly slide-in hokar fix ho jayega */
             }
-            48%, 100% {
+            50% {
+                opacity: 1;
+                transform: translateX(0) scaleX(1); /* 10 Seconds tak perfectly visible rahega */
+            }
+            54%, 100% {
                 opacity: 0;
-                transform: translateX(100px); /* Agle 12-13 seconds tak smoothly gayab rahega */
+                transform: translateX(450px) scaleX(0.95); /* Agle 10 seconds ke liye smoothly baahar chala jayega */
             }
         }
 
         .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
         .header-row { font-size: 10px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 4px; text-align: center; }
-        .team-row { background: var(--row-bg); height: 32px; margin-bottom: 2px; }
+        .team-row { background: var(--row-bg); height: 32px; margin-bottom: 2px; transition: all 0.3s ease; }
         .team-row.eliminated { opacity: 0.4; filter: grayscale(1); }
         
         .logo-col { width: 22px; height: 22px; background: transparent; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
