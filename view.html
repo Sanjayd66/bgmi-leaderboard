@@ -1,3 +1,12 @@
+Bhai, video (`Screen Recording 2026-06-21 123431.mp4`) ke animation flow ke mutabik:
+
+1. Pehle pura green bar slide hokar screen par aata hai.
+2. Uske turant baad left side ka Rank box (`#16`) expand hokar left se nikalta hai aur right accent ribbon cross cut ke sath fade-in hota hai.
+3. Aur isme humne aapke kahe anusaar niche **TEAM NAME** ke theek aage **KILLS** ka counter bhi add kar diya hai, jaisa pehle reference mein tha.
+
+Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate kar diya hai:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,17 +95,166 @@
         #prediction-panel.show { display: flex; }
         .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         
-        /* ORIGINAL ELIMINATION POPUP UNTOUCHED */
-        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 300px; height: 90px; background: var(--elim-bg) !important; border-radius: 2px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
-        #elim-popup.show { top: 30px; }
+        /* ================= VIDEO ANIMATED ELIMINATION POPUP ================= */
+        #elim-popup { 
+            position: fixed; 
+            top: 40px; 
+            left: 50%; 
+            transform: translateX(-50%) scaleX(0); 
+            display: flex; 
+            align-items: center;
+            width: 540px; 
+            height: 85px; 
+            background: #0d662d !important; /* Rich Green */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            color: white; 
+            overflow: hidden;
+            opacity: 0;
+            transform-origin: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            visibility: hidden;
+        }
+        
+        /* Entrance state based on video animation flow */
+        #elim-popup.show { 
+            opacity: 1;
+            transform: translateX(-50%) scaleX(1);
+            visibility: visible;
+        }
+
+        /* Left side rank section slide-out animation */
+        .pop-rank-section {
+            width: 75px;
+            height: 100%;
+            background: #07471e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+            border-right: 2px solid #0d662d;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-out 0.2s;
+        }
+        #elim-popup.show .pop-rank-section {
+            transform: translateX(0);
+        }
+
+        /* Center main data area */
+        .pop-content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease-out 0.3s;
+        }
+        #elim-popup.show .pop-content-area {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pop-title-top {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #ffffff;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .pop-identity-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 3px;
+        }
+
+        .pop-team-logo-frame {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        .pop-team-logo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .pop-team-name-text {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .pop-kills-count {
+            font-size: 24px;
+            font-weight: 800;
+            color: #00f2ff; /* Cyber cyan highlight for kills text */
+            margin-left: 5px;
+        }
+
+        /* Right Corner Ribbon Fade/Slide In */
+        .pop-right-corner-decor {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 60px;
+            height: 100%;
+            background: #179344;
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out 0.2s;
+        }
+        #elim-popup.show .pop-right-corner-decor {
+            transform: translateX(0);
+        }
+
+        .pop-white-sub-tip {
+            width: 14px;
+            height: 14px;
+            background: #ffffff;
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
+        }
     </style>
 </head>
 <body>
+    
     <div id="elim-popup">
-        <div style="background:transparent; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
-        <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase;"></p><p style="color:var(--cyan); margin:0;">ELIMINATED</p></div>
-        <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan);">0</div></div>
+        <div class="pop-rank-section" id="pop-rank">#16</div>
+        
+        <div class="pop-content-area">
+            <div class="pop-title-top">TEAM ELIMINATED</div>
+            <div class="pop-identity-row">
+                <div class="pop-team-logo-frame">
+                    <img id="pop-logo" src="" alt="logo">
+                </div>
+                <div class="pop-team-name-text">
+                    <span id="pop-name">TEAM NAME</span>
+                    <span id="pop-fin" class="pop-kills-count">0 KILLS</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pop-right-corner-decor">
+            <div class="pop-white-sub-tip"></div>
+        </div>
     </div>
+
     <div id="prediction-panel"></div>
     <div id="board"></div>
 
@@ -111,11 +269,21 @@
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
+            
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
                 document.getElementById('pop-name').innerText = data.lastEliminated.name;
-                document.getElementById('pop-fin').innerText = data.lastEliminated.finishes;
+                
+                // Live Kills data assignment
+                document.getElementById('pop-fin').innerText = " - " + (data.lastEliminated.finishes || 0) + " KILLS";
+                
+                // Real-time rank calculation from scoreboard array
+                const teamsList = data.teams || [];
+                const sorted = [...teamsList].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
+                const rankIndex = sorted.findIndex(t => t.id === data.lastEliminated.id);
+                document.getElementById('pop-rank').innerText = rankIndex !== -1 ? `#${rankIndex + 1}` : '#--';
+                
                 const p = document.getElementById('elim-popup');
                 p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 4000);
             }
@@ -150,7 +318,6 @@
                 const sortedTeams = [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 
                 sortedTeams.forEach((t, i) => {
-                    // One-by-one perfect cascading delay logic for smooth dropdown effect
                     let delay = ((i + 1) * 0.05).toFixed(2);
                     
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${delay}s;">
@@ -167,3 +334,5 @@
     </script>
 </body>
 </html>
+
+```
