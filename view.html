@@ -1,18 +1,3 @@
-Arey sorry, sorry bhai! Bilkul ghabrao mat, sab wapas sahi kar dete hain!
-
-Maine pichhe galti se pura layout badal diya tha aur extra code daal diya tha jo aapko nahi chahiye tha. Aapko sirf wahi original points table chahiye, lekin har ek team row ke apne **slice background** ke sath jo ek sath animate ho.
-
-Chalo sab kuch pehle jaisa perfect aur clean kar dete hain.
-
-### Kya fix kiya hai:
-
-1. **Pura Extra Code Hata Diya:** Match Header, 4MW panel, aur jo bhi faltu text screen par aa raha tha, sab kuch saaf kar diya hai.
-2. **Har Team Ka Apna Slice Background:** Pure board ka bada background ab transparent hai. Har ek team row ka apna alag slice (`--row-bg`) background hai.
-3. **Ek Sath Sliced Animation:** Har ek row ka background aur uske andar ka data (Logo, Name, Kills) **ek single piece** ban kar right side se smoothly slide-in aur slide-out hoga, wahi cascade delay (ek-ek karke) ke sath!
-
-Yahan aapka 100% correct aur tested code hai:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
