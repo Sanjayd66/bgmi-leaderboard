@@ -6,7 +6,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #901c13; --pred-bg: #0b0e11; }
+        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
         #board { 
@@ -66,131 +66,135 @@
         #prediction-panel.show { display: flex; }
         .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         
-        /* ================= EXACT REFERENCE MATCH POPUP ================= */
+        /* ================= EXACT GREEN DESIGN LAYOUT ================= */
         #elim-popup {
             position: fixed;
             top: -200px;
             left: 50%;
             transform: translateX(-50%);
-            width: 520px;
-            height: 90px;
-            background: #b82319; /* Exact original red base */
+            width: 580px;
+            height: 100px;
+            background: #09792c; /* Exact rich green shade */
             display: flex;
             align-items: center;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.7);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             transition: top 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 9999;
+            border-left: 4px solid #00ff55; /* Left glow highlight border */
         }
         #elim-popup.show { top: 60px; }
 
-        /* Left Curved Diamond Badge Container */
-        .elim-custom-badge {
-            position: absolute;
-            left: -35px;
-            width: 110px;
-            height: 110px;
+        /* Left Ranking Box (#16 Style) */
+        .rank-box {
+            width: 75px;
+            height: 100%;
+            background: #054619; /* Darker contrasting green for rank panel */
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .badge-bg-svg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
-        }
-        .elim-team-logo {
-            position: absolute;
-            width: 52px;
-            height: 52px;
-            object-fit: contain;
-            z-index: 2;
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            border-right: 3px solid #09792c;
         }
 
-        /* Center Typography Block */
-        .elim-text-block {
-            margin-left: 95px;
+        /* Center Content Block */
+        .content-block {
             display: flex;
             flex-direction: column;
             justify-content: center;
             flex: 1;
-        }
-        
-        /* Exact Reference Wide Block Title Font Style */
-        .elim-main-heading {
-            font-family: 'Impact', 'Arial Black', sans-serif;
-            color: #fcae12; /* Exact gold/yellow from image */
-            font-size: 42px;
-            font-weight: 900;
-            line-height: 0.95;
-            margin: 0;
-            letter-spacing: 0.5px;
-            text-shadow: 1px 2px 0px rgba(0,0,0,0.5);
-        }
-        
-        /* Subtitle Row: Team Name & Kills side-by-side */
-        .elim-sub-row {
-            display: flex;
-            align-items: center;
-            color: #ffffff;
-            font-family: 'Oswald', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            margin-top: 4px;
-            margin-bottom: 0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-shadow: 1px 1px 0px rgba(0,0,0,0.4);
-        }
-        .elim-square-icon {
-            color: #fcae12;
-            font-size: 13px;
-            margin-right: 8px;
-            transform: rotate(45deg);
-            display: inline-block;
-        }
-        .elim-k-count {
-            color: #fcae12; /* Highlighting Kills in Yellow matching Name prefix */
-            margin-left: 6px;
+            padding-left: 25px;
+            position: relative;
         }
 
-        /* Right Side Flame Skull Image Asset from exact reference */
-        .elim-right-asset {
+        /* Top Header Line: "TEAM ELIMINATED" */
+        .top-header {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        /* Bottom Info Line: Logo + Team Name */
+        .bottom-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .team-logo-wrapper {
+            width: 44px;
+            height: 44px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .team-logo-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .team-name-text {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        /* Right Slanted Accent Corner Design */
+        .right-accent-strip {
             position: absolute;
-            right: -15px;
-            top: -22px;
-            width: 100px;
-            height: 130px;
-            background-image: url('https://i.ibb.co/L9QJ1z1/flame-skull.png'); /* Exact asset rendered via reliable external CDN link */
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+            right: 0;
+            top: 0;
+            width: 65px;
+            height: 100%;
+            background: #1bb746; /* Lighter bright green accent stripe */
+            clip-path: polygon(100% 0, 0 0, 100% 100%); /* Slanted geometric cut */
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 6px 8px 0 0;
+            box-sizing: border-box;
+        }
+
+        /* Tiny white sub-highlight triangle in the corner */
+        .white-sub-corner {
+            width: 15px;
+            height: 15px;
+            background: #ffffff;
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
         }
     </style>
 </head>
 <body>
     
     <div id="elim-popup">
-        <div class="elim-custom-badge">
-            <svg class="badge-bg-svg" viewBox="0 0 100 100">
-                <path d="M 50 2 C 62 15, 85 38, 98 50 C 85 62, 62 85, 50 98 C 38 85, 15 62, 2 50 C 15 38, 38 15, 50 2 Z" fill="#4d0b06" />
-                <path d="M 50 5 C 75 5, 95 25, 95 50 C 95 75, 75 95, 50 95 C 25 95, 5 75, 5 50 C 5 25, 25 5, 50 5 Z" fill="#4d0b06" />
-                <path d="M 50 8 C 60 18, 82 40, 92 50 C 82 60, 60 82, 50 92 C 40 82, 18 60, 8 50 C 18 40, 40 18, 50 8 Z" fill="none" stroke="#fcae12" stroke-width="2.5" />
-            </svg>
-            <img id="pop-logo" class="elim-team-logo" src="" alt="logo">
-        </div>
+        <div class="rank-box" id="pop-rank">#16</div>
 
-        <div class="elim-text-block">
-            <div class="elim-main-heading">ELIMINATED</div>
-            <div class="elim-sub-row">
-                <span class="elim-square-icon">■</span>
-                <span id="pop-name">TEAM NAME</span>
-                <span id="pop-kills" class="elim-k-count">0 KILLS</span>
+        <div class="content-block">
+            <div class="top-header">TEAM ELIMINATED</div>
+            <div class="bottom-info">
+                <div class="team-logo-wrapper">
+                    <img id="pop-logo" src="" alt="logo">
+                </div>
+                <div class="team-name-text" id="pop-name">TEAM NAME</div>
             </div>
         </div>
 
-        <div class="elim-right-asset"></div>
+        <div class="right-accent-strip">
+            <div class="white-sub-corner"></div>
+        </div>
     </div>
 
     <div id="prediction-panel"></div>
@@ -215,8 +219,11 @@
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
                 document.getElementById('pop-name').innerText = data.lastEliminated.name;
                 
-                // Kills data appended next to Team Name in the same text row block
-                document.getElementById('pop-kills').innerText = " - " + (data.lastEliminated.finishes || 0) + " KILLS";
+                // Finds the current rank of the team dynamically from the main scoreboard list array 
+                const teamsList = data.teams || [];
+                const sorted = [...teamsList].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
+                const index = sorted.findIndex(t => t.id === data.lastEliminated.id);
+                document.getElementById('pop-rank').innerText = index !== -1 ? `#${index + 1}` : '#--';
                 
                 const p = document.getElementById('elim-popup');
                 p.classList.add('show'); 
@@ -285,3 +292,5 @@
     </script>
 </body>
 </html>
+
+```
