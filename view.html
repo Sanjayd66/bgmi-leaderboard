@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght=700&display=swap" rel="stylesheet">
     <style>
         :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
-        /* Container absolute positions and transparent setup */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -18,12 +17,11 @@
             padding: 0; 
             display: flex;
             flex-direction: column;
-            gap: 4px; /* Video jaisa rows ke beech ka standard gap */
+            gap: 4px; /* Exact spacing matched to your video frame */
         }
 
         .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
         
-        /* Header Slice Setup */
         .header-row { 
             font-size: 10px; 
             color: var(--cyan); 
@@ -36,39 +34,24 @@
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        /* EXACT VIDEO ANIMATION: BACKGROUND + CONTENT MOVES TOGETHER */
+        /* THE EXACT SLICED COMBINED UNIT ANIMATION FROM VIDEO */
         .team-row { 
-            background: var(--row-bg); /* Custom Admin panel color directly linked */
+            background: var(--row-bg) !important; /* Linked to dynamic admin configuration directly */
             height: 32px; 
             border-radius: 2px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             opacity: 0; 
             transform: translateX(450px); 
-            
-            /* Slices right side se smoothly single block ban kar aayenge */
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         .team-row.eliminated { filter: grayscale(1); opacity: 0.4; }
         
-        /* Continuous slide-in / wait / slide-out loop matching your video */
         @keyframes teamSliceIn {
-            0% {
-                opacity: 0;
-                transform: translateX(450px);
-            }
-            4% { 
-                opacity: 1;
-                transform: translateX(0);
-            }
-            60% { 
-                opacity: 1;
-                transform: translateX(0);
-            }
-            64%, 100% { 
-                opacity: 0;
-                transform: translateX(450px);
-            }
+            0% { opacity: 0; transform: translateX(450px); }
+            4% { opacity: 1; transform: translateX(0); }
+            60% { opacity: 1; transform: translateX(0); }
+            64%, 100% { opacity: 0; transform: translateX(450px); }
         }
         
         .logo-col { width: 22px; height: 22px; background: transparent; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
@@ -105,6 +88,8 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
 
         let currentElimId = "";
+        let existingTeamsLength = 0;
+
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
@@ -139,27 +124,43 @@
                         <div style="color:var(--cyan); font-size:20px; font-weight:900;">${winPerc}%</div>
                     </div>`;
                 });
+                existingTeamsLength = 0;
             } else {
                 pPanel.classList.remove('show'); 
                 board.style.display="flex"; 
                 
-                let h = `<div class="header-row" style="animation-delay: 0s;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
-                
                 const sortedTeams = [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 
-                sortedTeams.forEach((t, i) => {
-                    // Smooth sequence cascading style delays matching video loop perfectly
-                    let delay = ((i + 1) * 0.05).toFixed(2);
-                    
-                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${delay}s;">
-                        <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
-                        <div class="name-col">${t.name}</div>
-                        <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
-                        <div style="text-align:center;">${t.fin || 0}</div>
-                        <div class="total-box">${t.totalFin || 0}</div>
-                    </div>`;
-                });
-                board.innerHTML = h;
+                // FIXED OVERWRITE PROTECTION: Agar teams list update ho rahi hai tabhi innerHTML reset hoga
+                if (sortedTeams.length !== existingTeamsLength) {
+                    let h = `<div class="header-row" style="animation-delay: 0s;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+                    sortedTeams.forEach((t, i) => {
+                        let delay = ((i + 1) * 0.05).toFixed(2);
+                        h += `<div class="team-row id-row-${i} ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${delay}s;">
+                            <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
+                            <div class="name-col">${t.name}</div>
+                            <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
+                            <div style="text-align:center;" class="live-fin">${t.fin || 0}</div>
+                            <div class="total-box">${t.totalFin || 0}</div>
+                        </div>`;
+                    });
+                    board.innerHTML = h;
+                    existingTeamsLength = sortedTeams.length;
+                } else {
+                    // Agar properties real-time update ho rahi hain bina data rotation block reset hue, toh update smooth cells context directly bina structure reset kiye
+                    sortedTeams.forEach((t, i) => {
+                        const row = board.querySelector(`.id-row-${i}`);
+                        if(row) {
+                            if(t.alive.every(a=>a==0)) { row.classList.add('eliminated'); } else { row.classList.remove('eliminated'); }
+                            const bars = row.querySelector('.status-col');
+                            if(bars) bars.innerHTML = t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('');
+                            const liveFin = row.querySelector('.live-fin');
+                            if(liveFin) liveFin.innerText = t.fin || 0;
+                            const totalBox = row.querySelector('.total-box');
+                            if(totalBox) totalBox.innerText = t.totalFin || 0;
+                        }
+                    });
+                }
             }
         }
     </script>
