@@ -8,16 +8,29 @@
     <style>
         :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
-        #board { position: absolute; right: 40px; bottom: 40px; background: var(--dark-blue); padding: 8px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* BOARD MAIN CONTAINER WITH ENTRY ANIMATION */
+        #board { 
+            position: absolute; 
+            right: 40px; 
+            bottom: 40px; 
+            background: var(--dark-blue); 
+            padding: 8px; 
+            border-radius: 4px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            opacity: 0;
+            animation: slideUpFade 0.5s ease-out forwards; /* Pure board ka background slide animation */
+        }
+        
         .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
         .header-row { font-size: 10px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 4px; text-align: center; }
         
-        /* TEAM ROW WITH NEW ENTRY ANIMATION */
+        /* INDIVIDUAL TEAM ROWS */
         .team-row { 
             background: var(--row-bg); 
             height: 32px; 
             margin-bottom: 2px; 
-            opacity: 0; /* Starting state for animation */
+            opacity: 0; 
             animation: slideUpFade 0.4s ease-out forwards;
         }
         
@@ -30,10 +43,20 @@
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 10px; }
+        /* PREDICTION PANEL MAIN BG WITH ANIMATION */
+        #prediction-panel { 
+            position: absolute; 
+            bottom: 40px; 
+            right: 40px; 
+            display: none; 
+            flex-direction: column; 
+            gap: 10px; 
+            opacity: 0;
+            animation: slideUpFade 0.5s ease-out forwards;
+        }
         #prediction-panel.show { display: flex; }
         
-        /* PREDICTION CARD WITH ENTRY ANIMATION */
+        /* PREDICTION CARDS */
         .pred-card { 
             width: 300px; 
             background: var(--pred-bg) !important; 
@@ -51,15 +74,15 @@
         #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 300px; height: 90px; background: var(--elim-bg) !important; border-radius: 2px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
         #elim-popup.show { top: 30px; }
 
-        /* KEYFRAMES FOR THE SLIDE-IN EFFECT (Niche se upar aane ke liye) */
+        /* KEYFRAMES FOR THE SLIDE-UP EFFECT */
         @keyframes slideUpFade {
             from {
                 opacity: 0;
-                transform: translateY(20px); /* 20px niche se shuru hoga */
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0); /* Apni original jagah par rukega */
+                transform: translateY(0);
             }
         }
     </style>
@@ -80,7 +103,7 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
 
         let currentElimId = "";
-        let totalTeamsCount = 0; // Data comparison track karne ke liye
+        let cachedTeamsData = []; // Firebase data ko store karne ke liye global variable
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
@@ -94,13 +117,26 @@
                 const p = document.getElementById('elim-popup');
                 p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 4000);
             }
-            render(data.teams || []);
+            
+            // Data save karke pehli baar render trigger karte hain
+            cachedTeamsData = data.teams || [];
+            render(cachedTeamsData);
         });
 
         function render(teams) {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
+
+            // Jab data refresh hoga, to CSS animation restart karne ke liye style reset setup kiya hai
+            board.style.animation = 'none';
+            pPanel.style.animation = 'none';
+            // Trigger reflow/trick to restart CSS animations
+            void board.offsetWidth; 
+            void pPanel.offsetWidth;
+            
+            board.style.animation = 'slideUpFade 0.5s ease-out forwards';
+            pPanel.style.animation = 'slideUpFade 0.5s ease-out forwards';
 
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
@@ -109,8 +145,8 @@
                 alive.forEach((t, index) => {
                     let winPerc = Math.round((((parseInt(t.totalFin) + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
                     
-                    // Staggered animation delay lagaya gaya hai (har card thoda ruk kar khulega)
-                    pPanel.innerHTML += `<div class="pred-card" style="animation-delay: ${index * 0.05}s">
+                    // Har card back-to-back animated ho kar aayega background container ke andar
+                    pPanel.innerHTML += `<div class="pred-card" style="animation-delay: ${(index * 0.05) + 0.2}s">
                         <img src="${t.logo}" style="width:35px; height:35px; background:transparent; object-fit:contain;">
                         <div style="flex:1;">
                             <div style="font-size:14px;">${t.name}</div>
@@ -126,8 +162,8 @@
                 const sortedTeams = [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 
                 sortedTeams.forEach((t, i) => {
-                    // animation-delay property add ki hai taaki rows step-by-step niche se upar slide karein
-                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${i * 0.04}s">
+                    // Delay ko 0.2s badha diya taaki main background pehle smoothly upar aaye, fir rows aane shuru ho
+                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${(i * 0.04) + 0.2}s">
                         <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
                         <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
@@ -138,6 +174,25 @@
                 board.innerHTML = h;
             }
         }
+
+        // --- AUTOMATIC REFRESH LOOP LOGIC ---
+        // Har 20 seconds mein board clear hoga, kuch der screen se hatega, aur phir se slide-in hokar aayega
+        setInterval(() => {
+            const board = document.getElementById('board');
+            const pPanel = document.getElementById('prediction-panel');
+            
+            // Step 1: Board ko gayab karo screen se 
+            board.style.display = "none";
+            pPanel.classList.remove('show');
+            
+            // Step 2: 2.5 seconds ke break ke baad database data ka use karke animation ke sath wapas dikhao
+            setTimeout(() => {
+                if(cachedTeamsData.length > 0) {
+                    render(cachedTeamsData);
+                }
+            }, 2500); 
+
+        }, 20000); // Yeh code har 20,000ms (20 seconds) par execute hoga
     </script>
 </body>
 </html>
