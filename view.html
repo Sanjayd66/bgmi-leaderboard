@@ -1,12 +1,3 @@
-Bhai, video (`Screen Recording 2026-06-21 123431.mp4`) ke animation flow ke mutabik:
-
-1. Pehle pura green bar slide hokar screen par aata hai.
-2. Uske turant baad left side ka Rank box (`#16`) expand hokar left se nikalta hai aur right accent ribbon cross cut ke sath fade-in hota hai.
-3. Aur isme humne aapke kahe anusaar niche **TEAM NAME** ke theek aage **KILLS** ka counter bhi add kar diya hai, jaisa pehle reference mein tha.
-
-Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate kar diya hai:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,62 +86,62 @@ Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate ka
         #prediction-panel.show { display: flex; }
         .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         
-        /* ================= VIDEO ANIMATED ELIMINATION POPUP ================= */
+        /* ================= VIDEO ACCURATE ELIMINATION POPUP ================= */
         #elim-popup { 
             position: fixed; 
-            top: 40px; 
+            top: 50px; 
             left: 50%; 
             transform: translateX(-50%) scaleX(0); 
             display: flex; 
             align-items: center;
-            width: 540px; 
-            height: 85px; 
-            background: #0d662d !important; /* Rich Green */
+            width: 520px; 
+            height: 80px; 
+            background: #117834 !important; /* Rich Esports Green */
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             color: white; 
             overflow: hidden;
             opacity: 0;
             transform-origin: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
             visibility: hidden;
         }
         
-        /* Entrance state based on video animation flow */
+        /* 1. Base Green Box Entrance Step */
         #elim-popup.show { 
             opacity: 1;
             transform: translateX(-50%) scaleX(1);
             visibility: visible;
         }
 
-        /* Left side rank section slide-out animation */
+        /* 2. Left Rank Segment Delayed Slide-Out */
         .pop-rank-section {
             width: 75px;
             height: 100%;
-            background: #07471e;
+            background: #095221;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 26px;
             font-weight: 900;
             color: #ffffff;
-            border-right: 2px solid #0d662d;
+            border-right: 2px solid rgba(255,255,255,0.1);
             transform: translateX(-100%);
-            transition: transform 0.3s ease-out 0.2s;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
         }
         #elim-popup.show .pop-rank-section {
             transform: translateX(0);
         }
 
-        /* Center main data area */
+        /* 3. Center Content Delayed Fade & Drop Up */
         .pop-content-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding-left: 20px;
+            padding-left: 18px;
             opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s ease-out 0.3s;
+            transform: translateY(15px);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.3s, opacity 0.35s ease-out 0.3s;
         }
         #elim-popup.show .pop-content-area {
             opacity: 1;
@@ -158,9 +149,9 @@ Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate ka
         }
 
         .pop-title-top {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             color: #ffffff;
             text-transform: uppercase;
             margin: 0;
@@ -169,17 +160,17 @@ Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate ka
         .pop-identity-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-top: 3px;
+            gap: 10px;
+            margin-top: 2px;
         }
 
         .pop-team-logo-frame {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.15);
             border-radius: 50%;
             padding: 2px;
         }
@@ -191,7 +182,7 @@ Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate ka
         }
 
         .pop-team-name-text {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
             letter-spacing: 0.5px;
             color: #ffffff;
@@ -199,26 +190,26 @@ Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate ka
         }
 
         .pop-kills-count {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
-            color: #00f2ff; /* Cyber cyan highlight for kills text */
-            margin-left: 5px;
+            color: #00f2ff; /* Cyber Cyan Kills Counter */
+            margin-left: 6px;
         }
 
-        /* Right Corner Ribbon Fade/Slide In */
+        /* 4. Right Accent Ribbon Delayed Crop-In */
         .pop-right-corner-decor {
             position: absolute;
             right: 0;
             top: 0;
             width: 60px;
             height: 100%;
-            background: #179344;
+            background: #1cb54d;
             clip-path: polygon(100% 0, 0 0, 100% 100%);
             display: flex;
             justify-content: flex-end;
             align-items: flex-start;
             transform: translateX(100%);
-            transition: transform 0.3s ease-out 0.2s;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
         }
         #elim-popup.show .pop-right-corner-decor {
             transform: translateX(0);
@@ -275,10 +266,10 @@ Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate ka
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
                 document.getElementById('pop-name').innerText = data.lastEliminated.name;
                 
-                // Live Kills data assignment
+                // Realtime kills sync output
                 document.getElementById('pop-fin').innerText = " - " + (data.lastEliminated.finishes || 0) + " KILLS";
                 
-                // Real-time rank calculation from scoreboard array
+                // Realtime Rank mapping
                 const teamsList = data.teams || [];
                 const sorted = [...teamsList].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 const rankIndex = sorted.findIndex(t => t.id === data.lastEliminated.id);
@@ -334,5 +325,3 @@ Aapke freeze kiye hue exact code mein yeh perfectly animated pop-up integrate ka
     </script>
 </body>
 </html>
-
-```
