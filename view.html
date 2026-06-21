@@ -9,6 +9,7 @@
         :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
+        /* Main Container ab transparent hai aur GAP BILKUL ZERO (0px) HAI */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -17,7 +18,7 @@
             padding: 0; 
             display: flex;
             flex-direction: column;
-            gap: 0px; 
+            gap: 0px; /* Koi gap nahi taaki background judkar ek bada box lage */
             border-radius: 4px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
@@ -25,6 +26,7 @@
 
         .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
         
+        /* Header ka apna background tukda */
         .header-row { 
             font-size: 10px; 
             color: var(--cyan); 
@@ -37,17 +39,21 @@
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
         
+        /* HAR TEAM KA APNA BACKGROUND TUKDA JO SATH MEIN ANIMATE HOGA */
         .team-row { 
-            background: var(--row-bg); 
+            background: var(--row-bg); /* Har row ka apna background tukda */
             height: 32px; 
             opacity: 0; 
             transform: translateX(450px); 
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.03); /* Slices ke beech subtle line divider */
+            
+            /* Background aur elements dono isi animation se ek sath custom delay par aayenge */
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         .team-row.eliminated { filter: grayscale(1); opacity: 0.4; }
         
+        /* Slices ke slide hone ka uniform corporate animation sequence */
         @keyframes teamSliceIn {
             0% { opacity: 0; transform: translateX(450px); }
             4% { opacity: 1; transform: translateX(0); }
@@ -68,150 +74,99 @@
         #prediction-panel.show { display: flex; }
         .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         
-        /* ================= PREMIUM VIDEO ELIMINATION OVERLAY ================= */
-        #elim-wrapper {
-            position: fixed;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 500px;
-            display: flex;
-            flex-direction: column;
-            visibility: hidden;
+        /* ================= NEW ELIMINATION POPUP (IMAGE REFERENCE STYLE) ================= */
+        #elim-popup { 
+            position: fixed; 
+            top: -150px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            display: flex; 
+            align-items: center;
+            height: 65px; 
+            transition: top 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+            z-index: 9999;
         }
-        #elim-wrapper.show { visibility: visible; }
+        #elim-popup.show { top: 50px; }
 
-        /* Step 1: Sponsor Drop Tag */
-        .v-top-tag {
-            background: #ffffff;
-            color: #000000;
-            font-size: 11px;
-            font-weight: 900;
-            text-align: center;
-            padding: 3px 0;
-            letter-spacing: 1px;
-            transform: translateY(-40px);
-            opacity: 0;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
-        }
-        #elim-wrapper.show .v-top-tag {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .v-main-body {
-            display: flex;
-            height: 76px;
-            margin-top: 2px;
-            overflow: hidden;
-        }
-
-        /* Step 2: Floating Logo Area (TRANSPARENT - NO WHITE BACKGROUND) */
-        .v-logo-holder {
-            width: 85px;
+        /* Left Section: Logo Holder (Transparent Slant Box - Image Ref Background Free) */
+        .popup-left-side {
+            background: #2b3543;
             height: 100%;
-            background: transparent; /* Complete transparent */
             display: flex;
             align-items: center;
             justify-content: center;
-            transform: scale(0);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s;
+            padding: 0 25px 0 35px;
+            clip-path: polygon(20px 0%, 100% 0%, calc(100% - 20px) 100%, 0% 100%);
+            margin-right: -18px; /* Smooth overlay connection */
             z-index: 2;
         }
-        #elim-wrapper.show .v-logo-holder {
-            transform: scale(1);
-        }
-        .v-logo-holder img {
-            width: 90%;
-            height: 90%;
+        .popup-left-side img {
+            width: 45px;
+            height: 45px;
             object-fit: contain;
+            background: transparent; /* Background bilkul nahi chahiye */
         }
 
-        /* Step 3: Info Cards Wipe Animation */
-        .v-details-panel {
-            flex: 1;
-            background: #15191d;
+        /* Right Section: Text Fields Container Wrapper */
+        .popup-right-side {
             display: flex;
             flex-direction: column;
-            transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
-        }
-        #elim-wrapper.show .v-details-panel {
-            transform: translateX(0);
+            height: 100%;
         }
 
-        /* Inner Content Rows */
-        .v-text-row-top {
-            height: 50%;
-            background: #14b844; /* Premium Video Green */
+        /* Top Bar: Rank Placement & ELIMINATED Text */
+        .popup-title-bar {
+            background: #0d1622;
             color: #ffffff;
-            font-size: 22px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 2px 40px 2px 25px;
+            clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+            width: fit-content;
+            margin-bottom: -1px;
             text-transform: uppercase;
         }
 
-        .v-text-row-bottom {
-            height: 50%;
-            background: #0d0f12;
-            color: #ea1c24; /* Aggressive Dark Red */
-            font-size: 18px;
-            font-weight: 800;
+        /* Bottom Bar: Clean White/Sleek Slant Container for Team Name & Kills */
+        .popup-name-bar {
+            background: #fbfbfb;
+            color: #1a337e; /* Dark Pro Blue Typography */
+            height: 38px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            letter-spacing: 1px;
+            gap: 12px;
+            padding: 0 50px 0 30px;
+            clip-path: polygon(15px 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-
-        /* Elements Slide & Fade up Sequence */
-        .v-anim-txt {
-            opacity: 0;
-            transform: translateY(10px);
-            transition: transform 0.35s ease-out 0.4s, opacity 0.35s ease-out 0.4s;
-        }
-        #elim-wrapper.show .v-anim-txt {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Dynamic Counters formatting */
-        .v-meta-right {
-            text-align: right;
-            font-size: 20px;
-            color: #ffffff;
+        .team-display-name {
+            font-size: 22px;
             font-weight: 900;
-        }
-        .v-text-row-bottom .v-meta-right {
-            color: #ffffff; 
-            font-size: 15px;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+        .team-display-kills {
+            font-size: 15px;
+            font-weight: bold;
+            color: #ea1c24; /* Red highlights for kills count */
+            background: rgba(234, 28, 36, 0.1);
+            padding: 1px 8px;
+            border-radius: 2px;
         }
     </style>
 </head>
 <body>
-    
-    <div id="elim-wrapper">
-        <div class="v-top-tag">POWERED BY GENERAL ESPORTS</div>
+    <div id="elim-popup">
+        <div class="popup-left-side">
+            <img id="pop-logo" src="" alt="team">
+        </div>
         
-        <div class="v-main-body">
-            <div class="v-logo-holder">
-                <img id="pop-logo" src="" alt="logo">
-            </div>
-            
-            <div class="v-details-panel">
-                <div class="v-text-row-top">
-                    <span id="pop-name" class="v-anim-txt">TEAM NAME</span>
-                    <span id="pop-rank" class="v-anim-txt v-meta-right">#--</span>
-                </div>
-                
-                <div class="v-text-row-bottom">
-                    <span class="v-anim-txt">ELIMINATED</span>
-                    <span id="pop-fin" class="v-anim-txt v-meta-right">0 FINISHES</span>
-                </div>
+        <div class="popup-right-side">
+            <div id="pop-rank-title" class="popup-title-bar">#-- TEAM ELIMINATED</div>
+            <div class="popup-name-bar">
+                <span id="pop-name" class="team-display-name">TEAM NAME</span>
+                <span id="pop-fin" class="team-display-kills">0 KILLS</span>
             </div>
         </div>
     </div>
@@ -230,25 +185,23 @@
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
-            
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
                 document.getElementById('pop-name').innerText = data.lastEliminated.name;
+                document.getElementById('pop-fin').innerText = (data.lastEliminated.finishes || 0) + " KILLS";
                 
-                // Real-time counter assignment
-                document.getElementById('pop-fin').innerText = (data.lastEliminated.finishes || 0) + " FINISHES";
-                
-                // Immediate rank calculation logic to avoid delay blank strings
+                // Realtime Rank Loop logic added so "#" handles dynamic rendering numbers smoothly
                 const teamsList = data.teams || [];
                 const sorted = [...teamsList].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 const rankIndex = sorted.findIndex(t => t.id === data.lastEliminated.id);
+                const finalRank = rankIndex !== -1 ? (rankIndex + 1) : '--';
                 
-                document.getElementById('pop-rank').innerText = rankIndex !== -1 ? `#${rankIndex + 1}` : '#--';
-                
-                const wrapper = document.getElementById('elim-wrapper');
-                wrapper.classList.add('show'); 
-                setTimeout(() => wrapper.classList.remove('show'), 4500);
+                // Setup layout injection text strings securely
+                document.getElementById('pop-rank-title').innerText = `#${finalRank} TEAM ELIMINATED`;
+
+                const p = document.getElementById('elim-popup');
+                p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 4000);
             }
             render(data.teams || []);
         });
@@ -281,6 +234,7 @@
                 const sortedTeams = [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 
                 sortedTeams.forEach((t, i) => {
+                    // One-by-one perfect cascading delay logic for smooth dropdown effect
                     let delay = ((i + 1) * 0.05).toFixed(2);
                     
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${delay}s;">
