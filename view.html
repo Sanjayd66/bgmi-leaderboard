@@ -6,177 +6,59 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --dark-blue: #12193b; 
-            --row-bg: #1a2245; 
-            --cyan: #00f2ff; 
-            --text-color: #ffffff; 
-            --header-accent: #022359;
-            --elim-bg: #15191d; 
-            --pred-bg: #0b0e11; 
-        }
+        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
-
-        /* HEADER INFO PANEL (Match 01 | Erangel) */
-        #match-header {
-            position: absolute;
-            top: 40px;
-            right: 40px;
-            display: grid;
-            grid-template-columns: 140px 1fr;
-            align-items: center;
-            background: rgba(18, 25, 59, 0.95); /* Dark blue with slight opacity */
-            border-left: 5px solid var(--cyan);
-            border-radius: 4px;
-            padding: 8px 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            color: var(--cyan);
-            font-size: 16px;
-            text-transform: uppercase;
-            gap: 15px;
-        }
-        #header-match {
-            font-weight: bold;
-            color: #ffffff;
-            border-right: 1px solid rgba(0,242,255,0.3);
-            padding-right: 15px;
-        }
-        #header-map-phase {
-            display: flex;
-            gap: 15px;
-        }
-        .header-phase-box {
-            background: #4a0404; /* Red for phase */
-            color: #ffffff;
-            font-size: 14px;
-            padding: 2px 8px;
-            border-radius: 2px;
-            font-weight: 400;
-        }
-
-        /* TEAM FOCUS PANEL (4MW Eliminated Layout) */
-        #team-focus-panel {
-            position: absolute;
-            bottom: 40px;
-            right: 40px;
-            display: grid;
-            grid-template-columns: 100px 1fr 120px;
-            align-items: center;
-            width: 320px;
-            background: var(--dark-blue);
-            border-left: 5px solid var(--cyan);
-            border-radius: 4px;
-            padding: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            color: var(--text-color);
-        }
-        #focus-logo-col {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            border-radius: 4px;
-            padding: 5px;
-            width: 80px;
-            height: 80px;
-            margin: auto;
-        }
-        #focus-logo-col img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        #focus-name-col {
-            padding-left: 15px;
-            text-align: left;
-        }
-        #focus-team-name {
-            font-size: 28px;
-            font-weight: bold;
-            line-height: 1.1;
-        }
-        #focus-status-text {
-            color: var(--cyan);
-            font-size: 14px;
-            text-transform: uppercase;
-            animation: pulseText 1.5s infinite ease-in-out;
-        }
-        #focus-status-col {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 10px;
-            padding-right: 10px;
-        }
-        #focus-finishes {
-            font-size: 40px;
-            color: var(--cyan);
-            font-weight: 900;
-            line-height: 1;
-        }
-        #focus-alive-bars {
-            display: flex;
-            gap: 4px;
-            animation: pulseBars 1.5s infinite ease-in-out;
-        }
-        .bar { width: 5px; height: 18px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
-        .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
-
-        @keyframes pulseText {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        @keyframes pulseBars {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-
-        /* OLD LEADERBOARD BOARD (as a backup if many are alive) */
-        #board { display: none; position: absolute; right: 40px; bottom: 40px; background: var(--dark-blue); padding: 8px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 40px 30px 25px 30px; align-items: center; gap: 2px; color: var(--text-color); }
+        #board { position: absolute; right: 40px; bottom: 40px; background: var(--dark-blue); padding: 8px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
         .header-row { font-size: 10px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 4px; text-align: center; }
         .team-row { background: var(--row-bg); height: 32px; margin-bottom: 2px; }
         .team-row.eliminated { opacity: 0.4; filter: grayscale(1); }
-        .logo-col { width: 22px; height: 22px; background: white; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
-        .logo-col img { width: 90%; height: 90%; object-fit: contain; }
+        
+        /* YAHA SE BACKGROUND WHITE HATA DIYA HAI */
+        .logo-col { width: 22px; height: 22px; background: transparent; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
+        .logo-col img { width: 100%; height: 100%; object-fit: contain; }
         .name-col { padding-left: 5px; font-weight: bold; font-size: 13px; overflow: hidden; white-space: nowrap; text-transform: uppercase; }
-        .status-col { display: flex; gap: 3px; justify-content: start; padding-left: 5px; }
+        
+        /* STATUS COLUMN ANIMATION: 15 seconds total loop (5s Show, 10s Hide) */
+        .status-col { 
+            display: flex; 
+            gap: 3px; 
+            justify-content: start; 
+            padding-left: 5px; 
+            animation: showHideStatus 15s infinite ease-in-out;
+        }
+        
+        /* Header ka STATUS text animation */
+        .status-header {
+            animation: showHideStatus 15s infinite ease-in-out;
+        }
+
+        @keyframes showHideStatus {
+            0%, 33% { /* Pehle 5 seconds tak 100% dikhega */
+                opacity: 1;
+                transform: translateX(0);
+            }
+            40%, 100% { /* Agle 10 seconds tak smoothly gayab rahega */
+                opacity: 0;
+                transform: translateX(-3px);
+            }
+        }
+
+        .bar { width: 4px; height: 14px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
+        .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 10px; }
         #prediction-panel.show { display: flex; }
         .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
+        
+        /* ELIM POPUP LOGO BACKGROUND REMOVED */
         #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 300px; height: 90px; background: var(--elim-bg) !important; border-radius: 2px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
         #elim-popup.show { top: 30px; }
     </style>
 </head>
 <body>
-    <div id="match-header">
-        <div id="header-match">MATCH 01</div>
-        <div id="header-map-phase">
-            <div>ERANGEL - DAY</div>
-            <div class="header-phase-box">PHASE 2</div>
-        </div>
-    </div>
-
-    <div id="team-focus-panel">
-        <div id="focus-logo-col"><img src="" id="focus-logo-img"></div>
-        <div id="focus-name-col">
-            <div id="focus-team-name">4MW</div>
-            <div id="focus-status-text">ELIMINATED</div>
-        </div>
-        <div id="focus-status-col">
-            <div id="focus-finishes">0</div>
-            <div id="focus-alive-bars">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-            </div>
-        </div>
-    </div>
-
     <div id="elim-popup">
-        <div style="background:white; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
+        <div style="background:transparent; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
         <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase;"></p><p style="color:var(--cyan); margin:0;">ELIMINATED</p></div>
         <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan);">0</div></div>
     </div>
@@ -205,50 +87,19 @@
             render(data.teams || []);
         });
 
-        // Focus layout for a single team (e.g., 4MW), if provided
-        // This is a manual toggle for demonstration, or could be linked to a firebase flag 'isSpectatingTeam'
-        const specTeamId = '4MW_01'; // ID of the team to show in focus (match this in teams list below)
-
         function render(teams) {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
-            const teamFocus = document.getElementById('team-focus-panel');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
-
-            // DEMO: Populate the 4MW focus layout with real data from teams list if a specific team is spectated
-            // This is just to make the graphic functional. Spectated Team should probably come from Admin Panel.
-            const spectated = teams.find(t => t.id === specTeamId);
-            if(spectated) {
-                teamFocus.style.display = 'grid'; // Ensure it's showing
-                document.getElementById('focus-logo-img').src = spectated.logo;
-                document.getElementById('focus-team-name').innerText = spectated.name;
-                document.getElementById('focus-finishes').innerText = spectated.fin || 0;
-                document.getElementById('focus-status-text').innerText = spectated.alive.every(a=>a==0)?'ELIMINATED':'SPECTATING';
-                document.getElementById('focus-status-text').style.color = spectated.alive.every(a=>a==0)?'#00f2ff':'#ffffff'; // Use cyan for elim, white for alive spectate
-                
-                const barsHtml = spectated.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('');
-                document.getElementById('focus-alive-bars').innerHTML = barsHtml;
-            } else {
-                teamFocus.style.display = 'none'; // Turn off if not spectating
-            }
-
-            // --- ALL OTHER ORIGINAL RENDER LOGIC BELOW ---
-            // It will hide board/panels depending on conditions.
-
-            if (spectated || (alive.length < 2 || alive.length > 5)) {
-                // When spectating a team, hide other leaderboard layouts
-                pPanel.classList.remove('show');
-                board.style.display="none"; 
-                return; // Exit render, don't build old board
-            }
 
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
                 let totalS = alive.reduce((a,c) => a + (parseInt(c.totalFin) + c.alive.filter(x=>x==1).length * 3), 0) || 1;
                 alive.forEach(t => {
                     let winPerc = Math.round((((parseInt(t.totalFin) + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
+                    /* PREDICTIONS CARD SE BHI BACKGROUND:WHITE HATA DIYA HAI */
                     pPanel.innerHTML += `<div class="pred-card">
-                        <img src="${t.logo}" style="width:35px; height:35px; background:white;">
+                        <img src="${t.logo}" style="width:35px; height:35px; background:transparent; object-fit:contain;">
                         <div style="flex:1;">
                             <div style="font-size:14px;">${t.name}</div>
                             <div style="font-size:10px; color:#aaa;">${t.totalFin || 0} TOTAL KILLS</div>
@@ -257,9 +108,9 @@
                     </div>`;
                 });
             } else {
-                // If alive.length > 5, show old board, otherwise spectating panel dominates
                 pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div class="header-row" style="background:none;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+                /* STATUS text par status-header class laga di hai animation ke liye */
+                let h = `<div class="header-row" style="background:none;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div class="status-header" style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
                 [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0)).forEach((t, i) => {
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}">
                         <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
@@ -272,21 +123,6 @@
                 board.innerHTML = h;
             }
         }
-
-        // Dummy data for testing the focus graphic in case Firebase is empty
-        render([{
-            id: '4MW_01',
-            name: '4MW',
-            logo: 'path/to/logo.png', // Replace with path to your team logo image file (e.g., image_1.png_logo)
-            fin: 0,
-            alive: [0,0,0,0] // Represents all players dead for test
-        }, {
-            id: 'TeamN_01',
-            name: 'TEAM N',
-            logo: 'path/to/logo2.png',
-            fin: 1,
-            alive: [1,1,1,1] // Alive team for prediction logic
-        }]);
     </script>
 </body>
 </html>
