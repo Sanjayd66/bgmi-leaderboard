@@ -6,10 +6,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
+        :root { --dark-blue: #12193b; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
-        /* Main container transparent hai aur rows ke beech pehle jaisa gap wapas de diya hai */
+        /* Container background transparent hai aur gap bilkul 0px hai */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -18,41 +18,41 @@
             padding: 0; 
             display: flex;
             flex-direction: column;
-            gap: 3px; /* Pehle jaisa stylish slice gap wapas de diya */
+            gap: 0px; /* Koi gap nahi taaki saare slices milkar ek full background image banayein */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
         }
 
         .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
         
-        /* Header ka apna background slice */
+        /* Header slice background */
         .header-row { 
             font-size: 10px; 
             color: var(--cyan); 
             background: var(--dark-blue);
             height: 26px;
             text-align: center;
-            border-radius: 4px 4px 0 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             opacity: 0;
             transform: translateX(450px);
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        /* Har team row ka apna alag slice background aur rounded corners */
+        /* HAR TEAM KE HISAB SE BACKGROUND KO TUKDO (SLICES) MEIN RAKHA HAI */
         .team-row { 
-            background: var(--row-bg); 
+            /* Yahan aapki golden/brown background image har row ke slice size ke hisab se set hoti hai */
+            background-image: url('image_409d5f.png'); 
+            background-size: 100% auto;
+            background-repeat: no-repeat;
             height: 32px; 
-            border-radius: 2px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             opacity: 0; 
             transform: translateX(450px); 
             
-            /* Har slice aur uska data ek sath hi specific cascade delay par animate hoga */
+            /* Background ka tukda aur data dono ek sath animate honge */
             animation: teamSliceIn 15s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         .team-row.eliminated { filter: grayscale(1); opacity: 0.4; }
         
-        /* Slices ke slide hone ka clean animation logic */
+        /* Smooth cascading slide-in aur slide-out animation */
         @keyframes teamSliceIn {
             0% {
                 opacity: 0;
@@ -79,13 +79,13 @@
         
         .bar { width: 4px; height: 14px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 0 2px 2px 0; }
+        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
         #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 10px; }
         #prediction-panel.show { display: flex; }
         .pred-card { width: 300px; background: var(--pred-bg) !important; border-left: 5px solid var(--cyan); padding: 12px; display: flex; align-items: center; gap: 12px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         
-        /* ORIGINAL ELIMINATION POPUP UNTOUCHED */
+        /* ORIGINAL ELIMINATION POPUP SAFE AUR UNTOUCHED */
         #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); display: flex; width: 300px; height: 90px; background: var(--elim-bg) !important; border-radius: 2px; border: 2px solid var(--cyan); transition: top 0.4s; color: white; }
         #elim-popup.show { top: 30px; }
     </style>
@@ -149,10 +149,12 @@
                 const sortedTeams = [...teams].sort((a,b)=> (parseInt(b.totalFin)||0) - (parseInt(a.totalFin)||0));
                 
                 sortedTeams.forEach((t, i) => {
-                    // Clean dynamic delay parsed sequentially
                     let delay = ((i + 1) * 0.05).toFixed(2);
                     
-                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${delay}s;">
+                    // background-position ko dynamically adjust kiya hai taaki puri image har row mein sahi se cut hokar set ho jaye
+                    let bgPercent = sortedTeams.length > 1 ? ((i / (sortedTeams.length - 1)) * 100).toFixed(2) : 0;
+                    
+                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${delay}s; background-position: center ${bgPercent}%;">
                         <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
                         <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
