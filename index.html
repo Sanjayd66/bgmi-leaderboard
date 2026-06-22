@@ -29,7 +29,7 @@
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - POSITION POINTS EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - FIX EDITION</h2>
         
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
@@ -69,7 +69,6 @@
             teams = data.teams || []; 
             config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
             
-            // Update the color pickers in admin to match database
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
@@ -115,7 +114,6 @@
             });
         }
 
-        // FIXED: Input value ko number me convert karne ke liye parseInt lagaya
         function edit(i,f,v) { 
             if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
                 teams[i][f] = parseInt(v) || 0;
@@ -141,20 +139,29 @@
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
+        // FIXED: Pure payload ko ek hi baar mein heavy update kra diya, jisse double click ki zarurat nahi padegi.
         function globalNewMatch() { 
             if(confirm("New Match? Status reset hoga, points save rahenge.")) {
                 teams.forEach(t => { 
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                     t.fin = 0; 
-                    
                     t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
                     t.pos = 0;
-                    
-                    t.alive = [1,1,1,1]; t.elim = false; 
+                    t.alive = [1,1,1,1]; 
+                    t.elim = false; 
+                    t.totalFin = t.prevFin;
+                    t.totalPos = t.prevPos;
                 }); 
-                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
+                
+                // Ek single database trigger jisme teams updates aur removal dono sath honge
+                db.ref(SYNC_PATH).update({
+                    teams: teams,
+                    config: config,
+                    lastEliminated: null
+                });
             }
         }
+        
         function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
         function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
