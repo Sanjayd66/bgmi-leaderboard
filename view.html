@@ -9,7 +9,7 @@
         :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
-        /* BOARD MAIN CONTAINER WITH ENTRY ANIMATION */
+        /* BOARD MAIN CONTAINER */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -18,8 +18,6 @@
             padding: 8px; 
             border-radius: 4px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            opacity: 0;
-            animation: slideUpFade 0.5s ease-out forwards;
         }
         
         /* ORIGINAL LAYOUT COLUMNS RETAINED */
@@ -31,8 +29,6 @@
             background: var(--row-bg); 
             height: 32px; 
             margin-bottom: 2px; 
-            opacity: 0; 
-            animation: slideUpFade 0.4s ease-out forwards;
         }
         
         .team-row.eliminated { opacity: 0.4; filter: grayscale(1); }
@@ -44,7 +40,7 @@
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* PREDICTION PANEL MAIN BG WITH ANIMATION */
+        /* PREDICTION PANEL MAIN BG */
         #prediction-panel { 
             position: absolute; 
             bottom: 40px; 
@@ -52,8 +48,6 @@
             display: none; 
             flex-direction: column; 
             gap: 10px; 
-            opacity: 0;
-            animation: slideUpFade 0.5s ease-out forwards;
         }
         #prediction-panel.show { display: flex; }
         
@@ -68,10 +62,16 @@
             gap: 12px; 
             color: white; 
             box-shadow: 0 5px 20px rgba(0,0,0,0.4); 
-            opacity: 0;
-            animation: slideUpFade 0.4s ease-out forwards;
         }
         
+        /* NEW CLASSES FOR TRIGGERING ANIMATION ONLY WHEN NEEDED */
+        .trigger-animate {
+            animation: slideUpFade 0.5s ease-out forwards;
+        }
+        .trigger-card-animate {
+            animation: slideUpFade 0.4s ease-out forwards;
+        }
+
         /* NEW UPDATED DYNAMIC ELIMINATION POPUP STYLES */
         #elim-popup { 
             position: fixed; 
@@ -92,7 +92,7 @@
         
         #elim-popup.show { 
             top: 40px; 
-            opacity: 1;
+            opacity: 1; 
             transform: translateX(-50%) scale(1);
             box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 25px rgba(0,242,255,0.4);
         }
@@ -132,6 +132,7 @@
 
         let currentElimId = "";
         let cachedTeamsData = []; 
+        let shouldAnimateNextRender = true; // First load pe animate hoga
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
@@ -166,19 +167,23 @@
             const pPanel = document.getElementById('prediction-panel');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
 
-            board.style.animation = 'none';
-            pPanel.style.animation = 'none';
-            void board.offsetWidth; 
-            void pPanel.offsetWidth;
+            // Purani animation status clean karo taaki glitch na ho
+            board.classList.remove('trigger-animate');
+            pPanel.classList.remove('trigger-animate');
             
-            board.style.animation = 'slideUpFade 0.5s ease-out forwards';
-            pPanel.style.animation = 'slideUpFade 0.5s ease-out forwards';
+            if (shouldAnimateNextRender) {
+                void board.offsetWidth; 
+                void pPanel.offsetWidth;
+                board.classList.add('trigger-animate');
+                pPanel.classList.add('trigger-animate');
+                // Ek baar animation hone ke baad toggle off kar do jab tak 30s ka refresh na aaye
+                shouldAnimateNextRender = false; 
+            }
 
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
                 
                 let totalS = alive.reduce((a,c) => {
-                    // Total Points Backend Calculation for Prediction Panel
                     let teamTotal = (parseInt(c.totalFin) || 0) + (parseInt(c.totalPos) || 0);
                     return a + (teamTotal + c.alive.filter(x=>x==1).length * 3);
                 }, 0) || 1;
@@ -187,7 +192,11 @@
                     let teamTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     let winPerc = Math.round((((teamTotal + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
                     
-                    pPanel.innerHTML += `<div class="pred-card" style="animation-delay: ${(index * 0.05) + 0.2}s">
+                    // Card standard animation ya empty class choose karega condition ke basis pe
+                    let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
+                    let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(index * 0.05) + 0.2}s"` : '';
+                    
+                    pPanel.innerHTML += `<div class="pred-card ${cardAnimClass}" ${cardDelay}>
                         <img src="${t.logo}" style="width:35px; height:35px; background:transparent; object-fit:contain;">
                         <div style="flex:1;">
                             <div style="font-size:14px;">${t.name}</div>
@@ -198,10 +207,8 @@
                 });
             } else {
                 pPanel.classList.remove('show'); board.style.display="block";
-                // Header original columns retained (#, LOGO, TEAM, STATUS, FIN., TOTAL)
                 let h = `<div class="header-row" style="background:none;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
                 
-                // Sorted properly behind the scenes by adding Total Finishes + Total Position Points
                 const sortedTeams = [...teams].sort((a,b)=> {
                     let totalA = (parseInt(a.totalFin) || 0) + (parseInt(a.totalPos) || 0);
                     let totalB = (parseInt(b.totalFin) || 0) + (parseInt(b.totalPos) || 0);
@@ -209,9 +216,13 @@
                 });
                 
                 sortedTeams.forEach((t, i) => {
-                    // Overall Total points display combined in the total box
                     let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
-                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${(i * 0.04) + 0.2}s">
+                    
+                    // Check karega ki board refresh animation chahiye ya normal update
+                    let rowAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
+                    let rowDelay = rowAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.2}s"` : '';
+
+                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''} ${rowAnimClass}" ${rowDelay}>
                         <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
                         <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
@@ -223,19 +234,22 @@
             }
         }
 
-        // AUTOMATIC REFRESH LOOP LOGIC
+        // AUTOMATIC REFRESH LOOP LOGIC (Set to exactly 30 seconds as requested)
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
+            
+            // Screen ko fade out karke clear karo
             board.style.display = "none";
             pPanel.classList.remove('show');
             
             setTimeout(() => {
                 if(cachedTeamsData.length > 0) {
+                    shouldAnimateNextRender = true; // 30s loop ke andar animation switch on!
                     render(cachedTeamsData);
                 }
             }, 2500); 
-        }, 20000);
+        }, 30000); // 30 Seconds Interval Loop
     </script>
 </body>
 </html>
