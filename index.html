@@ -15,14 +15,12 @@
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
         .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
         
+        /* Fixing the "Line" Glitch in inputs */
         input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
-        .btn { padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         
-        /* MATCH NAVIGATION TABS SYSTEM */
-        .tabs-container { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; background: #1c2227; padding: 10px; border-radius: 8px; border: 1px solid #2d3439; }
-        .tab-btn { background: #252c33; color: #888; border: 1px solid #343a40; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; }
-        .tab-btn.active { background: var(--cyan); color: #000; border-color: var(--cyan); }
-
+        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
+        
+        /* Updated layout grid to perfectly fit Position Points */
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
@@ -31,7 +29,7 @@
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - MULTI MATCH EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - POSITION POINTS EDITION</h2>
         
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
@@ -42,12 +40,10 @@
             <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
         </div>
 
-        <div class="tabs-container" id="match-tabs"></div>
-
         <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="btn" style="background:#2ed573; color:white; flex: 1;" onclick="addTeam()">+ ADD TEAM</button>
-            <button class="btn" style="background:#ffa502; color:white; flex: 2;" onclick="globalNewMatch()">+ CREATE NEW MATCH TAB</button>
-            <button class="btn" style="background:#ff4757; color:white; flex: 1;" onclick="resetAll()">FULL RESET</button>
+            <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
+            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">NEW MATCH (RESET STATUS)</button>
+            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">FULL RESET</button>
         </div>
         <div id="team-list"></div>
     </div>
@@ -65,70 +61,23 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
-        
-        let allMatchesData = {};
-        let currentMatchKey = "Match1"; // Default match tab
-        let config = {};
+        let teams = []; let config = {};
 
         // Listen for data
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
+            teams = data.teams || []; 
             config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
             
-            // Separate config from match data
-            allMatchesData = {};
-            Object.keys(data).forEach(key => {
-                if(key.startsWith("Match")) {
-                    allMatchesData[key] = data[key];
-                }
-            });
-
-            // If database is fully empty, initialize Match1
-            if(Object.keys(allMatchesData).length === 0) {
-                allMatchesData["Match1"] = { teams: [] };
-            }
-
-            // If current active tab was deleted or not found, set to first available match
-            if(!allMatchesData[currentMatchKey]) {
-                currentMatchKey = Object.keys(allMatchesData)[0];
-            }
-
-            // Update the color pickers
+            // Update the color pickers in admin to match database
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
             });
             
             document.documentElement.style.setProperty('--cyan', config.cyan);
-            
-            renderTabs();
             draw();
         });
-
-        function renderTabs() {
-            const container = document.getElementById('match-tabs');
-            container.innerHTML = '';
-            
-            // Sort matches so Match1 comes before Match2, etc.
-            const sortedMatchKeys = Object.keys(allMatchesData).sort((a,b) => {
-                return parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", ""));
-            });
-
-            sortedMatchKeys.forEach(key => {
-                const num = key.replace("Match", "");
-                const btn = document.createElement('button');
-                btn.className = `tab-btn ${currentMatchKey === key ? 'active' : ''}`;
-                btn.innerText = `MATCH ${num}`;
-                btn.onclick = () => {
-                    currentMatchKey = key;
-                    // Live View Panel ko batane ke liye ki abhi kaunsa match chal raha hai
-                    db.ref(SYNC_PATH + '/activeMatchKey').set(currentMatchKey);
-                    draw();
-                    renderTabs();
-                };
-                container.appendChild(btn);
-            });
-        }
 
         function updateCfg(param, value) {
             config[param] = value;
@@ -137,26 +86,18 @@
         }
 
         function sync(elimData = null) { 
-            let currentTeams = allMatchesData[currentMatchKey]?.teams || [];
-            currentTeams.forEach(t => { 
+            teams.forEach(t => { 
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                 t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
             });
-            
-            let updates = {};
-            updates[`/${currentMatchKey}/teams`] = currentTeams;
-            if(elimData !== undefined) {
-                updates[`/${currentMatchKey}/lastEliminated`] = elimData;
-            }
-            db.ref(SYNC_PATH).update(updates);
+            const payload = { teams, config };
+            if(elimData) payload.lastEliminated = elimData;
+            db.ref(SYNC_PATH).update(payload);
         }
 
         function draw() {
-            const list = document.getElementById('team-list'); 
-            list.innerHTML = '';
-            let currentTeams = allMatchesData[currentMatchKey]?.teams || [];
-            
-            currentTeams.forEach((t, i) => {
+            const list = document.getElementById('team-list'); list.innerHTML = '';
+            teams.forEach((t, i) => {
                 list.innerHTML += `<div class="team-row">
                     <div><span class="label-tag">Team</span><input type="text" value="${t.name || ''}" onchange="edit(${i},'name',this.value)"></div>
                     <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
@@ -174,83 +115,48 @@
             });
         }
 
+        // FIXED: Input value ko number me convert karne ke liye parseInt lagaya
         function edit(i,f,v) { 
-            let currentTeams = allMatchesData[currentMatchKey]?.teams || [];
             if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
-                currentTeams[i][f] = parseInt(v) || 0;
+                teams[i][f] = parseInt(v) || 0;
             } else {
-                currentTeams[i][f] = v;
+                teams[i][f] = v;
             }
-            sync(allMatchesData[currentMatchKey]?.lastEliminated || null); 
+            sync(); 
         }
         
         function tog(i,pi) {
-            let currentTeams = allMatchesData[currentMatchKey]?.teams || [];
-            currentTeams[i].alive[pi] = currentTeams[i].alive[pi] ? 0 : 1;
+            teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             let elim = null;
-            if (currentTeams[i].alive.every(a => a == 0)) {
-                if (!currentTeams[i].elim) {
-                    currentTeams[i].elim = true;
-                    elim = { id: Date.now().toString(), name: currentTeams[i].name, logo: currentTeams[i].logo, finishes: (parseInt(currentTeams[i].fin)||0) };
+            if (teams[i].alive.every(a => a == 0)) {
+                if (!teams[i].elim) {
+                    teams[i].elim = true;
+                    elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
                 }
             } else {
-                currentTeams[i].elim = false;
+                teams[i].elim = false;
             }
             sync(elim);
         }
 
-        function addTeam() { 
-            if(!allMatchesData[currentMatchKey]) allMatchesData[currentMatchKey] = { teams: [] };
-            if(!allMatchesData[currentMatchKey].teams) allMatchesData[currentMatchKey].teams = [];
-            allMatchesData[currentMatchKey].teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); 
-            sync(null); 
-        }
+        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
         function globalNewMatch() { 
-            const currentMatchNum = parseInt(currentMatchKey.replace("Match", ""));
-            const nextMatchKey = "Match" + (currentMatchNum + 1);
-            
-            if(confirm(`Create New Tab: ${nextMatchKey}? Pichle match ke total points carry forward ho jayenge.`)) {
-                let currentTeams = allMatchesData[currentMatchKey]?.teams || [];
-                
-                // Deep copy old teams to create next match base structure
-                let nextTeams = currentTeams.map(t => {
-                    let calculatedPrevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0);
-                    let calculatedPrevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
-                    return {
-                        name: t.name,
-                        logo: t.logo,
-                        prevFin: calculatedPrevFin,
-                        fin: 0,
-                        totalFin: calculatedPrevFin,
-                        prevPos: calculatedPrevPos,
-                        pos: 0,
-                        totalPos: calculatedPrevPos,
-                        alive: [1,1,1,1],
-                        elim: false
-                    };
-                });
-
-                currentMatchKey = nextMatchKey;
-                
-                let updates = {};
-                updates[`/${nextMatchKey}/teams`] = nextTeams;
-                updates[`/${nextMatchKey}/lastEliminated`] = null;
-                updates[`/activeMatchKey`] = nextMatchKey;
-
-                db.ref(SYNC_PATH).update(updates);
+            if(confirm("New Match? Status reset hoga, points save rahenge.")) {
+                teams.forEach(t => { 
+                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
+                    t.fin = 0; 
+                    
+                    t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
+                    t.pos = 0;
+                    
+                    t.alive = [1,1,1,1]; t.elim = false; 
+                }); 
+                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
             }
         }
-        
-        function removeTeam(i) { 
-            let currentTeams = allMatchesData[currentMatchKey]?.teams || [];
-            if(confirm("Delete Team?")) { 
-                currentTeams.splice(i, 1); 
-                sync(allMatchesData[currentMatchKey]?.lastEliminated || null); 
-            } 
-        }
-        
-        function resetAll() { if(confirm("HARD RESET Everything? All matches will be wiped.")) { db.ref(SYNC_PATH).set(null); currentMatchKey = "Match1"; } }
+        function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
+        function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
