@@ -10,7 +10,6 @@
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
-        /* Fixed Color Grid Styling */
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
         .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
@@ -18,17 +17,17 @@
         input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
         .btn { padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         
-        /* MATCH NAVIGATION TABS SYSTEM */
+        /* NAVIGATION BOX SYSTEM */
         .tabs-container { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; background: #1c2227; padding: 10px; border-radius: 8px; border: 1px solid #2d3439; }
-        .tab-btn { background: #252c33; color: #888; border: 1px solid #343a40; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; }
-        .tab-btn.active { background: var(--cyan); color: #000; border-color: var(--cyan); }
+        .tab-btn { background: #252c33; color: #aaa; border: 1px solid #343a40; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; }
+        .tab-btn:hover { border-color: var(--cyan); color: white; }
 
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-        /* POPUP MODAL STYLES FOR PAST MATCHES */
+        /* VIEW MODAL STYLES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
         .modal-content { background: #15191d; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 85%; max-width: 900px; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 25px rgba(0,242,255,0.2); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
@@ -41,7 +40,7 @@
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - MULTI MATCH EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - HISTORY POPUP EDITION</h2>
         
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
@@ -52,8 +51,10 @@
             <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
         </div>
 
-        <div style="font-size: 12px; color: #888; margin-bottom: 5px; font-weight: bold; text-transform: uppercase;">Past Matches Pointstable:</div>
+        <div style="font-size: 11px; color: #888; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Click to view past match scores:</div>
         <div class="tabs-container" id="match-tabs"></div>
+
+        <h3 id="current-match-title" style="color: var(--cyan); margin-bottom: 15px; text-transform: uppercase;">Chalu Match: Match1</h3>
 
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <button class="btn" style="background:#2ed573; color:white; flex: 1;" onclick="addTeam()">+ ADD TEAM</button>
@@ -63,10 +64,10 @@
         <div id="team-list"></div>
     </div>
 
-    <div id="history-modal" class="modal" onclick="closeModal(event)">
+    <div id="history-modal" class="modal" onclick="document.getElementById('history-modal').style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase; letter-spacing:1px;">Match Points</h3>
+                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Points</h3>
                 <button class="close-btn" onclick="document.getElementById('history-modal').style.display='none'">✖</button>
             </div>
             <div id="modal-body"></div>
@@ -96,7 +97,9 @@
             const data = snap.val() || {};
             config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
             
-            // Separate config from match data
+            currentMatchKey = data.activeMatchKey || "Match1";
+            document.getElementById('current-match-title').innerText = `Chalu Match: ${currentMatchKey.replace("Match", "Match ")}`;
+
             allMatchesData = {};
             Object.keys(data).forEach(key => {
                 if(key.startsWith("Match")) {
@@ -104,17 +107,14 @@
                 }
             });
 
-            // If database is fully empty, initialize Match1
             if(Object.keys(allMatchesData).length === 0) {
                 allMatchesData["Match1"] = { teams: [] };
             }
 
-            // If current active tab was deleted or not found, set to first available match
             if(!allMatchesData[currentMatchKey]) {
                 currentMatchKey = Object.keys(allMatchesData)[0];
             }
 
-            // Update the color pickers
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
@@ -126,7 +126,7 @@
             draw();
         });
 
-        // Generates Buttons dynamically for every match present in database
+        // Creates separate historical pop-up buttons for each match
         function renderTabs() {
             const container = document.getElementById('match-tabs');
             container.innerHTML = '';
@@ -138,40 +138,31 @@
             sortedMatchKeys.forEach(key => {
                 const num = key.replace("Match", "");
                 const btn = document.createElement('button');
-                btn.className = `tab-btn`;
-                btn.innerText = `MATCH ${num}`;
+                btn.className = "tab-btn";
+                // Agar chalu match hai toh identify karne ke liye star laga diya
+                btn.innerText = `MATCH ${num} ${currentMatchKey === key ? '★' : ''}`;
                 btn.onclick = () => {
-                    openMatchPopup(key); // Opens the popup screen for that specific match
+                    openMatchPopup(key); 
                 };
                 container.appendChild(btn);
             });
         }
 
-        // Logic to open selected match points inside the Modal overlay popup
+        // Logic to show points inside the admin popup modal
         function openMatchPopup(matchKey) {
             const modal = document.getElementById('history-modal');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
             
-            const matchNum = matchKey.replace("Match", "");
-            title.innerText = `Points Table View - Match ${matchNum}`;
-            
+            title.innerText = `Points Table View - Match ${matchKey.replace("Match", "")}`;
             let matchTeams = allMatchesData[matchKey]?.teams || [];
             
-            // Sorting points high to low inside popup view
-            let sortedTeams = [...matchTeams].sort((a,b) => {
-                let totalA = (parseInt(a.prevFin)||0) + (parseInt(a.fin)||0) + (parseInt(a.prevPos)||0) + (parseInt(a.pos)||0);
-                let totalB = (parseInt(b.prevFin)||0) + (parseInt(b.fin)||0) + (parseInt(b.prevPos)||0) + (parseInt(b.pos)||0);
-                return totalB - totalA;
-            });
-
-            if(sortedTeams.length === 0) {
-                body.innerHTML = `<p style="color:#aaa; text-align:center; padding: 20px;">No team data found in this match.</p>`;
+            if(matchTeams.length === 0) {
+                body.innerHTML = `<p style="color:#aaa; text-align:center; padding: 20px;">No data found in this match.</p>`;
             } else {
                 let html = `<table class="pop-table">
                     <thead>
                         <tr>
-                            <th>Rank</th>
                             <th>Team Name</th>
                             <th style="text-align:center;">Prev Kills</th>
                             <th style="text-align:center;">Match Kills</th>
@@ -182,12 +173,11 @@
                     </thead>
                     <tbody>`;
                 
-                sortedTeams.forEach((t, index) => {
+                matchTeams.forEach((t) => {
                     let totalPts = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0) + (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
                     let logoImg = t.logo ? `<img class="pop-logo" src="${t.logo}">` : '';
                     html += `<tr>
-                        <td>${index + 1}</td>
-                        <td style="font-weight:bold; text-transform:uppercase;">${logoImg}${t.name || 'UNKNOWN'}</td>
+                        <td style="font-weight:bold; text-transform:uppercase;">${logoImg}${t.name || 'TEAM'}</td>
                         <td style="text-align:center;">${t.prevFin || 0}</td>
                         <td style="text-align:center;">${t.fin || 0}</td>
                         <td style="text-align:center;">${t.prevPos || 0}</td>
@@ -199,12 +189,7 @@
                 html += `</tbody></table>`;
                 body.innerHTML = html;
             }
-            
             modal.style.display = 'flex';
-        }
-
-        function closeModal(e) {
-            document.getElementById('history-modal').style.display = 'none';
         }
 
         function updateCfg(param, value) {
