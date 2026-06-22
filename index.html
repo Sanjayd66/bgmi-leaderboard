@@ -88,7 +88,6 @@
         function sync(elimData = null) { 
             teams.forEach(t => { 
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                // Calculation for Total Position Points
                 t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
             });
             const payload = { teams, config };
@@ -100,8 +99,8 @@
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
                 list.innerHTML += `<div class="team-row">
-                    <div><span class="label-tag">Team</span><input type="text" value="${t.name}" onchange="edit(${i},'name',this.value)"></div>
-                    <div><span class="label-tag">Logo</span><input type="text" value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
+                    <div><span class="label-tag">Team</span><input type="text" value="${t.name || ''}" onchange="edit(${i},'name',this.value)"></div>
+                    <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
                     
@@ -116,7 +115,15 @@
             });
         }
 
-        function edit(i,f,v) { teams[i][f]=v; sync(); }
+        // FIXED: Input value ko number me convert karne ke liye parseInt lagaya
+        function edit(i,f,v) { 
+            if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
+                teams[i][f] = parseInt(v) || 0;
+            } else {
+                teams[i][f] = v;
+            }
+            sync(); 
+        }
         
         function tog(i,pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
@@ -132,17 +139,14 @@
             sync(elim);
         }
 
-        // Added default values for pos, prevPos, and totalPos
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
         function globalNewMatch() { 
             if(confirm("New Match? Status reset hoga, points save rahenge.")) {
                 teams.forEach(t => { 
-                    // Save Kills
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                     t.fin = 0; 
                     
-                    // Save Position Points
                     t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
                     t.pos = 0;
                     
