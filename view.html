@@ -1,14 +1,3 @@
-Aapka View Display overlay code mil gaya hai. Isme dikkat yeh thi ki yeh code sirf `totalFin` (Kills) ko hi read karke display aur sorting kar raha tha. Naye `totalPos` aur `pos` (Position Points) isme jud nahi rahe the.
-
-Maine aapke is code ko fix kar diya hai. Ab isme yeh sab badlav ho chuke hain:
-
-1. **Total Points Calculation:** Ab total points nikalne ke liye formula **(Total Kills + Total Position Points)** lag gaya hai: `(parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0)`.
-2. **Sorting Logic Fix:** Ab points table par teams ki ranking higher **Total Points** ke hisaab se automatic sort hogi.
-3. **Prediction Panel Fix:** Jab aakhiri ke 2 se 5 teams bachengi, toh prediction percentage ka logic bhi aapke total points aur alive players ke bonus ko jodkar calculation karega.
-
-Yahan aapka complete updated View Display code hai:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,8 +22,8 @@ Yahan aapka complete updated View Display code hai:
             animation: slideUpFade 0.5s ease-out forwards;
         }
         
-        /* Layout Grid Width Adjusted to fit overall scores seamlessly */
-        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 65px 35px 30px 30px 30px 35px; align-items: center; gap: 2px; color: var(--text-color); }
+        /* ORIGINAL LAYOUT COLUMNS RETAINED */
+        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
         .header-row { font-size: 10px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 4px; text-align: center; }
         
         /* INDIVIDUAL TEAM ROWS */
@@ -188,8 +177,8 @@ Yahan aapka complete updated View Display code hai:
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
                 
-                // Prediction math calculated via combined Total Finishes + Total Position Points + Active players
                 let totalS = alive.reduce((a,c) => {
+                    // Total Points Backend Calculation for Prediction Panel
                     let teamTotal = (parseInt(c.totalFin) || 0) + (parseInt(c.totalPos) || 0);
                     return a + (teamTotal + c.alive.filter(x=>x==1).length * 3);
                 }, 0) || 1;
@@ -209,9 +198,10 @@ Yahan aapka complete updated View Display code hai:
                 });
             } else {
                 pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div class="header-row" style="background:none;"><div>#</div><div>LOGO</div><div style="text-align:left; padding-left:5px;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN</div><div>POS</div><div>M.FIN</div><div>TOTAL</div></div>`;
+                // Header original columns retained (#, LOGO, TEAM, STATUS, FIN., TOTAL)
+                let h = `<div class="header-row" style="background:none;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
                 
-                // Sorted via Overall Total (Total Finishes + Total Position Points)
+                // Sorted properly behind the scenes by adding Total Finishes + Total Position Points
                 const sortedTeams = [...teams].sort((a,b)=> {
                     let totalA = (parseInt(a.totalFin) || 0) + (parseInt(a.totalPos) || 0);
                     let totalB = (parseInt(b.totalFin) || 0) + (parseInt(b.totalPos) || 0);
@@ -219,13 +209,12 @@ Yahan aapka complete updated View Display code hai:
                 });
                 
                 sortedTeams.forEach((t, i) => {
+                    // Overall Total points display combined in the total box
                     let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''}" style="animation-delay: ${(i * 0.04) + 0.2}s">
                         <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
                         <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
-                        <div style="text-align:center;">${t.totalFin || 0}</div>
-                        <div style="text-align:center;">${t.totalPos || 0}</div>
                         <div style="text-align:center;">${t.fin || 0}</div>
                         <div class="total-box">${overallTotal}</div>
                     </div>`;
@@ -250,5 +239,3 @@ Yahan aapka complete updated View Display code hai:
     </script>
 </body>
 </html>
-
-```
