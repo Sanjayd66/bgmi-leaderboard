@@ -20,11 +20,25 @@
         
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         
+        /* Match History Buttons Styling */
+        .history-container { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
+        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; transition: 0.2s; }
+        .hist-btn:hover { background: var(--cyan); color: #000; }
+
         /* Updated layout grid to perfectly fit Position Points */
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
+
+        /* POPUP MODAL WINDOW STYLES */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
+        .modal-content { background: #15191d; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 85%; max-width: 850px; max-height: 75vh; overflow-y: auto; box-shadow: 0 0 25px rgba(0,242,255,0.3); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
+        .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .pop-table th, .pop-table td { padding: 10px; border-bottom: 1px solid #2d3439; font-size: 14px; }
+        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -40,12 +54,27 @@
             <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
         </div>
 
+        <div style="font-size: 11px; color: #888; margin-bottom: 6px; font-weight: bold; text-transform: uppercase;">Past Matches Points View:</div>
+        <div class="history-container" id="history-buttons-layout">
+            <span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>
+        </div>
+
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
             <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">NEW MATCH (RESET STATUS)</button>
             <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">FULL RESET</button>
         </div>
         <div id="team-list"></div>
+    </div>
+
+    <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Pointstable</h3>
+                <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
     </div>
 
     <script>
@@ -61,14 +90,15 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
-        let teams = []; let config = {};
+        let teams = []; let config = {}; let matchHistory = {};
 
         // Listen for data
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
             config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
-            
+            matchHistory = data.history || {}; // Fetch saved matches history
+
             // Update the color pickers in admin to match database
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
@@ -76,6 +106,8 @@
             });
             
             document.documentElement.style.setProperty('--cyan', config.cyan);
+            
+            renderHistoryButtons();
             draw();
         });
 
@@ -90,7 +122,7 @@
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                 t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
             });
-            const payload = { teams, config };
+            const payload = { teams, config, history: matchHistory };
             if(elimData) payload.lastEliminated = elimData;
             db.ref(SYNC_PATH).update(payload);
         }
@@ -115,7 +147,6 @@
             });
         }
 
-        // FIXED: Input value ko number me convert karne ke liye parseInt lagaya
         function edit(i,f,v) { 
             if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
                 teams[i][f] = parseInt(v) || 0;
@@ -141,8 +172,80 @@
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
+        // Displays past match buttons dynamically
+        function renderHistoryButtons() {
+            const container = document.getElementById('history-buttons-layout');
+            const keys = Object.keys(matchHistory);
+            if(keys.length === 0) {
+                container.innerHTML = `<span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>`;
+                return;
+            }
+            container.innerHTML = '';
+            keys.sort((a,b) => parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", "")))
+                .forEach(key => {
+                    const btn = document.createElement('button');
+                    btn.className = 'hist-btn';
+                    btn.innerText = key.replace("Match", "MATCH ");
+                    btn.onclick = () => showPopupTable(key);
+                    container.appendChild(btn);
+                });
+        }
+
+        // Logic to show points list inside the dark modal box
+        function showPopupTable(matchKey) {
+            const modal = document.getElementById('popup-modal');
+            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} - Pointstable View`;
+            const savedTeams = matchHistory[matchKey] || [];
+
+            // High to Low Points Sorting for Popup Screen
+            let sortedTeams = [...savedTeams].sort((a,b) => {
+                let totalA = (parseInt(a.prevFin)||0) + (parseInt(a.fin)||0) + (parseInt(a.prevPos)||0) + (parseInt(a.pos)||0);
+                let totalB = (parseInt(b.prevFin)||0) + (parseInt(b.fin)||0) + (parseInt(b.prevPos)||0) + (parseInt(b.pos)||0);
+                return totalB - totalA;
+            });
+
+            let html = `<table class="pop-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Team Name</th>
+                        <th style="text-align:center;">Prev Kills</th>
+                        <th style="text-align:center;">Match Kills</th>
+                        <th style="text-align:center;">Prev Pos</th>
+                        <th style="text-align:center;">Match Pos</th>
+                        <th style="text-align:center; color:var(--cyan);">Total Pts</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            sortedTeams.forEach((t, idx) => {
+                let totalPts = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0) + (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
+                html += `<tr>
+                    <td>${idx + 1}</td>
+                    <td style="font-weight:bold; text-transform:uppercase;">${t.name || 'TEAM'}</td>
+                    <td style="text-align:center;">${t.prevFin || 0}</td>
+                    <td style="text-align:center;">${t.fin || 0}</td>
+                    <td style="text-align:center;">${t.prevPos || 0}</td>
+                    <td style="text-align:center;">${t.pos || 0}</td>
+                    <td style="text-align:center; font-weight:bold; color:var(--cyan);">${totalPts}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('modal-body').innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
         function globalNewMatch() { 
             if(confirm("New Match? Status reset hoga, points save rahenge.")) {
+                // Step 1: Current match ka data backup/history node me save karo reset hone se pehle
+                const currentMatchNumber = Object.keys(matchHistory).length + 1;
+                const matchKeyName = "Match" + currentMatchNumber;
+                
+                // Deep copy current state to history
+                matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
+
+                // Step 2: Purana logic as it is points aage transfer karne ke liye
                 teams.forEach(t => { 
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                     t.fin = 0; 
@@ -152,11 +255,13 @@
                     
                     t.alive = [1,1,1,1]; t.elim = false; 
                 }); 
+                
                 db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
             }
         }
+        
         function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
+        function resetAll() { if(confirm("HARD RESET? History aur teams sab clean ho jayega.")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
