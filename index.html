@@ -8,7 +8,7 @@
     <style>
         :root { --cyan: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
-        .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1100px; margin: auto; border: 1px solid #2d3439; }
+        .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
         /* Fixed Color Grid Styling */
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
@@ -19,7 +19,9 @@
         input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
         
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
-        .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1fr 1fr 70px 70px 100px 30px; gap: 10px; align-items: center; }
+        
+        /* Updated layout grid to perfectly fit Position Points */
+        .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
@@ -27,7 +29,7 @@
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - FIX EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - POSITION POINTS EDITION</h2>
         
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
@@ -77,18 +79,17 @@
             draw();
         });
 
-        // FIXED: This function now properly pushes colors to Firebase
         function updateCfg(param, value) {
             config[param] = value;
             if(param === 'cyan') document.documentElement.style.setProperty('--cyan', value);
-            
-            // Immediate sync to Firebase
             db.ref(SYNC_PATH + '/config').set(config);
         }
 
         function sync(elimData = null) { 
             teams.forEach(t => { 
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
+                // Calculation for Total Position Points
+                t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
             });
             const payload = { teams, config };
             if(elimData) payload.lastEliminated = elimData;
@@ -103,6 +104,10 @@
                     <div><span class="label-tag">Logo</span><input type="text" value="${t.logo}" onchange="edit(${i},'logo',this.value)"></div>
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
+                    
+                    <div><span class="label-tag">Prev Pos</span><input type="number" value="${t.prevPos || 0}" onchange="edit(${i},'prevPos',this.value)"></div>
+                    <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
+                    
                     <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
                         ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
                     </div></div>
@@ -127,13 +132,21 @@
             sync(elim);
         }
 
-        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, alive: [1,1,1,1], elim: false }); sync(); }
+        // Added default values for pos, prevPos, and totalPos
+        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
         function globalNewMatch() { 
             if(confirm("New Match? Status reset hoga, points save rahenge.")) {
                 teams.forEach(t => { 
+                    // Save Kills
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                    t.fin = 0; t.alive = [1,1,1,1]; t.elim = false; 
+                    t.fin = 0; 
+                    
+                    // Save Position Points
+                    t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
+                    t.pos = 0;
+                    
+                    t.alive = [1,1,1,1]; t.elim = false; 
                 }); 
                 db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
             }
