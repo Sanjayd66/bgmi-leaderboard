@@ -64,7 +64,7 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.4); 
         }
         
-        /* NEW CLASSES FOR TRIGGERING ANIMATION ONLY WHEN NEEDED */
+        /* CLASSES FOR TRIGGERING ANIMATION ONLY WHEN NEEDED */
         .trigger-animate {
             animation: slideUpFade 0.5s ease-out forwards;
         }
@@ -72,31 +72,113 @@
             animation: slideUpFade 0.4s ease-out forwards;
         }
 
-        /* NEW UPDATED DYNAMIC ELIMINATION POPUP STYLES */
+        /* ==========================================================================
+           UPDATED DYNAMIC ELIMINATION POPUP STYLES (AS PER ATTACHED IMAGE)
+           ========================================================================== */
         #elim-popup { 
             position: fixed; 
-            top: -200px; 
+            top: -250px; 
             left: 50%; 
             transform: translateX(-50%) scale(0.9); 
             display: flex; 
-            width: 340px; 
-            height: 95px; 
-            background: var(--elim-bg) !important; 
-            border-radius: 4px; 
-            border: 2px solid var(--cyan); 
+            align-items: center;
+            width: 620px; 
+            height: 110px; 
+            /* Dark metallic background with premium glow */
+            background: linear-gradient(135deg, #182026 0%, #0f1316 100%);
+            border-radius: 16px; 
+            border: 3px solid var(--cyan); 
             color: white; 
             opacity: 0;
             box-shadow: 0 0 0px rgba(0,242,255,0);
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 0 10px;
+            box-sizing: border-box;
         }
         
         #elim-popup.show { 
             top: 40px; 
             opacity: 1; 
             transform: translateX(-50%) scale(1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 25px rgba(0,242,255,0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(0,242,255,0.35);
         }
 
+        /* Circular Logo Frame Container */
+        .pop-logo-container {
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, #202830 0%, #0b0e11 100%);
+            border-radius: 50%;
+            border: 3px solid #232d35;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.7);
+            margin-left: 5px;
+        }
+        #pop-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        /* Center Content: Team Details */
+        .pop-details {
+            flex: 1;
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        #pop-name {
+            font-size: 32px;
+            margin: 0;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--cyan);
+            line-height: 1.1;
+        }
+        .pop-status-text {
+            color: #ffffff;
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        /* Right Content: Box Section for Finishes Count */
+        .pop-fin-box {
+            width: 95px;
+            height: 90px;
+            background: #0f1316;
+            border-radius: 12px;
+            border: 2px solid #232d35;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+            margin-right: 5px;
+        }
+        #pop-fin {
+            font-size: 44px;
+            color: #ffffff;
+            font-weight: 900;
+            line-height: 1;
+        }
+        .pop-fin-label {
+            color: var(--cyan);
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Text Pop-in animations inside the container */
         #elim-popup.show #pop-name, #elim-popup.show #pop-logo, #elim-popup.show #pop-fin {
             animation: popInText 0.4s 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
         }
@@ -117,10 +199,19 @@
 </head>
 <body>
     <div id="elim-popup">
-        <div style="background:transparent; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
-        <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase; font-weight: 900; letter-spacing: 1px;"></p><p style="color:var(--cyan); margin:0; font-size: 14px; letter-spacing: 2px;">ELIMINATED</p></div>
-        <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan); font-weight: 900;">0</div></div>
+        <div class="pop-logo-container">
+            <img id="pop-logo">
+        </div>
+        <div class="pop-details">
+            <p id="pop-name"></p>
+            <p class="pop-status-text">TEAM ELIMINATED</p>
+        </div>
+        <div class="pop-fin-box">
+            <div id="pop-fin">0</div>
+            <div class="pop-fin-label">FINISHES</div>
+        </div>
     </div>
+
     <div id="prediction-panel"></div>
     <div id="board"></div>
 
@@ -167,7 +258,6 @@
             const pPanel = document.getElementById('prediction-panel');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
 
-            // Purani animation status clean karo taaki glitch na ho
             board.classList.remove('trigger-animate');
             pPanel.classList.remove('trigger-animate');
             
@@ -176,7 +266,6 @@
                 void pPanel.offsetWidth;
                 board.classList.add('trigger-animate');
                 pPanel.classList.add('trigger-animate');
-                // Ek baar animation hone ke baad toggle off kar do jab tak 30s ka refresh na aaye
                 shouldAnimateNextRender = false; 
             }
 
@@ -192,7 +281,6 @@
                     let teamTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     let winPerc = Math.round((((teamTotal + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
                     
-                    // Card standard animation ya empty class choose karega condition ke basis pe
                     let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
                     let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(index * 0.05) + 0.2}s"` : '';
                     
@@ -218,7 +306,6 @@
                 sortedTeams.forEach((t, i) => {
                     let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     
-                    // Check karega ki board refresh animation chahiye ya normal update
                     let rowAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
                     let rowDelay = rowAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.2}s"` : '';
 
@@ -234,22 +321,20 @@
             }
         }
 
-        // AUTOMATIC REFRESH LOOP LOGIC (Set to exactly 30 seconds as requested)
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
             
-            // Screen ko fade out karke clear karo
             board.style.display = "none";
             pPanel.classList.remove('show');
             
             setTimeout(() => {
                 if(cachedTeamsData.length > 0) {
-                    shouldAnimateNextRender = true; // 30s loop ke andar animation switch on!
+                    shouldAnimateNextRender = true; 
                     render(cachedTeamsData);
                 }
             }, 2500); 
-        }, 30000); // 30 Seconds Interval Loop
+        }, 30000);
     </script>
 </body>
 </html>
