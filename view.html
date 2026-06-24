@@ -9,120 +9,70 @@
         :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
-        /* BOARD MAIN CONTAINER */
+        /* DYNAMIC SCALABLE BOARD LAYOUT CONTAINER */
         #board { 
             position: absolute; 
             right: 40px; 
             bottom: 40px; 
-            background: var(--dark-blue); 
-            padding: 8px; 
-            border-radius: 4px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            width: 250px; /* Custom Width adjusted for stream layouts */
+            display: flex;
+            flex-direction: column;
         }
+
+        /* GFX SLICES INJECTIONS WITH AUTOMATIC HEIGHT STRETCH */
+        #board-header-gfx { width: 100%; height: 35px; background-size: 100% 100%; background-repeat: no-repeat; }
+        #board-rows-container { width: 100%; display: flex; flex-direction: column; }
+        #board-footer-gfx { width: 100%; height: 30px; background-size: 100% 100%; background-repeat: no-repeat; }
         
-        /* ORIGINAL LAYOUT COLUMNS RETAINED */
-        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 55px 35px 30px 30px; align-items: center; gap: 2px; color: var(--text-color); }
-        .header-row { font-size: 10px; color: var(--cyan); border-bottom: 1px solid rgba(0,242,255,0.3); margin-bottom: 4px; text-align: center; }
+        /* EXACT ALIGNMENT MATCH FOR YOUR CHANNELS/COLUMNS */
+        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 75px 45px 35px 40px; align-items: center; gap: 0px; color: var(--text-color); text-align: center; box-sizing: border-box; }
+        .header-row { font-size: 10px; color: var(--cyan); height: 100%; padding: 0 5px; }
         
-        /* INDIVIDUAL TEAM ROWS */
-        .team-row { 
-            background: var(--row-bg); 
-            height: 32px; 
-            margin-bottom: 2px; 
-        }
+        .team-row { height: 30px; background-size: 100% 100%; background-repeat: no-repeat; padding: 0 5px; font-size: 13px; font-weight: bold; }
+        .team-row.eliminated { opacity: 0.35; filter: grayscale(1); }
         
-        .team-row.eliminated { opacity: 0.4; filter: grayscale(1); }
-        .logo-col { width: 22px; height: 22px; background: transparent; border-radius: 2px; margin: auto; display: flex; align-items: center; justify-content: center; }
+        .logo-col { width: 20px; height: 20px; margin: auto; display: flex; align-items: center; justify-content: center; }
         .logo-col img { width: 100%; height: 100%; object-fit: contain; }
-        .name-col { padding-left: 5px; font-weight: bold; font-size: 13px; overflow: hidden; white-space: nowrap; text-transform: uppercase; }
-        .status-col { display: flex; gap: 3px; justify-content: start; padding-left: 5px; }
-        .bar { width: 4px; height: 14px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
+        .name-col { text-align: left; padding-left: 4px; overflow: hidden; white-space: nowrap; text-transform: uppercase; text-shadow: 1px 1px 2px #000; }
+        .status-col { display: flex; gap: 2px; justify-content: center; }
+        .bar { width: 4px; height: 12px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
-        .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* PREDICTION PANEL MAIN BG */
-        #prediction-panel { 
-            position: absolute; 
-            bottom: 40px; 
-            right: 40px; 
-            display: none; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
+        /* PREDICTION PANEL */
+        #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 8px; }
         #prediction-panel.show { display: flex; }
+        .pred-card { width: 300px; height: 65px; background-size: 100% 100%; background-repeat: no-repeat; display: flex; align-items: center; padding: 0 15px; box-sizing: border-box; color: white; }
         
-        /* PREDICTION CARDS */
-        .pred-card { 
-            width: 300px; 
-            background: var(--pred-bg) !important; 
-            border-left: 5px solid var(--cyan); 
-            padding: 12px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            color: white; 
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4); 
-        }
-        
-        /* NEW CLASSES FOR TRIGGERING ANIMATION ONLY WHEN NEEDED */
-        .trigger-animate {
-            animation: slideUpFade 0.5s ease-out forwards;
-        }
-        .trigger-card-animate {
-            animation: slideUpFade 0.4s ease-out forwards;
-        }
+        /* TIMED ANIMATION SYSTEM */
+        .trigger-animate { animation: slideUpFade 0.5s ease-out forwards; }
+        .trigger-card-animate { animation: slideUpFade 0.4s ease-out forwards; }
 
-        /* NEW UPDATED DYNAMIC ELIMINATION POPUP STYLES */
-        #elim-popup { 
-            position: fixed; 
-            top: -200px; 
-            left: 50%; 
-            transform: translateX(-50%) scale(0.9); 
-            display: flex; 
-            width: 340px; 
-            height: 95px; 
-            background: var(--elim-bg) !important; 
-            border-radius: 4px; 
-            border: 2px solid var(--cyan); 
-            color: white; 
-            opacity: 0;
-            box-shadow: 0 0 0px rgba(0,242,255,0);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        #elim-popup.show { 
-            top: 40px; 
-            opacity: 1; 
-            transform: translateX(-50%) scale(1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 25px rgba(0,242,255,0.4);
-        }
-
-        #elim-popup.show #pop-name, #elim-popup.show #pop-logo, #elim-popup.show #pop-fin {
-            animation: popInText 0.4s 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-        }
-        
+        /* ELIMINATION BANNER POPUP */
+        #elim-popup { position: fixed; top: -200px; left: 50%; transform: translateX(-50%) scale(0.9); display: flex; width: 340px; height: 95px; background-size: 100% 100%; background-repeat: no-repeat; color: white; opacity: 0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #elim-popup.show { top: 40px; opacity: 1; transform: translateX(-50%) scale(1); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        #elim-popup.show #pop-name, #elim-popup.show #pop-logo, #elim-popup.show #pop-fin { animation: popInText 0.4s 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
         #pop-name, #pop-fin { opacity: 0; transform: scale(0.8); }
-        #pop-logo { opacity: 0; transform: translateY(-10px); transition: all 0.3s; }
 
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes popInText {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
-        }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popInText { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
     <div id="elim-popup">
-        <div style="background:transparent; width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:70px;"></div>
-        <div style="flex:1; padding:15px;"><p id="pop-name" style="font-size:30px; margin:0; text-transform:uppercase; font-weight: 900; letter-spacing: 1px;"></p><p style="color:var(--cyan); margin:0; font-size: 14px; letter-spacing: 2px;">ELIMINATED</p></div>
-        <div style="width:100px; text-align:center; padding-top:15px;"><div id="pop-fin" style="font-size:35px; color:var(--cyan); font-weight: 900;">0</div></div>
+        <div style="width:100px; display:flex; align-items:center; justify-content:center;"><img id="pop-logo" style="width:65px; object-fit:contain;"></div>
+        <div style="flex:1; padding:15px; display:flex; flex-direction:column; justify-content:center;"><p id="pop-name" style="font-size:26px; margin:0; text-transform:uppercase; font-weight:900; line-height:1;"></p><p style="color:var(--cyan); margin:0; font-size:12px; letter-spacing:2px; font-weight:bold;">ELIMINATED</p></div>
+        <div style="width:90px; display:flex; align-items:center; justify-content:center; font-size:35px; color:var(--cyan); font-weight:900;" id="pop-fin">0</div>
     </div>
+
     <div id="prediction-panel"></div>
-    <div id="board"></div>
+
+    <div id="board">
+        <div id="board-header-gfx">
+            <div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left; padding-left:4px;">TEAM</div><div>STATUS</div><div>FIN</div><div>PTS</div></div>
+        </div>
+        <div id="board-rows-container"></div>
+        <div id="board-footer-gfx"></div>
+    </div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
@@ -130,126 +80,100 @@
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
 
-        let currentElimId = "";
-        let cachedTeamsData = []; 
-        let shouldAnimateNextRender = true; // First load pe animate hoga
+        let currentElimId = ""; let cachedTeamsData = []; let shouldAnimateNextRender = true;
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
             
+            // Inject dynamic upload images onto View panel styles live!
+            if(cfg['gfx-header']) document.getElementById('board-header-gfx').style.backgroundImage = `url('${cfg['gfx-header']}')`;
+            if(cfg['gfx-footer']) document.getElementById('board-footer-gfx').style.backgroundImage = `url('${cfg['gfx-footer']}')`;
+            if(cfg['gfx-elim']) document.getElementById('elim-popup').style.backgroundImage = `url('${cfg['gfx-elim']}')`;
+
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
-                
-                document.getElementById('pop-name').style.opacity = "0";
-                document.getElementById('pop-fin').style.opacity = "0";
-                document.getElementById('pop-logo').style.opacity = "0";
-
                 document.getElementById('pop-logo').src = data.lastEliminated.logo;
                 document.getElementById('pop-name').innerText = data.lastEliminated.name;
                 document.getElementById('pop-fin').innerText = data.lastEliminated.finishes;
-                
-                const p = document.getElementById('elim-popup');
-                p.classList.add('show'); 
-                
-                setTimeout(() => {
-                    p.classList.remove('show');
-                }, 4000);
+                const p = document.getElementById('elim-popup'); p.classList.add('show'); 
+                setTimeout(() => p.classList.remove('show'), 4000);
             }
             
             cachedTeamsData = data.teams || [];
-            render(cachedTeamsData);
+            render(cachedTeamsData, cfg);
         });
 
-        function render(teams) {
+        function render(teams, cfg) {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
+            const rowsContainer = document.getElementById('board-rows-container');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
 
-            // Purani animation status clean karo taaki glitch na ho
             board.classList.remove('trigger-animate');
             pPanel.classList.remove('trigger-animate');
             
             if (shouldAnimateNextRender) {
-                void board.offsetWidth; 
-                void pPanel.offsetWidth;
+                void board.offsetWidth; void pPanel.offsetWidth;
                 board.classList.add('trigger-animate');
                 pPanel.classList.add('trigger-animate');
-                // Ek baar animation hone ke baad toggle off kar do jab tak 30s ka refresh na aaye
                 shouldAnimateNextRender = false; 
             }
 
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
-                
-                let totalS = alive.reduce((a,c) => {
-                    let teamTotal = (parseInt(c.totalFin) || 0) + (parseInt(c.totalPos) || 0);
-                    return a + (teamTotal + c.alive.filter(x=>x==1).length * 3);
-                }, 0) || 1;
+                let totalS = alive.reduce((a,c) => a + (((parseInt(c.totalFin)||0)+(parseInt(c.totalPos)||0)) + c.alive.filter(x=>x==1).length * 3), 0) || 1;
                 
                 alive.forEach((t, index) => {
                     let teamTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     let winPerc = Math.round((((teamTotal + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
-                    
-                    // Card standard animation ya empty class choose karega condition ke basis pe
                     let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
-                    let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(index * 0.05) + 0.2}s"` : '';
+                    let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(index * 0.05) + 0.2}s; background-image: url('${cfg['gfx-pred']||''}');"` : `style="background-image: url('${cfg['gfx-pred']||''}');"`;
                     
                     pPanel.innerHTML += `<div class="pred-card ${cardAnimClass}" ${cardDelay}>
-                        <img src="${t.logo}" style="width:35px; height:35px; background:transparent; object-fit:contain;">
+                        <img src="${t.logo}" style="width:32px; height:32px; object-fit:contain; margin-right:10px;">
                         <div style="flex:1;">
-                            <div style="font-size:14px;">${t.name}</div>
-                            <div style="font-size:10px; color:#aaa;">${teamTotal} TOTAL PTS</div>
+                            <div style="font-size:13px; font-weight:bold;">${t.name}</div>
+                            <div style="font-size:9px; color:#ccc;">${teamTotal} TOTAL PTS</div>
                         </div>
                         <div style="color:var(--cyan); font-size:20px; font-weight:900;">${winPerc}%</div>
                     </div>`;
                 });
             } else {
-                pPanel.classList.remove('show'); board.style.display="block";
-                let h = `<div class="header-row" style="background:none;"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+                pPanel.classList.remove('show'); board.style.display="flex"; rowsContainer.innerHTML = '';
                 
-                const sortedTeams = [...teams].sort((a,b)=> {
-                    let totalA = (parseInt(a.totalFin) || 0) + (parseInt(a.totalPos) || 0);
-                    let totalB = (parseInt(b.totalFin) || 0) + (parseInt(b.totalPos) || 0);
-                    return totalB - totalA;
-                });
+                const sortedTeams = [...teams].sort((a,b)=> ((parseInt(b.totalFin)||0)+(parseInt(b.totalPos)||0)) - ((parseInt(a.totalFin)||0)+(parseInt(a.totalPos)||0)) );
                 
                 sortedTeams.forEach((t, i) => {
                     let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
-                    
-                    // Check karega ki board refresh animation chahiye ya normal update
                     let rowAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
-                    let rowDelay = rowAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.2}s"` : '';
+                    let rowDelay = rowAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.2}s; background-image: url('${cfg['gfx-row']||''}');"` : `style="background-image: url('${cfg['gfx-row']||''}');"`;
 
-                    h += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''} ${rowAnimClass}" ${rowDelay}>
-                        <div style="text-align:center;">${i+1}</div><div class="logo-col"><img src="${t.logo}"></div>
+                    rowsContainer.innerHTML += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''} ${rowAnimClass}" ${rowDelay}>
+                        <div>${i+1}</div>
+                        <div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
                         <div class="status-col">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>
-                        <div style="text-align:center;">${t.fin || 0}</div>
-                        <div class="total-box">${overallTotal}</div>
+                        <div>${t.fin || 0}</div>
+                        <div style="color:var(--cyan); font-weight:900;">${overallTotal}</div>
                     </div>`;
                 });
-                board.innerHTML = h;
             }
         }
 
-        // AUTOMATIC REFRESH LOOP LOGIC (Set to exactly 30 seconds as requested)
+        // PERFECT AUTOMATIC 30 SECONDS REFRESH LOOP
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
-            
-            // Screen ko fade out karke clear karo
-            board.style.display = "none";
-            pPanel.classList.remove('show');
-            
+            board.style.display = "none"; pPanel.classList.remove('show');
             setTimeout(() => {
                 if(cachedTeamsData.length > 0) {
-                    shouldAnimateNextRender = true; // 30s loop ke andar animation switch on!
-                    render(cachedTeamsData);
+                    shouldAnimateNextRender = true;
+                    db.ref(SYNC_PATH + '/config').once('value', (s) => render(cachedTeamsData, s.val()||{}));
                 }
             }, 2500); 
-        }, 30000); // 30 Seconds Interval Loop
+        }, 30000);
     </script>
 </body>
 </html>
