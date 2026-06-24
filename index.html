@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI ADMIN - GFX EDITION</title>
+    <title>BGMI ADMIN - DIRECT IMAGE UPLOAD</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -10,19 +10,20 @@
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
+        /* GFX Upload Styles */
+        .gfx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #11161a; padding: 20px; border-radius: 8px; border: 1px solid var(--cyan); }
+        .gfx-item { display: flex; flex-direction: column; gap: 8px; }
+        .gfx-item label { font-size: 13px; color: var(--cyan); font-weight: bold; text-transform: uppercase; }
+        .gfx-item input[type="file"] { background: #1c2227; padding: 8px; border-radius: 4px; border: 1px solid #333; color: white; cursor: pointer; }
+        .preview-img { max-height: 60px; object-fit: contain; border-radius: 4px; margin-top: 5px; background: #222; padding: 2px; }
+
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
-        .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
         input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
         
-        /* GFX Input Styles */
-        .gfx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; background: #11161a; padding: 20px; border-radius: 8px; border: 1px solid #var(--cyan); }
-        .gfx-item { display: flex; flex-direction: column; gap: 5px; }
-        .gfx-item label { font-size: 12px; color: var(--cyan); font-weight: bold; text-transform: uppercase; }
-
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         .history-container { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
-        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
 
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
@@ -37,24 +38,31 @@
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - AUTOMATIC GFX SETTINGS</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - FULL IMAGE UPLOADER</h2>
         
-        <h4 style="margin:0 0 5px 0; color:#aaa;">GFX LAYOUT IMAGES (PASTE LINKS HERE)</h4>
+        <h4 style="margin:0 0 5px 0; color:#aaa;">UPLOAD FULL GFX LAYOUTS</h4>
         <div class="gfx-grid">
-            <div class="gfx-item"><label>Points Table Header GFX Link</label><input type="text" id="cfg-gfx-header" placeholder="Paste Header PNG URL" onchange="updateCfg('gfx-header',this.value)"></div>
-            <div class="gfx-item"><label>Points Table Single Row GFX Link</label><input type="text" id="cfg-gfx-row" placeholder="Paste Single Row PNG URL" onchange="updateCfg('gfx-row',this.value)"></div>
-            <div class="gfx-item"><label>Points Table Footer GFX Link</label><input type="text" id="cfg-gfx-footer" placeholder="Paste Footer PNG URL" onchange="updateCfg('gfx-footer',this.value)"></div>
-            <div class="gfx-item"><label>Prediction Card Background Link</label><input type="text" id="cfg-gfx-pred" placeholder="Paste Prediction Card PNG URL" onchange="updateCfg('gfx-pred',this.value)"></div>
-            <div class="gfx-item" style="grid-column: span 2;"><label>Elimination Popup GFX Link</label><input type="text" id="cfg-gfx-elim" placeholder="Paste Elimination Banner PNG URL" onchange="updateCfg('gfx-elim',this.value)"></div>
+            <div class="gfx-item">
+                <label>1. Full Points Table Image</label>
+                <input type="file" accept="image/*" onchange="uploadImage(this, 'gfx-full-table')">
+                <img id="prev-gfx-full-table" class="preview-img" src="" alt="No Image Selected">
+            </div>
+            <div class="gfx-item">
+                <label>2. Prediction Card Image</label>
+                <input type="file" accept="image/*" onchange="uploadImage(this, 'gfx-pred')">
+                <img id="prev-gfx-pred" class="preview-img" src="" alt="No Image Selected">
+            </div>
+            <div class="gfx-item">
+                <label>3. Elimination Popup Image</label>
+                <input type="file" accept="image/*" onchange="uploadImage(this, 'gfx-elim')">
+                <img id="prev-gfx-elim" class="preview-img" src="" alt="No Image Selected">
+            </div>
         </div>
 
         <div class="color-grid">
-            <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
-            <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
-            <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
-            <div class="color-item"><span>Text</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
-            <div class="color-item"><span>Elim BG</span><input type="color" id="cfg-elim-bg" onchange="updateCfg('elim-bg',this.value)"></div>
-            <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
+            <div class="color-item"><span>Theme Color</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
+            <div class="color-item"><span>Text Color</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
+            <div class="color-item"><span>Status Bar Active</span><input type="color" id="cfg-status-color" onchange="updateCfg('status-color',this.value)"></div>
         </div>
 
         <div class="history-container" id="history-buttons-layout"></div>
@@ -93,11 +101,24 @@
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
+                const imgPrev = document.getElementById('prev-' + k);
+                if(imgPrev && config[k]) imgPrev.src = config[k];
             });
             if(config.cyan) document.documentElement.style.setProperty('--cyan', config.cyan);
             renderHistoryButtons();
             draw();
         });
+
+        // Convert selected image to Base64 and save directly to RTDB
+        function uploadImage(input, configKey) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                updateCfg(configKey, reader.result);
+            }
+            reader.readAsDataURL(file);
+        }
 
         function updateCfg(param, value) {
             config[param] = value;
