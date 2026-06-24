@@ -62,7 +62,7 @@
             font-weight: bold;
         }
 
-        /* LIVE DYNAMIC CELLS (HEIGHT & GAP WILL BE CONTROLLED BY JAVASCRIPT) */
+        /* LIVE DYNAMIC CELLS */
         .cell-item {
             display: flex;
             align-items: center;
@@ -190,7 +190,6 @@
         };
 
         function applyLayoutStyles() {
-            // Apply Horizontal column settings
             Object.keys(layoutSettings).forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
@@ -201,14 +200,12 @@
                 }
             });
 
-            // Apply Row Height to all individual texts live
             const cells = document.querySelectorAll('.cell-item');
             cells.forEach(c => {
                 c.style.height = verticalSettings.rowHeight + 'px';
             });
         }
 
-        // Initialize Slider input positions
         function initSliders() {
             document.getElementById('slide-top').value = verticalSettings.topShift;
             document.getElementById('slide-height').value = verticalSettings.rowHeight;
@@ -255,6 +252,9 @@
         function render(teams, cfg) {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
+            
+            // FIX: filter lagane se pehle check kiya ki data exist karta hai ya nahi
+            const alive = teams.filter(t => t && t.alive && t.alive.some(a => a === 1));
 
             document.getElementById('col-rank').innerHTML = '';
             document.getElementById('col-logo').innerHTML = '';
@@ -264,19 +264,30 @@
             document.getElementById('col-pts').innerHTML = '';
 
             if (alive.length >= 2 && alive.length <= 5 && !isEditorMode) {
-                // Prediction logic remains clean...
+                pPanel.classList.add('show'); board.style.display="none"; pPanel.innerHTML="";
+                let totalS = alive.reduce((a,c) => a + (((parseInt(c.totalFin)||0)+(parseInt(c.totalPos)||0)) + c.alive.filter(x=>x==1).length * 3), 0) || 1;
+                
+                alive.forEach((t) => {
+                    let teamTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
+                    let winPerc = Math.round((((teamTotal + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
+                    pPanel.innerHTML += `<div class="pred-card" style="background-image: url('${cfg['gfx-pred']||''}');">
+                        <img src="${t.logo}" style="width:32px; height:32px; object-fit:contain; margin-right:10px;">
+                        <div style="flex:1;"><div style="font-size:13px; font-weight:bold;">${t.name}</div><div style="font-size:9px; color:#ccc;">${teamTotal} TOTAL PTS</div></div>
+                        <div style="color:var(--cyan); font-size:20px; font-weight:900;">${winPerc}%</div>
+                    </div>`;
+                });
             } else {
                 pPanel.classList.remove('show'); board.style.display="flex";
                 const sortedTeams = [...teams].sort((a,b)=> ((parseInt(b.totalFin)||0)+(parseInt(b.totalPos)||0)) - ((parseInt(a.totalFin)||0)+(parseInt(a.totalPos)||0)) );
                 
                 sortedTeams.forEach((t, i) => {
                     let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
-                    let statusClass = t.alive.every(a=>a==0) ? 'eliminated' : '';
+                    let statusClass = (t.alive && t.alive.every(a=>a==0)) ? 'eliminated' : '';
 
                     document.getElementById('col-rank').innerHTML += `<div class="cell-item ${statusClass}">${i+1}</div>`;
-                    document.getElementById('col-logo').innerHTML += `<div class="cell-item logo-col-item ${statusClass}"><img src="${t.logo}"></div>`;
-                    document.getElementById('col-name').innerHTML += `<div class="cell-item name-col-item ${statusClass}">${t.name}</div>`;
-                    document.getElementById('col-status').innerHTML += `<div class="cell-item status-col-item ${statusClass}">${t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')}</div>`;
+                    document.getElementById('col-logo').innerHTML += `<div class="cell-item logo-col-item ${statusClass}"><img src="${t.logo || ''}"></div>`;
+                    document.getElementById('col-name').innerHTML += `<div class="cell-item name-col-item ${statusClass}">${t.name || 'TEAM'}</div>`;
+                    document.getElementById('col-status').innerHTML += `<div class="cell-item status-col-item ${statusClass}">${t.alive ? t.alive.map(a => `<div class="bar ${a?'':'dead'}"></div>`).join('')} : ''</div>`;
                     document.getElementById('col-fin').innerHTML += `<div class="cell-item ${statusClass}">${t.fin || 0}</div>`;
                     document.getElementById('col-pts').innerHTML += `<div class="cell-item ${statusClass}" style="color:var(--cyan); font-weight:900;">${overallTotal}</div>`;
                 });
@@ -303,7 +314,7 @@
             render(cachedTeamsData, {});
         }
 
-        /* MOUSE DRAG & RESIZE ENGINE FOR COLUMNS (HORIZONTAL) */
+        /* MOUSE DRAG ENGINE */
         let activeTarget = null; let startX = 0; let startLeft = 0; let startWidth = 0; let isResizing = false;
 
         document.addEventListener('mousedown', (e) => {
