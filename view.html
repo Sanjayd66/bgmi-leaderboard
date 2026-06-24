@@ -4,46 +4,64 @@
     <meta charset="UTF-8">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght=700&display=swap" rel="stylesheet">
     <style>
-        :root { --dark-blue: #12193b; --row-bg: #1a2245; --cyan: #00f2ff; --text-color: #ffffff; --elim-bg: #15191d; --pred-bg: #0b0e11; }
+        :root { --cyan: #00f2ff; --text-color: #ffffff; --status-color: #00f2ff; }
         body { font-family: 'Oswald', sans-serif; margin: 0; background: #00FF00; overflow: hidden; width: 1920px; height: 1080px; }
         
-        /* DYNAMIC SCALABLE BOARD LAYOUT CONTAINER */
+        /* THE MASTER BOARD BOX - ACCORDING TO YOUR RATIO */
         #board { 
             position: absolute; 
             right: 40px; 
             bottom: 40px; 
-            width: 250px; /* Custom Width adjusted for stream layouts */
+            width: 320px; 
+            height: 730px; 
+            background-size: 100% 100%; 
+            background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
+            padding-top: 38px; /* Safe space for your Header area */
+            padding-bottom: 35px; /* Safe space for Alive/Eliminated footer bar */
         }
 
-        /* GFX SLICES INJECTIONS WITH AUTOMATIC HEIGHT STRETCH */
-        #board-header-gfx { width: 100%; height: 35px; background-size: 100% 100%; background-repeat: no-repeat; }
-        #board-rows-container { width: 100%; display: flex; flex-direction: column; }
-        #board-footer-gfx { width: 100%; height: 30px; background-size: 100% 100%; background-repeat: no-repeat; }
+        #rows-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around; /* Automatically stretches rows perfectly based on total teams */
+            padding: 0 5px;
+        }
         
-        /* EXACT ALIGNMENT MATCH FOR YOUR CHANNELS/COLUMNS */
-        .header-row, .team-row { display: grid; grid-template-columns: 25px 30px 75px 45px 35px 40px; align-items: center; gap: 0px; color: var(--text-color); text-align: center; box-sizing: border-box; }
-        .header-row { font-size: 10px; color: var(--cyan); height: 100%; padding: 0 5px; }
+        /* ACCURATE COLUMN WIDTH ALIGNMENT WITH YOUR IMAGE BLOCKS */
+        .team-row { 
+            display: grid; 
+            grid-template-columns: 28px 30px 88px 58px 35px 40px; 
+            align-items: center; 
+            color: var(--text-color); 
+            text-align: center; 
+            height: 100%;
+            max-height: 38px;
+            font-size: 14px; 
+            font-weight: bold; 
+        }
+        .team-row.eliminated { opacity: 0.25; filter: grayscale(1); }
         
-        .team-row { height: 30px; background-size: 100% 100%; background-repeat: no-repeat; padding: 0 5px; font-size: 13px; font-weight: bold; }
-        .team-row.eliminated { opacity: 0.35; filter: grayscale(1); }
-        
-        .logo-col { width: 20px; height: 20px; margin: auto; display: flex; align-items: center; justify-content: center; }
+        .logo-col { width: 22px; height: 22px; margin: auto; display: flex; align-items: center; justify-content: center; }
         .logo-col img { width: 100%; height: 100%; object-fit: contain; }
-        .name-col { text-align: left; padding-left: 4px; overflow: hidden; white-space: nowrap; text-transform: uppercase; text-shadow: 1px 1px 2px #000; }
-        .status-col { display: flex; gap: 2px; justify-content: center; }
-        .bar { width: 4px; height: 12px; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
-        .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
+        .name-col { text-align: left; padding-left: 5px; overflow: hidden; white-space: nowrap; text-transform: uppercase; text-shadow: 1px 1px 2px #000; }
+        
+        /* STATUS ALIVE BARS */
+        .status-col { display: flex; gap: 3px; justify-content: center; }
+        .bar { width: 4px; height: 14px; background: var(--status-color); box-shadow: 0 0 4px var(--status-color); }
+        .bar.dead { background: #444; box-shadow: none; opacity: 0.2; }
         
         /* PREDICTION PANEL */
         #prediction-panel { position: absolute; bottom: 40px; right: 40px; display: none; flex-direction: column; gap: 8px; }
         #prediction-panel.show { display: flex; }
-        .pred-card { width: 300px; height: 65px; background-size: 100% 100%; background-repeat: no-repeat; display: flex; align-items: center; padding: 0 15px; box-sizing: border-box; color: white; }
+        .pred-card { width: 320px; height: 65px; background-size: 100% 100%; background-repeat: no-repeat; display: flex; align-items: center; padding: 0 15px; box-sizing: border-box; color: white; }
         
-        /* TIMED ANIMATION SYSTEM */
+        /* TIMED REFRESH ANIMATIONS */
         .trigger-animate { animation: slideUpFade 0.5s ease-out forwards; }
         .trigger-card-animate { animation: slideUpFade 0.4s ease-out forwards; }
 
@@ -67,11 +85,7 @@
     <div id="prediction-panel"></div>
 
     <div id="board">
-        <div id="board-header-gfx">
-            <div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left; padding-left:4px;">TEAM</div><div>STATUS</div><div>FIN</div><div>PTS</div></div>
-        </div>
-        <div id="board-rows-container"></div>
-        <div id="board-footer-gfx"></div>
+        <div id="rows-wrapper"></div>
     </div>
 
     <script>
@@ -87,9 +101,8 @@
             const cfg = data.config || {};
             Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
             
-            // Inject dynamic upload images onto View panel styles live!
-            if(cfg['gfx-header']) document.getElementById('board-header-gfx').style.backgroundImage = `url('${cfg['gfx-header']}')`;
-            if(cfg['gfx-footer']) document.getElementById('board-footer-gfx').style.backgroundImage = `url('${cfg['gfx-footer']}')`;
+            // Set uploaded master background image 
+            if(cfg['gfx-full-table']) document.getElementById('board').style.backgroundImage = `url('${cfg['gfx-full-table']}')`;
             if(cfg['gfx-elim']) document.getElementById('elim-popup').style.backgroundImage = `url('${cfg['gfx-elim']}')`;
 
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
@@ -108,7 +121,7 @@
         function render(teams, cfg) {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
-            const rowsContainer = document.getElementById('board-rows-container');
+            const rowsWrapper = document.getElementById('rows-wrapper');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
 
             board.classList.remove('trigger-animate');
@@ -141,16 +154,16 @@
                     </div>`;
                 });
             } else {
-                pPanel.classList.remove('show'); board.style.display="flex"; rowsContainer.innerHTML = '';
+                pPanel.classList.remove('show'); board.style.display="flex"; rowsWrapper.innerHTML = '';
                 
                 const sortedTeams = [...teams].sort((a,b)=> ((parseInt(b.totalFin)||0)+(parseInt(b.totalPos)||0)) - ((parseInt(a.totalFin)||0)+(parseInt(a.totalPos)||0)) );
                 
                 sortedTeams.forEach((t, i) => {
                     let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     let rowAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
-                    let rowDelay = rowAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.2}s; background-image: url('${cfg['gfx-row']||''}');"` : `style="background-image: url('${cfg['gfx-row']||''}');"`;
+                    let rowDelay = rowAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.2}s;"` : '';
 
-                    rowsContainer.innerHTML += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''} ${rowAnimClass}" ${rowDelay}>
+                    rowsWrapper.innerHTML += `<div class="team-row ${t.alive.every(a=>a==0)?'eliminated':''} ${rowAnimClass}" ${rowDelay}>
                         <div>${i+1}</div>
                         <div class="logo-col"><img src="${t.logo}"></div>
                         <div class="name-col">${t.name}</div>
@@ -162,7 +175,7 @@
             }
         }
 
-        // PERFECT AUTOMATIC 30 SECONDS REFRESH LOOP
+        // AUTOMATIC 30 SECONDS REFRESH LOOP
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
