@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>indian</title>
+    <title>BGMI ADMIN - GFX EDITION</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -10,41 +10,44 @@
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
-        /* Fixed Color Grid Styling */
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
         .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
-        
-        /* Fixing the "Line" Glitch in inputs */
         input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
         
-        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
-        
-        /* Match History Buttons Styling */
-        .history-container { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
-        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; transition: 0.2s; }
-        .hist-btn:hover { background: var(--cyan); color: #000; }
+        /* GFX Input Styles */
+        .gfx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; background: #11161a; padding: 20px; border-radius: 8px; border: 1px solid #var(--cyan); }
+        .gfx-item { display: flex; flex-direction: column; gap: 5px; }
+        .gfx-item label { font-size: 12px; color: var(--cyan); font-weight: bold; text-transform: uppercase; }
 
-        /* Updated layout grid to perfectly fit Position Points */
+        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
+        .history-container { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
+        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+
         .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-        /* POPUP MODAL WINDOW STYLES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
-        .modal-content { background: #15191d; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 85%; max-width: 850px; max-height: 75vh; overflow-y: auto; box-shadow: 0 0 25px rgba(0,242,255,0.3); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
+        .modal-content { background: #15191d; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 85%; max-width: 850px; }
         .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .pop-table th, .pop-table td { padding: 10px; border-bottom: 1px solid #2d3439; font-size: 14px; }
-        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 12px; }
+        .pop-table th, .pop-table td { padding: 10px; border-bottom: 1px solid #2d3439; }
     </style>
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - POSITION POINTS EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - AUTOMATIC GFX SETTINGS</h2>
         
+        <h4 style="margin:0 0 5px 0; color:#aaa;">GFX LAYOUT IMAGES (PASTE LINKS HERE)</h4>
+        <div class="gfx-grid">
+            <div class="gfx-item"><label>Points Table Header GFX Link</label><input type="text" id="cfg-gfx-header" placeholder="Paste Header PNG URL" onchange="updateCfg('gfx-header',this.value)"></div>
+            <div class="gfx-item"><label>Points Table Single Row GFX Link</label><input type="text" id="cfg-gfx-row" placeholder="Paste Single Row PNG URL" onchange="updateCfg('gfx-row',this.value)"></div>
+            <div class="gfx-item"><label>Points Table Footer GFX Link</label><input type="text" id="cfg-gfx-footer" placeholder="Paste Footer PNG URL" onchange="updateCfg('gfx-footer',this.value)"></div>
+            <div class="gfx-item"><label>Prediction Card Background Link</label><input type="text" id="cfg-gfx-pred" placeholder="Paste Prediction Card PNG URL" onchange="updateCfg('gfx-pred',this.value)"></div>
+            <div class="gfx-item" style="grid-column: span 2;"><label>Elimination Popup GFX Link</label><input type="text" id="cfg-gfx-elim" placeholder="Paste Elimination Banner PNG URL" onchange="updateCfg('gfx-elim',this.value)"></div>
+        </div>
+
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
             <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
@@ -54,10 +57,7 @@
             <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
         </div>
 
-        <div style="font-size: 11px; color: #888; margin-bottom: 6px; font-weight: bold; text-transform: uppercase;">Past Matches Points View:</div>
-        <div class="history-container" id="history-buttons-layout">
-            <span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>
-        </div>
+        <div class="history-container" id="history-buttons-layout"></div>
 
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
@@ -69,22 +69,14 @@
 
     <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Pointstable</h3>
-                <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
-            </div>
+            <h3 id="modal-title" style="margin-top:0; color:var(--cyan);">Match Pointstable</h3>
             <div id="modal-body"></div>
         </div>
     </div>
 
     <script>
         const pass = prompt("Sanjay Bhai, Password daalo:");
-        if(pass === "BOT@97") {
-            document.getElementById('admin-content').style.display = 'block';
-        } else {
-            document.body.innerHTML = "<h1 style='color:red; text-align:center;'>ACCESS DENIED</h1>";
-            window.stop();
-        }
+        if(pass === "BOT@97") { document.getElementById('admin-content').style.display = 'block'; } else { document.body.innerHTML = "<h1 style='color:red; text-align:center;'>ACCESS DENIED</h1>"; window.stop(); }
 
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
@@ -92,28 +84,23 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
         let teams = []; let config = {}; let matchHistory = {};
 
-        // Listen for data
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
-            config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
-            matchHistory = data.history || {}; // Fetch saved matches history
+            config = data.config || {};
+            matchHistory = data.history || {};
 
-            // Update the color pickers in admin to match database
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
             });
-            
-            document.documentElement.style.setProperty('--cyan', config.cyan);
-            
+            if(config.cyan) document.documentElement.style.setProperty('--cyan', config.cyan);
             renderHistoryButtons();
             draw();
         });
 
         function updateCfg(param, value) {
             config[param] = value;
-            if(param === 'cyan') document.documentElement.style.setProperty('--cyan', value);
             db.ref(SYNC_PATH + '/config').set(config);
         }
 
@@ -135,27 +122,17 @@
                     <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
-                    
                     <div><span class="label-tag">Prev Pos</span><input type="number" value="${t.prevPos || 0}" onchange="edit(${i},'prevPos',this.value)"></div>
                     <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
-                    
                     <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
-                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
+                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan||'#00f2ff':'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
                     </div></div>
                     <button style="color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
                 </div>`;
             });
         }
 
-        function edit(i,f,v) { 
-            if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
-                teams[i][f] = parseInt(v) || 0;
-            } else {
-                teams[i][f] = v;
-            }
-            sync(); 
-        }
-        
+        function edit(i,f,v) { if(f==='prevFin'||f==='fin'||f==='prevPos'||f==='pos'){ teams[i][f]=parseInt(v)||0; }else{ teams[i][f]=v; } sync(); }
         function tog(i,pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             let elim = null;
@@ -164,104 +141,36 @@
                     teams[i].elim = true;
                     elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
                 }
-            } else {
-                teams[i].elim = false;
-            }
+            } else { teams[i].elim = false; }
             sync(elim);
         }
-
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
-        
-        // Displays past match buttons dynamically
         function renderHistoryButtons() {
-            const container = document.getElementById('history-buttons-layout');
-            const keys = Object.keys(matchHistory);
-            if(keys.length === 0) {
-                container.innerHTML = `<span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>`;
-                return;
-            }
-            container.innerHTML = '';
-            keys.sort((a,b) => parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", "")))
-                .forEach(key => {
-                    const btn = document.createElement('button');
-                    btn.className = 'hist-btn';
-                    btn.innerText = key.replace("Match", "MATCH ");
-                    btn.onclick = () => showPopupTable(key);
-                    container.appendChild(btn);
-                });
+            const container = document.getElementById('history-buttons-layout'); container.innerHTML = '';
+            Object.keys(matchHistory).forEach(key => {
+                const btn = document.createElement('button'); btn.className = 'hist-btn'; btn.innerText = key;
+                btn.onclick = () => showPopupTable(key); container.appendChild(btn);
+            });
         }
-
-        // Logic to show points list inside the dark modal box
         function showPopupTable(matchKey) {
             const modal = document.getElementById('popup-modal');
-            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} - Pointstable View`;
-            const savedTeams = matchHistory[matchKey] || [];
-
-            // High to Low Points Sorting for Popup Screen
-            let sortedTeams = [...savedTeams].sort((a,b) => {
-                let totalA = (parseInt(a.prevFin)||0) + (parseInt(a.fin)||0) + (parseInt(a.prevPos)||0) + (parseInt(a.pos)||0);
-                let totalB = (parseInt(b.prevFin)||0) + (parseInt(b.fin)||0) + (parseInt(b.prevPos)||0) + (parseInt(b.pos)||0);
-                return totalB - totalA;
+            document.getElementById('modal-title').innerText = matchKey + " Points";
+            let html = `<table class="pop-table" style="color:white; width:100%;"><thead><tr><th>Team</th><th>Kills</th><th>Pos</th><th>Total</th></tr></thead><tbody>`;
+            (matchHistory[matchKey]||[]).forEach(t => {
+                let total = (t.prevFin||0)+(t.fin||0)+(t.prevPos||0)+(t.pos||0);
+                html += `<tr><td>${t.name}</td><td>${t.fin}</td><td>${t.pos}</td><td>${total}</td></tr>`;
             });
-
-            let html = `<table class="pop-table">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Team Name</th>
-                        <th style="text-align:center;">Prev Kills</th>
-                        <th style="text-align:center;">Match Kills</th>
-                        <th style="text-align:center;">Prev Pos</th>
-                        <th style="text-align:center;">Match Pos</th>
-                        <th style="text-align:center; color:var(--cyan);">Total Pts</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-            sortedTeams.forEach((t, idx) => {
-                let totalPts = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0) + (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
-                html += `<tr>
-                    <td>${idx + 1}</td>
-                    <td style="font-weight:bold; text-transform:uppercase;">${t.name || 'TEAM'}</td>
-                    <td style="text-align:center;">${t.prevFin || 0}</td>
-                    <td style="text-align:center;">${t.fin || 0}</td>
-                    <td style="text-align:center;">${t.prevPos || 0}</td>
-                    <td style="text-align:center;">${t.pos || 0}</td>
-                    <td style="text-align:center; font-weight:bold; color:var(--cyan);">${totalPts}</td>
-                </tr>`;
-            });
-
-            html += `</tbody></table>`;
-            document.getElementById('modal-body').innerHTML = html;
-            modal.style.display = 'flex';
+            html += `</tbody></table>`; document.getElementById('modal-body').innerHTML = html; modal.style.display = 'flex';
         }
-
-        function globalNewMatch() { 
-            if(confirm("New Match? Status reset hoga, points save rahenge.")) {
-                // Step 1: Current match ka data backup/history node me save karo reset hone se pehle
-                const currentMatchNumber = Object.keys(matchHistory).length + 1;
-                const matchKeyName = "Match" + currentMatchNumber;
-                
-                // Deep copy current state to history
-                matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
-
-                // Step 2: Purana logic as it is points aage transfer karne ke liye
-                teams.forEach(t => { 
-                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                    t.fin = 0; 
-                    
-                    t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
-                    t.pos = 0;
-                    
-                    t.alive = [1,1,1,1]; t.elim = false; 
-                }); 
-                
+        function globalNewMatch() {
+            if(confirm("New Match?")) {
+                matchHistory["Match" + (Object.keys(matchHistory).length + 1)] = JSON.parse(JSON.stringify(teams));
+                teams.forEach(t => { t.prevFin = (t.prevFin||0)+(t.fin||0); t.fin=0; t.prevPos=(t.prevPos||0)+(t.pos||0); t.pos=0; t.alive=[1,1,1,1]; t.elim=false; });
                 db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
             }
         }
-        
-        function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("HARD RESET? History aur teams sab clean ho jayega.")) { db.ref(SYNC_PATH).set(null); } }
+        function removeTeam(i) { if(confirm("Delete?")) { teams.splice(i,1); sync(); } }
+        function resetAll() { if(confirm("RESET?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
