@@ -12,6 +12,7 @@
         
         /* Fixed Color Grid Styling */
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
         .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
         
@@ -191,16 +192,18 @@
                 });
         }
 
-        // Logic to show points list inside the dark modal box
+        /* ==========================================================================
+           FIXED LOGIC: SHOWS ONLY SPECIFIC MATCH DATA INSIDE POPUP MODAL
+           ========================================================================== */
         function showPopupTable(matchKey) {
             const modal = document.getElementById('popup-modal');
             document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} - Pointstable View`;
             const savedTeams = matchHistory[matchKey] || [];
 
-            // High to Low Points Sorting for Popup Screen
+            // High to Low Sorting based ONLY on that specific Match Points
             let sortedTeams = [...savedTeams].sort((a,b) => {
-                let totalA = (parseInt(a.prevFin)||0) + (parseInt(a.fin)||0) + (parseInt(a.prevPos)||0) + (parseInt(a.pos)||0);
-                let totalB = (parseInt(b.prevFin)||0) + (parseInt(b.fin)||0) + (parseInt(b.prevPos)||0) + (parseInt(b.pos)||0);
+                let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
+                let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
                 return totalB - totalA;
             });
 
@@ -209,25 +212,22 @@
                     <tr>
                         <th>Rank</th>
                         <th>Team Name</th>
-                        <th style="text-align:center;">Prev Kills</th>
                         <th style="text-align:center;">Match Kills</th>
-                        <th style="text-align:center;">Prev Pos</th>
-                        <th style="text-align:center;">Match Pos</th>
-                        <th style="text-align:center; color:var(--cyan);">Total Pts</th>
+                        <th style="text-align:center;">Match Pos Points</th>
+                        <th style="text-align:center; color:var(--cyan);">Total Match Pts</th>
                     </tr>
                 </thead>
                 <tbody>`;
 
             sortedTeams.forEach((t, idx) => {
-                let totalPts = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0) + (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
+                // Calculation uses ONLY single match variables now
+                let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
                 html += `<tr>
                     <td>${idx + 1}</td>
                     <td style="font-weight:bold; text-transform:uppercase;">${t.name || 'TEAM'}</td>
-                    <td style="text-align:center;">${t.prevFin || 0}</td>
                     <td style="text-align:center;">${t.fin || 0}</td>
-                    <td style="text-align:center;">${t.prevPos || 0}</td>
                     <td style="text-align:center;">${t.pos || 0}</td>
-                    <td style="text-align:center; font-weight:bold; color:var(--cyan);">${totalPts}</td>
+                    <td style="text-align:center; font-weight:bold; color:var(--cyan);">${singleMatchTotal}</td>
                 </tr>`;
             });
 
