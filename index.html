@@ -12,7 +12,6 @@
         
         /* Fixed Color Grid Styling */
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
-        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
         .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
         
@@ -26,9 +25,15 @@
         .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; transition: 0.2s; }
         .hist-btn:hover { background: var(--cyan); color: #000; }
 
-        /* Updated layout grid to perfectly fit Position Points */
-        .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
+        /* Updated layout grid to perfectly fit Position Points & Custom File Upload Style */
+        .team-row { background: #1c2227; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.4fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        
+        /* Custom File Input Container Layout */
+        .upload-wrapper { display: flex; align-items: center; gap: 6px; background: #0b0e11; border: 1px solid #343a40; padding: 4px 6px; border-radius: 4px; }
+        .upload-wrapper img { width: 24px; height: 24px; object-fit: contain; background: rgba(255,255,255,0.05); border-radius: 3px; }
+        .upload-wrapper input[type="file"] { color: #888; font-size: 11px; width: 100%; }
+
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
@@ -98,9 +103,8 @@
             const data = snap.val() || {};
             teams = data.teams || []; 
             config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
-            matchHistory = data.history || {}; // Fetch saved matches history
+            matchHistory = data.history || {};
 
-            // Update the color pickers in admin to match database
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
@@ -131,9 +135,20 @@
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
+                // Default fallback blank image indicator
+                const currentLogoSrc = t.logo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23555" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+                
                 list.innerHTML += `<div class="team-row">
                     <div><span class="label-tag">Team</span><input type="text" value="${t.name || ''}" onchange="edit(${i},'name',this.value)"></div>
-                    <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
+                    
+                    <div>
+                        <span class="label-tag">Logo Upload</span>
+                        <div class="upload-wrapper">
+                            <img src="${currentLogoSrc}" id="prev-img-${i}">
+                            <input type="file" accept="image/*" onchange="uploadLogoFile(this, ${i})">
+                        </div>
+                    </div>
+                    
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
                     
@@ -146,6 +161,22 @@
                     <button style="color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
                 </div>`;
             });
+        }
+
+        /* DIRECT IMAGE CONVERSION HELPER WITHOUT INTERRUPTING DATA FLOW */
+        function uploadLogoFile(inputElement, index) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64String = e.target.result;
+                // Instant UI response for smooth feeling
+                document.getElementById(`prev-img-${index}`).src = base64String;
+                // Direct update field structure
+                edit(index, 'logo', base64String);
+            };
+            reader.readAsDataURL(file);
         }
 
         function edit(i,f,v) { 
@@ -173,7 +204,6 @@
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
-        // Displays past match buttons dynamically
         function renderHistoryButtons() {
             const container = document.getElementById('history-buttons-layout');
             const keys = Object.keys(matchHistory);
@@ -192,15 +222,11 @@
                 });
         }
 
-        /* ==========================================================================
-           FIXED LOGIC: SHOWS ONLY SPECIFIC MATCH DATA INSIDE POPUP MODAL
-           ========================================================================== */
         function showPopupTable(matchKey) {
             const modal = document.getElementById('popup-modal');
             document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} - Pointstable View`;
             const savedTeams = matchHistory[matchKey] || [];
 
-            // High to Low Sorting based ONLY on that specific Match Points
             let sortedTeams = [...savedTeams].sort((a,b) => {
                 let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
                 let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
@@ -220,7 +246,6 @@
                 <tbody>`;
 
             sortedTeams.forEach((t, idx) => {
-                // Calculation uses ONLY single match variables now
                 let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
                 html += `<tr>
                     <td>${idx + 1}</td>
@@ -238,14 +263,11 @@
 
         function globalNewMatch() { 
             if(confirm("New Match? Status reset hoga, points save rahenge.")) {
-                // Step 1: Current match ka data backup/history node me save karo reset hone se pehle
                 const currentMatchNumber = Object.keys(matchHistory).length + 1;
                 const matchKeyName = "Match" + currentMatchNumber;
                 
-                // Deep copy current state to history
                 matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
 
-                // Step 2: Purana logic as it is points aage transfer karne ke liye
                 teams.forEach(t => { 
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                     t.fin = 0; 
