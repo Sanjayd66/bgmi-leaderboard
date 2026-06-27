@@ -50,7 +50,7 @@
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
         <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - POSITION POINTS EDITION</h2>
-        
+
         <div class="color-grid">
             <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
             <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
@@ -84,8 +84,8 @@
     </div>
 
     <script>
-        // SANJAY BHAI, APNI IMGBB API KEY YAHAN DALO (Yeh free milti hai imgbb.com par)
-        const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY_HERE"; 
+        // SANJAY BHAI KI IMGBB API KEY APNAY CODE MEIN HAR BAAR FIXED REHEGI
+        const IMGBB_API_KEY = "140eed673d2383dd5131298e340349eb"; 
 
         const pass = prompt("Sanjay Bhai, Password daalo:");
         if(pass === "BOT@97") {
@@ -164,19 +164,11 @@
             });
         }
 
-        /* SAFE LOGO UPLOAD VIA IMGBB - PREVENTS DATABASE FROM SLOWING DOWN */
         function handleLogoUpload(inputElement, index) {
             const file = inputElement.files[0];
             if (!file) return;
 
-            if(IMGBB_API_KEY === "YOUR_IMGBB_API_KEY_HERE" || !IMGBB_API_KEY) {
-                alert("Sanjay Bhai, pahle code me apni ImgBB API key daalo!");
-                return;
-            }
-
-            // Show Uploading Status on Input Text
             inputElement.style.opacity = "0.3";
-            
             const formData = new FormData();
             formData.append("image", file);
 
@@ -190,15 +182,15 @@
                 if(response.success) {
                     const onlineUrl = response.data.url;
                     document.getElementById(`prev-img-${index}`).src = onlineUrl;
-                    edit(index, 'logo', onlineUrl); // Sync light short link to firebase
+                    edit(index, 'logo', onlineUrl);
                 } else {
-                    alert("Upload fail ho gaya, API Key check karo!");
+                    alert("Upload fail! Ek baar ImgBB key validity check karein.");
                 }
             })
             .catch(err => {
                 inputElement.style.opacity = "1";
                 console.error(err);
-                alert("Error: Internet check karo ya API key validity check karo!");
+                alert("Upload error! Internet connection check karein.");
             });
         }
 
