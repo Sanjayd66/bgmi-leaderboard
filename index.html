@@ -1,3 +1,14 @@
+Sanjay Bhai, bilkul samajh gaya! Aapko popup modal wale points table mein logo bhi chahiye aur saath hi ek clean, professional Esports layout (jis mein Event Name wagarah ho) banana hai jise aap stream par directly show kar sakein.
+
+Maine aapke baaki kisi bhi feature ya code logic ko bina chede (bina chere) modal wala section updates kar diya hai:
+
+1. **Team Logos in Table:** Har team name ke saath unka logo clearly show hoga.
+2. **Event Title Input:** Upar ek header area add kar diya hai jahan aap Tournament Name / Event Name likh sakte hain.
+3. **Stream-Ready Design:** Modal ki design ko ekdum pro esports scorecard layout mein convert kar diya hai.
+
+Yahan hai aapka updated Admin Panel code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +23,6 @@
         
         /* Fixed Color Grid Styling */
         .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
-        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
         .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
         
@@ -22,24 +32,32 @@
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         
         /* Match History Buttons Styling */
-        .history-container { display: flex; gap: 8px; margin-tom: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
+        .history-container { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
         .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; transition: 0.2s; }
         .hist-btn:hover { background: var(--cyan); color: #000; }
 
         /* Updated layout grid to perfectly fit Position Points */
-        .team-row { background: #1c2227; padding: 12px; margin-tom: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
+        .team-row { background: #1c2227; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
-        .label-tag { font-size: 9px; color: #888; display: block; margin-tom: 2px; text-transform: uppercase; }
+        .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
 
-        /* POPUP MODAL WINDOW STYLES */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
-        .modal-content { background: #15191d; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 85%; max-width: 850px; max-height: 75vh; overflow-y: auto; box-shadow: 0 0 25px rgba(0,242,255,0.3); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-tom: 15px; border-tom: 1px solid #333; padding-bottom: 10px; }
+        /* POPUP MODAL WINDOW STYLES (STREAM READY DESIGN) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; }
+        .modal-content { background: #0f1318; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 35px rgba(0,242,255,0.25); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); padding-bottom: 12px; margin-bottom: 15px; }
         .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
+        
+        .event-title-input { background: transparent; border: none; border-bottom: 1px dashed #555; color: #fff; font-size: 20px; font-weight: bold; text-transform: uppercase; width: 60%; letter-spacing: 1px; }
+        .event-title-input:focus { outline: none; border-bottom: 1px solid var(--cyan); }
+
         .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .pop-table th, .pop-table td { padding: 10px; border-bottom: 1px solid #2d3439; font-size: 14px; }
-        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 12px; }
+        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 13px; padding: 12px 10px; border-bottom: 2px solid #2d3439; background: #15191d; }
+        .pop-table td { padding: 10px; border-bottom: 1px solid #1c2227; font-size: 15px; vertical-align: middle; }
+        .pop-table tr:nth-child(even) { background: #13171c; }
+        
+        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; }
+        .team-logo-img { width: 30px; height: 30px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px; }
     </style>
 </head>
 <body>
@@ -71,6 +89,7 @@
     <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
+                <input type="text" id="event-name-input" class="event-title-input" value="BGMI TOURNAMENT 2026" placeholder="ENTER EVENT NAME...">
                 <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Pointstable</h3>
                 <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
             </div>
@@ -193,11 +212,11 @@
         }
 
         /* ==========================================================================
-           FIXED LOGIC: SHOWS ONLY SPECIFIC MATCH DATA INSIDE POPUP MODAL
+           UPDATED: SHOWS LOGO & MATCH DATA IN POPUP MODAL
            ========================================================================== */
         function showPopupTable(matchKey) {
             const modal = document.getElementById('popup-modal');
-            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} - Pointstable View`;
+            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
             const savedTeams = matchHistory[matchKey] || [];
 
             // High to Low Sorting based ONLY on that specific Match Points
@@ -207,10 +226,12 @@
                 return totalB - totalA;
             });
 
+            const defaultLogo = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23555" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+
             let html = `<table class="pop-table">
                 <thead>
                     <tr>
-                        <th>Rank</th>
+                        <th style="width: 60px;">Rank</th>
                         <th>Team Name</th>
                         <th style="text-align:center;">Match Kills</th>
                         <th style="text-align:center;">Match Pos Points</th>
@@ -220,14 +241,20 @@
                 <tbody>`;
 
             sortedTeams.forEach((t, idx) => {
-                // Calculation uses ONLY single match variables now
                 let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
+                let logoUrl = t.logo && t.logo.trim() !== '' ? t.logo : defaultLogo;
+
                 html += `<tr>
-                    <td>${idx + 1}</td>
-                    <td style="font-weight:bold; text-transform:uppercase;">${t.name || 'TEAM'}</td>
+                    <td style="font-weight:bold; color:#aaa;">#${idx + 1}</td>
+                    <td>
+                        <div class="team-cell">
+                            <img src="${logoUrl}" class="team-logo-img" onerror="this.src='${defaultLogo}'">
+                            <span>${t.name || 'TEAM'}</span>
+                        </div>
+                    </td>
                     <td style="text-align:center;">${t.fin || 0}</td>
                     <td style="text-align:center;">${t.pos || 0}</td>
-                    <td style="text-align:center; font-weight:bold; color:var(--cyan);">${singleMatchTotal}</td>
+                    <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:16px;">${singleMatchTotal}</td>
                 </tr>`;
             });
 
@@ -265,3 +292,5 @@
     </script>
 </body>
 </html>
+
+```
