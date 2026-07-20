@@ -1,27 +1,3 @@
-Bhai, samajh gaya exact issue!
-
-Problem yeh ho rahi thi ki **Winning Prediction Cards** initial Firebase payload se ek baar calculate/render toh ho rahe the, par jab match ke dauran **players eliminate** ho rahe the ya **poori team eliminate** ho rahi thi, tab prediction automatic update, hide, ya recalculate nahi ho raha tha.
-
-Is update mein **Winning Prediction engine ko fully dynamic** bana diya hai:
-
-### Fixed Features:
-
-1. **Real-time Player & Team Elimination Update**:
-* **Live Bars Update**: Winning prediction box ke andar jo 4 bars hain, wo team ke actual `alive` array se Sync ho gaye hain (`1` = Bright/Yellow, `0` = Dead/Red-Dark). Jaise hi player marega, prediction box ke andar ka player bar instant red/dark ho jayega.
-* **Auto-Hide Eliminated Teams**: Agar koi team poori eliminate ho jaati hai (0 players alive), toh wo Prediction Forecast se turant hat jayegi aur next alive team candidate prediction mein aa jayegi.
-
-
-2. **Dynamic Win Probability Recalculation**:
-* Jaise-jaise players eliminate honge, live alive count aur current team points ke basis par **WWCD % (percentage) real-time mein automatically update** ho kar calculate hoga.
-
-
-3. **No Dynamic Lag / Smooth Transition**: Firebase listener aur interval render dono dynamic check karenge bina layout break kiye.
-
----
-
-### Updated Code:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
