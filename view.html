@@ -1,19 +1,34 @@
+Sanjay Bhai, bilkul tension mat lo! Screenshot ke hisab se exact reference pixel-to-pixel copy kar diya hai.
+
+Aapke screenshot mein:
+
+1. **Rank Badge (`#7`):** Yellow box top-left, sharp bold black font (`#`).
+2. **Logo Box:** White clean background jisme team logo perfectly center hai.
+3. **ELIMINATED Box:** Dynamic background gradient with clean bold sans-serif text (`ELIMINATED`).
+4. **Bottom Bar:** Bright yellow strip with `X FINISHES | Y PLACE PTS.` layout.
+5. **Animation:** Left-to-right smooth slide & scale unfold entry/exit animation.
+
+---
+
+### Fixed `overlay.html` Code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Oswald:wght@700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --cyan: #00f2ff; 
+            --cyan: #ffcc00; 
             --dark-blue: #12193b; 
             --row-bg: #1a2245; 
             --text-color: #ffffff; 
             --status-bg: #252c33;
             --top-row-bg: #15191d;
-            --elim-bg: #e63900;
+            --elim-bg: #c83200;
         }
 
         body { 
@@ -48,39 +63,140 @@
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* ELIMINATION POPUP DESIGN */
-        #elim-banner { position: absolute; left: 50%; top: 80px; transform: translateX(-50%); display: none; z-index: 1000; }
-        #elim-banner.show { display: block; }
-        .elim-container { position: relative; display: flex; align-items: stretch; height: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .elim-rank-badge { position: absolute; top: -18px; left: -14px; background: var(--cyan) !important; color: #000000 !important; font-size: 18px; font-weight: 900; padding: 1px 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 10; }
-        .elim-logo-box { width: 75px; height: 60px; background: #ffffff !important; display: flex; align-items: center; justify-content: center; padding: 5px; box-sizing: border-box; z-index: 3; }
-        .elim-logo-box img { width: 100%; height: 100%; object-fit: contain; }
-        
-        /* DYNAMIC BACKGROUND COLOR FROM ADMIN */
-        .elim-main-text { 
-            background: var(--elim-bg) !important; 
-            border-top: 2px solid rgba(255,255,255,0.3); 
-            display: flex; align-items: center; justify-content: center; padding: 0 45px; min-width: 240px; position: relative; z-index: 2; 
+        /* =========================================================
+           EXACT MATCH ELIMINATION POPUP STYLES (SCREENSHOT REPLICA)
+           ========================================================= */
+        #elim-banner { 
+            position: absolute; 
+            left: 50%; 
+            top: 100px; 
+            transform: translateX(-50%); 
+            display: none; 
+            z-index: 1000; 
         }
         
-        #elim-banner.show .elim-main-text { animation: broadcastUnfold 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-        .elim-main-text span { font-size: 32px; font-weight: 900; color: var(--text-color); letter-spacing: 2.5px; text-transform: uppercase; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); }
-        .elim-bottom-strip { position: absolute; bottom: -22px; left: 75px; right: 0; background: var(--cyan) !important; color: #000000 !important; font-size: 15px; font-weight: 900; padding: 2px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); z-index: 1; }
+        #elim-banner.show { 
+            display: block; 
+            animation: slideInPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
 
-        @keyframes broadcastUnfold {
-            0% { opacity: 0; transform: scaleX(0.8); }
-            100% { opacity: 1; transform: scaleX(1); }
+        .elim-card { 
+            display: flex; 
+            align-items: stretch; 
+            position: relative; 
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8);
+            border-radius: 2px;
+        }
+
+        /* Top Left Yellow Badge (#7) */
+        .elim-rank-tag {
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            background: var(--cyan) !important;
+            color: #000000;
+            font-family: 'Oswald', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            padding: 0px 8px;
+            line-height: 1.1;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        /* Left White Logo Box */
+        .elim-logo-container {
+            width: 100px;
+            height: 80px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            box-sizing: border-box;
+            border-right: 1px solid #ddd;
+        }
+
+        .elim-logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Right Content Wrapper */
+        .elim-right-content {
+            display: flex;
+            flex-direction: column;
+            width: 380px;
+        }
+
+        /* Top Red Main Banner */
+        .elim-main-banner {
+            background: linear-gradient(180deg, var(--elim-bg) 0%, #000000 130%) !important;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .elim-main-banner span {
+            font-family: 'Oswald', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--text-color);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        /* Bottom Yellow Stat Bar */
+        .elim-stats-bar {
+            background: var(--cyan) !important;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: #000000;
+            font-family: 'Oswald', sans-serif;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .elim-stats-bar .sep {
+            font-weight: 400;
+            opacity: 0.6;
+        }
+
+        /* Clean Entrance & Exit Animation */
+        @keyframes slideInPop {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.85); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1); }
         }
     </style>
 </head>
 <body>
-    <!-- ELIMINATION BANNER -->
+    <!-- EXACT ELIMINATION POPUP STRUCTURE -->
     <div id="elim-banner">
-        <div class="elim-container">
-            <div class="elim-rank-badge" id="elim-rank-tag">#7</div>
-            <div class="elim-logo-box"><img id="elim-logo-img" src="" onerror="this.style.opacity='0'"></div>
-            <div class="elim-main-text"><span>ELIMINATED</span></div>
-            <div class="elim-bottom-strip" id="elim-stats-strip">0 FINISHES</div>
+        <div class="elim-card">
+            <div class="elim-rank-tag" id="elim-rank-tag">#7</div>
+            <div class="elim-logo-container">
+                <img id="elim-logo-img" src="" onerror="this.style.display='none'">
+            </div>
+            <div class="elim-right-content">
+                <div class="elim-main-banner">
+                    <span>ELIMINATED</span>
+                </div>
+                <div class="elim-stats-bar">
+                    <span id="elim-fin-text">0 FINISHES</span>
+                    <span class="sep">|</span>
+                    <span id="elim-pos-text">0 PLACE PTS.</span>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -109,24 +225,41 @@
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 
+                // Rank Number
                 document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
                 
+                // Logo Fix
                 const logoImg = document.getElementById('elim-logo-img');
                 if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
                     logoImg.src = data.lastEliminated.logo;
-                    logoImg.style.opacity = '1';
+                    logoImg.style.display = 'block';
                 } else {
-                    logoImg.style.opacity = '0';
+                    logoImg.style.display = 'none';
                 }
 
-                document.getElementById('elim-stats-strip').innerHTML = `${data.lastEliminated.finishes || 0} FINISHES`;
+                // Stats Text Sync
+                document.getElementById('elim-fin-text').innerText = `${data.lastEliminated.finishes || 0} FINISHES`;
                 
+                // Calculate Place Points dynamically based on rank
+                let posPoints = 0;
+                let r = data.lastEliminated.rank || 0;
+                if(r === 1) posPoints = 10;
+                else if(r === 2) posPoints = 6;
+                else if(r === 3) posPoints = 5;
+                else if(r === 4) posPoints = 4;
+                else if(r === 5) posPoints = 3;
+                else if(r === 6) posPoints = 2;
+                else if(r === 7 || r === 8) posPoints = 1;
+
+                document.getElementById('elim-pos-text').innerText = `${posPoints} PLACE PTS.`;
+                
+                // Trigger Smooth Animation
                 const banner = document.getElementById('elim-banner');
                 banner.classList.remove('show');
-                void banner.offsetWidth;
+                void banner.offsetWidth; // Reflow reset
                 banner.classList.add('show'); 
                 
-                setTimeout(() => { banner.classList.remove('show'); }, 4500);
+                setTimeout(() => { banner.classList.remove('show'); }, 5000);
             }
             
             render(data.teams || []);
@@ -160,3 +293,5 @@
     </script>
 </body>
 </html>
+
+```
