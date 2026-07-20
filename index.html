@@ -2,267 +2,117 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Admin - 6 Color Theme System</title>
+    <title>BGMI Broadcast Control Panel</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root { --cyan: #ffbc00; }
-        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
-        .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
-        
-        /* EXACT 6 COLOR GRID */
-        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; background: #1c2227; padding: 15px; border-radius: 8px; border: 1px solid #333; }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; }
-        .color-item span { font-size: 11px; font-weight: bold; color: #aaa; text-transform: uppercase; }
-        input[type="color"] { border: none; width: 35px; height: 25px; cursor: pointer; background: none; padding: 0; }
-        
-        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
-        
-        .history-container { display: flex; gap: 8px; margin-top: 15px; margin-bottom: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
-        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
-        .hist-btn:hover { background: var(--cyan); color: #000; }
-
-        .team-row { background: #1c2227; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
-        input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
-        .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
-
-        /* MODAL */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; }
-        .modal-content { background: #0f1318; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); padding-bottom: 12px; margin-bottom: 15px; }
-        .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
-        
-        .event-title-input { background: transparent; border: none; border-bottom: 1px dashed #555; color: #fff; font-size: 20px; font-weight: bold; text-transform: uppercase; width: 60%; }
-        .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 13px; padding: 12px 10px; border-bottom: 2px solid #2d3439; background: #15191d; }
-        .pop-table td { padding: 10px; border-bottom: 1px solid #1c2227; font-size: 15px; vertical-align: middle; }
-        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; }
-        .team-logo-img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; padding: 20px; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h2 { margin-top: 0; color: #ffc800; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .form-group { margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
+        label { font-weight: bold; font-size: 14px; }
+        input[type="color"] { border: none; width: 50px; height: 35px; cursor: pointer; background: transparent; }
+        input[type="text"], input[type="number"] { padding: 8px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff; width: 60%; }
+        button { background: #ffc800; color: #000; font-weight: bold; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #e0b000; }
+        .btn-danger { background: #ff4757; color: #fff; }
+        .btn-danger:hover { background: #d63031; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     </style>
 </head>
 <body>
-    <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - 6 COLOR SYSTEM</h2>
-        
-        <!-- 6 COLOR CONTROLS -->
-        <div class="color-grid">
-            <div class="color-item"><span>1. THEME (YELLOW BADGE)</span><input type="color" id="cfg-theme" onchange="updateCfg('theme',this.value)"></div>
-            <div class="color-item"><span>2. BOARD BG (MAIN BOARD)</span><input type="color" id="cfg-board-bg" onchange="updateCfg('board-bg',this.value)"></div>
-            <div class="color-item"><span>3. ROW BG (STATUS/BOX)</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
-            <div class="color-item"><span>4. TEXT COLOR</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
-            <div class="color-item"><span>5. ACCENT 2 (WWCD STRIP)</span><input type="color" id="cfg-accent2" onchange="updateCfg('accent2',this.value)"></div>
-            <div class="color-item"><span>6. LOGO BG (WHITE BOX)</span><input type="color" id="cfg-logo-bg" onchange="updateCfg('logo-bg',this.value)"></div>
-        </div>
 
-        <div style="font-size: 11px; color: #888; margin-bottom: 6px; font-weight: bold; text-transform: uppercase;">Past Matches History:</div>
-        <div class="history-container" id="history-buttons-layout"></div>
-
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
-            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">NEW MATCH (RESET STATUS)</button>
-            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">FULL RESET</button>
-        </div>
-        <div id="team-list"></div>
-    </div>
-
-    <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <input type="text" id="event-name-input" class="event-title-input" value="BGMI TOURNAMENT 2026">
-                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Scoreboard</h3>
-                <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
+    <div class="grid-2">
+        <!-- COLOR CONFIGURATION PANEL -->
+        <div class="card">
+            <h2>🎨 Theme & Elimination Colors</h2>
+            
+            <div class="form-group">
+                <label>Main Theme (Yellow Strip & #Rank):</label>
+                <input type="color" id="themeColor" value="#ffc800">
             </div>
-            <div id="modal-body"></div>
+
+            <div class="form-group">
+                <label>Elimination Top Color (Gradient):</label>
+                <input type="color" id="elimTopColor" value="#e63900">
+            </div>
+
+            <div class="form-group">
+                <label>Elimination Bottom Color (Gradient):</label>
+                <input type="color" id="elimBottomColor" value="#7a1500">
+            </div>
+
+            <button onclick="saveColors()">Save Colors</button>
+        </div>
+
+        <!-- TRIGGER MANUAL ELIMINATION POPUP -->
+        <div class="card">
+            <h2>💥 Trigger Elimination Popup</h2>
+            <div class="form-group">
+                <label>Rank Position (#):</label>
+                <input type="number" id="elimRank" value="7">
+            </div>
+            <div class="form-group">
+                <label>Team Logo URL:</label>
+                <input type="text" id="elimLogo" placeholder="https://link-to-logo.png">
+            </div>
+            <div class="form-group">
+                <label>Finishes:</label>
+                <input type="number" id="elimFinishes" value="4">
+            </div>
+            <div class="form-group">
+                <label>Place Points:</label>
+                <input type="number" id="elimPlacePts" value="1">
+            </div>
+
+            <button class="btn-danger" onclick="triggerElimination()">Show Popup On Stream</button>
         </div>
     </div>
 
     <script>
-        const pass = prompt("Sanjay Bhai, Password daalo:");
-        if(pass === "DT@97") {
-            document.getElementById('admin-content').style.display = 'block';
-        } else {
-            document.body.innerHTML = "<h1 style='color:red; text-align:center;'>ACCESS DENIED</h1>";
-            window.stop();
-        }
-
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
-        let teams = []; let config = {}; let matchHistory = {};
 
-        db.ref(SYNC_PATH).on('value', (snap) => {
-            const data = snap.val() || {};
-            teams = data.teams || []; 
-            config = data.config || { 
-                'theme': '#ffbc00', 
-                'board-bg': '#8e44ad', 
-                'row-bg': '#1e1f29', 
-                'text-color': '#ffffff', 
-                'accent2': '#ff4757', 
-                'logo-bg': '#ffffff' 
-            };
-            matchHistory = data.history || {};
-
-            Object.keys(config).forEach(k => {
-                const el = document.getElementById('cfg-' + k);
-                if(el) el.value = config[k];
-            });
-            
-            document.documentElement.style.setProperty('--cyan', config.theme);
-            renderHistoryButtons();
-            draw();
+        // Load existing colors from Firebase
+        db.ref(SYNC_PATH + '/config').on('value', (snap) => {
+            const cfg = snap.val();
+            if(cfg) {
+                if(cfg['theme']) document.getElementById('themeColor').value = cfg['theme'];
+                if(cfg['elim-bg-top']) document.getElementById('elimTopColor').value = cfg['elim-bg-top'];
+                if(cfg['elim-bg-bottom']) document.getElementById('elimBottomColor').value = cfg['elim-bg-bottom'];
+            }
         });
 
-        function updateCfg(param, value) {
-            config[param] = value;
-            if(param === 'theme') document.documentElement.style.setProperty('--cyan', value);
-            db.ref(SYNC_PATH + '/config').set(config);
+        // Save Color Configuration
+        function saveColors() {
+            const theme = document.getElementById('themeColor').value;
+            const elimTop = document.getElementById('elimTopColor').value;
+            const elimBottom = document.getElementById('elimBottomColor').value;
+
+            db.ref(SYNC_PATH + '/config').update({
+                'theme': theme,
+                'elim-bg-top': elimTop,
+                'elim-bg-bottom': elimBottom
+            }).then(() => alert("Colors Updated Successfully!"));
         }
 
-        function sync(elimData = null) { 
-            teams.forEach(t => { 
-                t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
-            });
-            const payload = { teams, config, history: matchHistory };
-            if(elimData) payload.lastEliminated = elimData;
-            db.ref(SYNC_PATH).update(payload);
-        }
+        // Trigger Elimination Banner Directly
+        function triggerElimination() {
+            const rank = document.getElementById('elimRank').value;
+            const logo = document.getElementById('elimLogo').value;
+            const finishes = document.getElementById('elimFinishes').value;
+            const placePts = document.getElementById('elimPlacePts').value;
 
-        function draw() {
-            const list = document.getElementById('team-list'); list.innerHTML = '';
-            teams.forEach((t, i) => {
-                list.innerHTML += `<div class="team-row">
-                    <div><span class="label-tag">Team</span><input type="text" value="${t.name || ''}" onchange="edit(${i},'name',this.value)"></div>
-                    <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
-                    <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
-                    <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
-                    <div><span class="label-tag">Prev Pos</span><input type="number" value="${t.prevPos || 0}" onchange="edit(${i},'prevPos',this.value)"></div>
-                    <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
-                    <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
-                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.theme:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
-                    </div></div>
-                    <button style="color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
-                </div>`;
+            db.ref(SYNC_PATH + '/lastEliminated').set({
+                id: Date.now().toString(),
+                rank: rank,
+                logo: logo,
+                finishes: finishes,
+                placePts: placePts
             });
         }
-
-        function edit(i,f,v) { 
-            if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
-                teams[i][f] = parseInt(v) || 0;
-            } else {
-                teams[i][f] = v;
-            }
-            sync(); 
-        }
-        
-        function tog(i,pi) {
-            teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
-            let elim = null;
-            if (teams[i].alive.every(a => a == 0)) {
-                if (!teams[i].elim) {
-                    teams[i].elim = true;
-                    // CALCULATE ELIMINATION RANK BASED ON REMAINING ALIVE TEAMS
-                    let aliveTeamsCount = teams.filter(t => t.alive.some(a => a == 1)).length;
-                    let elimRank = aliveTeamsCount + 1;
-                    
-                    elim = { 
-                        id: Date.now().toString(), 
-                        name: teams[i].name, 
-                        logo: teams[i].logo, 
-                        finishes: (parseInt(teams[i].fin)||0),
-                        placePts: (parseInt(teams[i].pos)||0),
-                        rank: elimRank
-                    };
-                }
-            } else {
-                teams[i].elim = false;
-            }
-            sync(elim);
-        }
-
-        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
-        
-        function renderHistoryButtons() {
-            const container = document.getElementById('history-buttons-layout');
-            const keys = Object.keys(matchHistory);
-            if(keys.length === 0) {
-                container.innerHTML = `<span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>`;
-                return;
-            }
-            container.innerHTML = '';
-            keys.sort((a,b) => parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", "")))
-                .forEach(key => {
-                    const btn = document.createElement('button');
-                    btn.className = 'hist-btn';
-                    btn.innerText = key.replace("Match", "MATCH ");
-                    btn.onclick = () => showPopupTable(key);
-                    container.appendChild(btn);
-                });
-        }
-
-        function showPopupTable(matchKey) {
-            const modal = document.getElementById('popup-modal');
-            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
-            const savedTeams = matchHistory[matchKey] || [];
-
-            let sortedTeams = [...savedTeams].sort((a,b) => {
-                let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
-                let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
-                return totalB - totalA;
-            });
-
-            let html = `<table class="pop-table">
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">Rank</th>
-                        <th>Team Name</th>
-                        <th style="text-align:center;">Match Kills</th>
-                        <th style="text-align:center;">Match Pos Points</th>
-                        <th style="text-align:center; color:var(--cyan);">Total Match Pts</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-            sortedTeams.forEach((t, idx) => {
-                let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
-                let imgTag = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo.trim()}" class="team-logo-img" onerror="this.style.display='none'">` : '';
-
-                html += `<tr>
-                    <td style="font-weight:bold; color:#aaa;">#${idx + 1}</td>
-                    <td><div class="team-cell">${imgTag}<span>${t.name || 'TEAM'}</span></div></td>
-                    <td style="text-align:center;">${t.fin || 0}</td>
-                    <td style="text-align:center;">${t.pos || 0}</td>
-                    <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:16px;">${singleMatchTotal}</td>
-                </tr>`;
-            });
-
-            html += `</tbody></table>`;
-            document.getElementById('modal-body').innerHTML = html;
-            modal.style.display = 'flex';
-        }
-
-        function globalNewMatch() { 
-            if(confirm("New Match? Status reset hoga, points save rahenge.")) {
-                const currentMatchNumber = Object.keys(matchHistory).length + 1;
-                const matchKeyName = "Match" + currentMatchNumber;
-                matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
-
-                teams.forEach(t => { 
-                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                    t.fin = 0; 
-                    t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
-                    t.pos = 0;
-                    t.alive = [1,1,1,1]; t.elim = false; 
-                }); 
-                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
-            }
-        }
-        
-        function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
