@@ -1,3 +1,12 @@
+Sanjay Bhai, `bottom: 80px` ko hta kar position ko **`top: 80px`** par shift kar diya hai. Ab koi bhi team eliminate hogi toh popup OBS screen par **TOP CENTER** par hi animate hoke dikhega!
+
+Baki animation, background fallback variables aur broadcast design bilkul same exact setup hain.
+
+---
+
+### Updated Code (Top Positioned Elimination Popup)
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,12 +16,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --theme: #ffc800; 
+            --theme: #ffc800; /* Primary Yellow Theme */
             --board-bg: #8e44ad; 
             --row-bg: #1e1f29; 
             --text-color: #ffffff; 
             --accent2: #ff4757; 
             --logo-bg: #ffffff; 
+            --elim-bg-top: #e63900;
+            --elim-bg-bottom: #7a1500;
         }
         body { 
             font-family: 'Oswald', sans-serif; 
@@ -71,7 +82,7 @@
         }
 
         .pred-top-tag {
-            background: var(--theme);
+            background: var(--theme, #ffc800);
             color: #000;
             font-size: 13px;
             font-weight: 900;
@@ -151,11 +162,11 @@
             z-index: 2;
         }
 
-        /* BROADCAST ACCURATE ELIMINATION BANNER WITH UNFOLD ANIMATION */
+        /* MOVED TO TOP POSITION */
         #elim-banner {
             position: absolute;
             left: 50%;
-            bottom: 80px;
+            top: 80px; /* SHIFTED TO TOP CENTER */
             transform: translateX(-50%);
             display: none;
             z-index: 1000;
@@ -173,13 +184,13 @@
             perspective: 1000px;
         }
 
-        /* OVERHANG RANK TAG (#7) */
+        /* OVERHANG RANK TAG */
         .elim-rank-badge {
             position: absolute;
             top: -18px;
             left: -14px;
-            background: var(--theme);
-            color: #000;
+            background: var(--theme, #ffc800) !important;
+            color: #000000 !important;
             font-size: 18px;
             font-weight: 900;
             padding: 1px 10px;
@@ -191,7 +202,7 @@
         .elim-logo-box {
             width: 75px;
             height: 60px;
-            background: #ffffff;
+            background: #ffffff !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -205,9 +216,9 @@
             object-fit: contain;
         }
 
-        /* GRADIENT CENTER ELIMINATED BANNER WITH BROADCAST UNROLL ANIMATION */
+        /* GRADIENT CENTER ELIMINATED BANNER */
         .elim-main-text {
-            background: linear-gradient(180deg, #e63900 0%, #7a1500 100%);
+            background: linear-gradient(180deg, var(--elim-bg-top, #e63900) 0%, var(--elim-bg-bottom, #7a1500) 100%) !important;
             border-top: 2px solid #ff6a00;
             display: flex;
             align-items: center;
@@ -232,14 +243,14 @@
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
         }
 
-        /* YELLOW BOTTOM STRIP WITH DELAYED SLIDE-DOWN */
+        /* BOTTOM STRIP */
         .elim-bottom-strip {
             position: absolute;
             bottom: -22px;
             left: 75px;
             right: 0;
-            background: var(--theme);
-            color: #000;
+            background: var(--theme, #ffc800) !important;
+            color: #000000 !important;
             font-size: 15px;
             font-weight: 900;
             padding: 2px 0;
@@ -292,7 +303,7 @@
     </style>
 </head>
 <body>
-    <!-- FIXED BROADCAST ELIMINATION BANNER -->
+    <!-- FIXED BROADCAST ELIMINATION BANNER (TOP CENTER) -->
     <div id="elim-banner">
         <div class="elim-container">
             <div class="elim-rank-badge" id="elim-rank-tag">#7</div>
@@ -318,7 +329,12 @@
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
-            Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
+            
+            Object.entries(cfg).forEach(([p,v]) => { 
+                if (v && v !== "") {
+                    document.documentElement.style.setProperty('--' + p, v); 
+                }
+            });
             
             // TRIGGER ELIMINATION POPUP
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
@@ -330,7 +346,7 @@
                 
                 const banner = document.getElementById('elim-banner');
                 banner.classList.remove('show');
-                void banner.offsetWidth; // Trigger reflow for reset animation
+                void banner.offsetWidth; // Reset animation
                 banner.classList.add('show'); 
                 
                 setTimeout(() => { banner.classList.remove('show'); }, 4500);
@@ -436,3 +452,5 @@
     </script>
 </body>
 </html>
+
+```
