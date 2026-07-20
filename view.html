@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --theme: #ffc800; /* Primary Yellow Theme */
+            --theme: #ffc800; 
             --board-bg: #8e44ad; 
             --row-bg: #1e1f29; 
             --text-color: #ffffff; 
@@ -25,7 +25,6 @@
             height: 1080px; 
         }
         
-        /* LEADERBOARD CONTAINER */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -49,7 +48,6 @@
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
         .total-box { background: var(--theme); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* PREDICTION PANEL */
         #prediction-panel { 
             position: absolute; 
             bottom: 60px; 
@@ -64,237 +62,50 @@
         }
         #prediction-panel.show { display: flex; }
         
-        .esports-pred-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            width: 170px;
-        }
+        .esports-pred-card { display: flex; flex-direction: column; align-items: center; position: relative; width: 170px; }
+        .pred-top-tag { background: var(--theme, #ffc800); color: #000; font-size: 13px; font-weight: 900; padding: 2px 16px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2; margin-bottom: -4px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pred-body-box { display: flex; width: 100%; height: 55px; border-radius: 3px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); }
+        .pred-logo-section { width: 55px; height: 100%; background: var(--logo-bg); display: flex; align-items: center; justify-content: center; padding: 4px; box-sizing: border-box; }
+        .pred-logo-section img { width: 100%; height: 100%; object-fit: contain; }
+        .pred-status-section { flex: 1; background: var(--row-bg); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; }
+        .p-bar { width: 7px; height: 28px; background: var(--text-color); border-radius: 1px; }
+        .p-bar.dead { background: #3a3f47; opacity: 0.4; }
+        .pred-bottom-tag { background: var(--accent2); color: var(--text-color); font-size: 14px; font-weight: 900; padding: 3px 0; width: 90%; text-align: center; border-radius: 2px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-top: -6px; z-index: 2; }
 
-        .pred-top-tag {
-            background: var(--theme, #ffc800);
-            color: #000;
-            font-size: 13px;
-            font-weight: 900;
-            padding: 2px 16px;
-            border-radius: 2px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-            z-index: 2;
-            margin-bottom: -4px;
-            max-width: 140px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pred-body-box {
-            display: flex;
-            width: 100%;
-            height: 55px;
-            border-radius: 3px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .pred-logo-section {
-            width: 55px;
-            height: 100%;
-            background: var(--logo-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
-            box-sizing: border-box;
-        }
-        .pred-logo-section img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .pred-status-section {
-            flex: 1;
-            background: var(--row-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 0 8px;
-        }
-
-        .p-bar {
-            width: 7px;
-            height: 28px;
-            background: var(--text-color);
-            border-radius: 1px;
-        }
-        .p-bar.dead {
-            background: #3a3f47;
-            opacity: 0.4;
-        }
-
-        .pred-bottom-tag {
-            background: var(--accent2);
-            color: var(--text-color);
-            font-size: 14px;
-            font-weight: 900;
-            padding: 3px 0;
-            width: 90%;
-            text-align: center;
-            border-radius: 2px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            margin-top: -6px;
-            z-index: 2;
-        }
-
-        /* MOVED TO TOP POSITION */
-        #elim-banner {
-            position: absolute;
-            left: 50%;
-            top: 80px; /* SHIFTED TO TOP CENTER */
-            transform: translateX(-50%);
-            display: none;
-            z-index: 1000;
-        }
-        #elim-banner.show {
-            display: block;
-        }
-
-        .elim-container {
-            position: relative;
-            display: flex;
-            align-items: stretch;
-            height: 60px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            perspective: 1000px;
-        }
-
-        /* OVERHANG RANK TAG */
-        .elim-rank-badge {
-            position: absolute;
-            top: -18px;
-            left: -14px;
-            background: var(--theme, #ffc800) !important;
-            color: #000000 !important;
-            font-size: 18px;
-            font-weight: 900;
-            padding: 1px 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            z-index: 10;
-        }
-
-        /* WHITE LOGO SQUARE */
-        .elim-logo-box {
-            width: 75px;
-            height: 60px;
-            background: #ffffff !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5px;
-            box-sizing: border-box;
-            z-index: 3;
-        }
-        .elim-logo-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        /* GRADIENT CENTER ELIMINATED BANNER */
-        .elim-main-text {
-            background: linear-gradient(180deg, var(--elim-bg-top, #e63900) 0%, var(--elim-bg-bottom, #7a1500) 100%) !important;
-            border-top: 2px solid #ff6a00;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 45px;
-            min-width: 240px;
-            position: relative;
-            z-index: 2;
-            transform-origin: left center;
+        /* ELIMINATION POPUP WITH DYNAMIC GRADIENT COLOR */
+        #elim-banner { position: absolute; left: 50%; top: 80px; transform: translateX(-50%); display: none; z-index: 1000; }
+        #elim-banner.show { display: block; }
+        .elim-container { position: relative; display: flex; align-items: stretch; height: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); perspective: 1000px; }
+        .elim-rank-badge { position: absolute; top: -18px; left: -14px; background: var(--theme, #ffc800) !important; color: #000000 !important; font-size: 18px; font-weight: 900; padding: 1px 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 10; }
+        .elim-logo-box { width: 75px; height: 60px; background: #ffffff !important; display: flex; align-items: center; justify-content: center; padding: 5px; box-sizing: border-box; z-index: 3; }
+        .elim-logo-box img { width: 100%; height: 100%; object-fit: contain; }
+        
+        /* DYNAMICALLY APPLIED GRADIENT COLOR FROM ADMIN */
+        .elim-main-text { 
+            background: linear-gradient(180deg, var(--elim-bg-top, #e63900) 0%, var(--elim-bg-bottom, #7a1500) 100%) !important; 
+            border-top: 2px solid rgba(255,255,255,0.3); 
+            display: flex; align-items: center; justify-content: center; padding: 0 45px; min-width: 240px; position: relative; z-index: 2; transform-origin: left center; 
         }
         
-        #elim-banner.show .elim-main-text {
-            animation: broadcastUnfold 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
+        #elim-banner.show .elim-main-text { animation: broadcastUnfold 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        .elim-main-text span { font-size: 32px; font-weight: 900; color: #ffffff; letter-spacing: 2.5px; text-transform: uppercase; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); }
+        .elim-bottom-strip { position: absolute; bottom: -22px; left: 75px; right: 0; background: var(--theme, #ffc800) !important; color: #000000 !important; font-size: 15px; font-weight: 900; padding: 2px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); z-index: 1; transform-origin: top center; }
+        #elim-banner.show .elim-bottom-strip { animation: stripSlideDown 0.35s ease-out 0.3s forwards; opacity: 0; }
 
-        .elim-main-text span {
-            font-size: 32px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 2.5px;
-            text-transform: uppercase;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-        }
-
-        /* BOTTOM STRIP */
-        .elim-bottom-strip {
-            position: absolute;
-            bottom: -22px;
-            left: 75px;
-            right: 0;
-            background: var(--theme, #ffc800) !important;
-            color: #000000 !important;
-            font-size: 15px;
-            font-weight: 900;
-            padding: 2px 0;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-            z-index: 1;
-            transform-origin: top center;
-        }
-
-        #elim-banner.show .elim-bottom-strip {
-            animation: stripSlideDown 0.35s ease-out 0.3s forwards;
-            opacity: 0;
-        }
-
-        /* BROADCAST REVEAL ANIMATIONS */
         @keyframes broadcastUnfold {
-            0% {
-                clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
-                transform: rotateY(-30deg) scaleX(0.8);
-                opacity: 0;
-            }
-            100% {
-                clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-                transform: rotateY(0deg) scaleX(1);
-                opacity: 1;
-            }
+            0% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); transform: rotateY(-30deg) scaleX(0.8); opacity: 0; }
+            100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: rotateY(0deg) scaleX(1); opacity: 1; }
         }
-
         @keyframes stripSlideDown {
-            0% {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            0% { transform: translateY(-100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
-
-        /* GENERAL LIST ANIMATION */
         .trigger-animate { animation: slideUpCenter 0.5s ease-out forwards; }
         .trigger-card-animate { animation: slideUpCenter 0.4s ease-out forwards; }
-
-        @keyframes slideUpCenter {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes slideUpCenter { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <!-- FIXED BROADCAST ELIMINATION BANNER (TOP CENTER) -->
     <div id="elim-banner">
         <div class="elim-container">
             <div class="elim-rank-badge" id="elim-rank-tag">#7</div>
@@ -321,13 +132,14 @@
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             
+            // DYNAMICALLY APPLY COLORS FROM ADMIN
             Object.entries(cfg).forEach(([p,v]) => { 
                 if (v && v !== "") {
                     document.documentElement.style.setProperty('--' + p, v); 
                 }
             });
             
-            // TRIGGER ELIMINATION POPUP
+            // TRIGGER POPUP
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 
@@ -337,7 +149,7 @@
                 
                 const banner = document.getElementById('elim-banner');
                 banner.classList.remove('show');
-                void banner.offsetWidth; // Reset animation
+                void banner.offsetWidth;
                 banner.classList.add('show'); 
                 
                 setTimeout(() => { banner.classList.remove('show'); }, 4500);
@@ -425,7 +237,6 @@
             }
         }
 
-        // AUTO REFRESH LOOP
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
@@ -443,5 +254,3 @@
     </script>
 </body>
 </html>
-
-```
