@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Oswald:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
             --cyan: #ffcc00; 
@@ -25,6 +25,7 @@
             height: 1080px; 
         }
         
+        /* Main Points Board */
         #board { 
             position: absolute; 
             right: 40px; 
@@ -49,57 +50,62 @@
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
         /* =========================================================
-           EXACT MATCH ELIMINATION POPUP STYLES (SCREENSHOT REPLICA)
+           VIDEO MATCHED FOLDING ELIMINATION POPUP STYLES
            ========================================================= */
         #elim-banner { 
             position: absolute; 
-            left: 50%; 
-            top: 100px; 
-            transform: translateX(-50%); 
+            left: 60px; 
+            bottom: 250px; 
             display: none; 
             z-index: 1000; 
+            perspective: 1000px;
         }
         
         #elim-banner.show { 
             display: block; 
-            animation: slideInPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        #elim-banner.show .elim-card {
+            animation: videoUnfoldIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .elim-card { 
             display: flex; 
             align-items: stretch; 
             position: relative; 
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8);
-            border-radius: 2px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            transform-origin: left center;
+            opacity: 0;
         }
 
-        /* Top Left Yellow Badge (#7) */
+        /* Rank Square (#5, #7) */
         .elim-rank-tag {
             position: absolute;
-            top: -12px;
-            left: -12px;
+            top: -15px;
+            left: -15px;
             background: var(--cyan) !important;
             color: #000000;
             font-family: 'Oswald', sans-serif;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
-            padding: 0px 8px;
-            line-height: 1.1;
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-            z-index: 10;
+            padding: 2px 10px;
+            line-height: 1;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+            z-index: 12;
         }
 
-        /* Left White Logo Box */
+        /* Team Logo Box (Left Side) */
         .elim-logo-container {
-            width: 100px;
-            height: 80px;
+            width: 90px;
+            height: 84px;
             background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 8px;
             box-sizing: border-box;
-            border-right: 1px solid #ddd;
+            border-right: 2px solid rgba(0,0,0,0.1);
+            z-index: 11;
         }
 
         .elim-logo-container img {
@@ -108,67 +114,148 @@
             object-fit: contain;
         }
 
-        /* Right Content Wrapper */
+        /* Info Content Base (Right Side Wrapper) */
         .elim-right-content {
             display: flex;
             flex-direction: column;
-            width: 380px;
+            width: 360px;
         }
 
-        /* Top Red Main Banner */
+        /* Top Main Red Block - Text Style Clean Bold Sans-Serif */
         .elim-main-banner {
-            background: linear-gradient(180deg, var(--elim-bg) 0%, #000000 130%) !important;
-            height: 52px;
+            background: linear-gradient(180deg, var(--elim-bg) 0%, #7d1400 100%) !important;
+            height: 54px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            justify-content: flex-start;
+            padding-left: 20px;
         }
 
         .elim-main-banner span {
             font-family: 'Oswald', sans-serif;
-            font-size: 42px;
-            font-weight: 800;
+            font-size: 40px;
+            font-weight: 700;
             color: var(--text-color);
-            letter-spacing: 4px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             line-height: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
         }
 
-        /* Bottom Yellow Stat Bar */
+        /* Bottom Yellow Strip Bar */
         .elim-stats-bar {
             background: var(--cyan) !important;
-            height: 28px;
+            height: 30px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 15px;
+            justify-content: flex-start;
+            padding-left: 20px;
+            gap: 12px;
             color: #000000;
             font-family: 'Oswald', sans-serif;
-            font-size: 19px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
+            font-size: 18px;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .elim-stats-bar .sep {
-            font-weight: 400;
-            opacity: 0.6;
+            font-weight: 500;
+            opacity: 0.5;
         }
 
-        /* Clean Entrance & Exit Animation */
-        @keyframes slideInPop {
-            0% { opacity: 0; transform: translateX(-50%) scale(0.85); }
-            100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        /* Exact Video Style Fold Ribbon Animation */
+        @keyframes videoUnfoldIn {
+            0% {
+                opacity: 0;
+                transform: rotateY(-60deg) scaleX(0.7);
+            }
+            100% {
+                opacity: 1;
+                transform: rotateY(0deg) scaleX(1);
+            }
+        }
+
+        /* =========================================================
+           WINNING PREDICTION FORECAST OVERLAY LAYOUT
+           ========================================================= */
+        #prediction-container {
+            position: absolute;
+            left: 60px;
+            bottom: 40px;
+            display: flex;
+            gap: 20px;
+            z-index: 900;
+        }
+
+        .pred-card {
+            display: flex;
+            flex-direction: column;
+            background: #11141a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 170px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+        .pred-top {
+            background: #ffcc00;
+            color: #000;
+            font-size: 14px;
+            font-weight: 800;
+            text-align: center;
+            padding: 2px 0;
+            text-transform: uppercase;
+        }
+
+        .pred-body {
+            display: flex;
+            align-items: center;
+            height: 50px;
+            padding: 5px 10px;
+            gap: 10px;
+            background: #1a1f29;
+        }
+
+        .pred-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 3px;
+            padding: 2px;
+        }
+
+        .pred-bars {
+            display: flex;
+            gap: 3px;
+        }
+
+        .pred-bar-line {
+            width: 4px;
+            height: 22px;
+            background: #ffffff;
+        }
+        .pred-bar-line.active {
+            background: #ffcc00;
+        }
+
+        .pred-bottom {
+            background: #e64a19;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            padding: 3px 0;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
-    <!-- EXACT ELIMINATION POPUP STRUCTURE -->
+
     <div id="elim-banner">
         <div class="elim-card">
-            <div class="elim-rank-tag" id="elim-rank-tag">#7</div>
+            <div class="elim-rank-tag" id="elim-rank-tag">#5</div>
             <div class="elim-logo-container">
                 <img id="elim-logo-img" src="" onerror="this.style.display='none'">
             </div>
@@ -184,6 +271,8 @@
             </div>
         </div>
     </div>
+
+    <div id="prediction-container"></div>
     
     <div id="board"></div>
 
@@ -199,21 +288,19 @@
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             
-            // DYNAMICALLY APPLY ALL 7 COLORS FROM ADMIN
+            // Apply Dynamic Panel Custom Colors
             Object.keys(cfg).forEach(p => { 
                 if (cfg[p]) {
                     document.documentElement.style.setProperty('--' + p, cfg[p]); 
                 }
             });
             
-            // TRIGGER ELIMINATION POPUP
+            // ELIMINATION POPUP SCHEDULER & ANIMATION LOGIC
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 
-                // Rank Number
                 document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
                 
-                // Logo Fix
                 const logoImg = document.getElementById('elim-logo-img');
                 if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
                     logoImg.src = data.lastEliminated.logo;
@@ -222,10 +309,9 @@
                     logoImg.style.display = 'none';
                 }
 
-                // Stats Text Sync
                 document.getElementById('elim-fin-text').innerText = `${data.lastEliminated.finishes || 0} FINISHES`;
                 
-                // Calculate Place Points dynamically based on rank
+                // Dynamic Accurate Place Points Calculator based on rank rules
                 let posPoints = 0;
                 let r = data.lastEliminated.rank || 0;
                 if(r === 1) posPoints = 10;
@@ -238,18 +324,56 @@
 
                 document.getElementById('elim-pos-text').innerText = `${posPoints} PLACE PTS.`;
                 
-                // Trigger Smooth Animation
                 const banner = document.getElementById('elim-banner');
                 banner.classList.remove('show');
-                void banner.offsetWidth; // Reflow reset
+                void banner.offsetWidth; // Force element reflow for restart animation
                 banner.classList.add('show'); 
                 
-                setTimeout(() => { banner.classList.remove('show'); }, 5000);
+                setTimeout(() => { banner.classList.remove('show'); }, 6000);
             }
             
+            // WINNING PREDICTION PROCESSOR
+            renderPrediction(data.predictions || data.predictionForecast || []);
+            
+            // Render Main Right Board Table
             render(data.teams || []);
         });
 
+        // Winning Prediction Display Builder
+        function renderPrediction(predList) {
+            const container = document.getElementById('prediction-container');
+            if(!predList || predList.length === 0) {
+                container.innerHTML = ""; 
+                return; 
+            }
+
+            let html = "";
+            // Slice top 3 or all available predictions
+            predList.slice(0, 3).forEach(p => {
+                let logo = p.logo && p.logo.trim() !== "" ? p.logo : "https://via.placeholder.com/50";
+                let wwcdPercentage = p.wwcd || p.percentage || "0%";
+                if(!wwcdPercentage.toString().includes('%')) wwcdPercentage += "%";
+
+                html += `
+                    <div class="pred-card">
+                        <div class="pred-top">${p.name || 'TEAM'}</div>
+                        <div class="pred-body">
+                            <img class="pred-logo" src="${logo}">
+                            <div class="pred-bars">
+                                <div class="pred-bar-line active"></div>
+                                <div class="pred-bar-line active"></div>
+                                <div class="pred-bar-line active"></div>
+                                <div class="pred-bar-line"></div>
+                            </div>
+                        </div>
+                        <div class="pred-bottom">WWCD - ${wwcdPercentage}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Leaderboard Table Renderer
         function render(teams) {
             const board = document.getElementById('board');
             let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:left; padding-left:5px;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
@@ -278,5 +402,3 @@
     </script>
 </body>
 </html>
-
-```
