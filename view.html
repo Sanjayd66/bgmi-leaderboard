@@ -1,10 +1,26 @@
+Sanjay Bhai, dono bilkul **SAME NHI THE!**
+
+Image 1 (jo aapko chahiye) me kuch important visual elements alag hain:
+
+1. **Logo Box Pure White hai:** Logo background visual clean white hona chahiye (black / dark border nahi).
+2. **Bottom Strip Position & Alignment:** Bottom Strip center-aligned nahi, balki exact logo ke baad se lekar right edge tak overlap karti hai.
+3. **Top Rank Tag Position:** `#15` Badge exact logo box ke super-left par overhang karta hai.
+4. **Font Styling:** `ELIMINATED` text aur bottom strip ka font weight aur spacing exact BGMI TV broadcast style mein alignment demand karta hai.
+
+Maine CSS ki alignment aur structure ko pixel-perfect match kar diya hai. Below updated **Display Overlay Code** hai:
+
+---
+
+### Updated DISPLAY OVERLAY CODE (Pixel-Perfect Elimination Banner)
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root { 
             --theme: #ffbc00; 
@@ -40,7 +56,7 @@
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
         .total-box { background: var(--theme); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* PREDICTION PANEL - EXACT CENTER LAYOUT */
+        /* PREDICTION PANEL */
         #prediction-panel { 
             position: absolute; 
             bottom: 60px; 
@@ -63,7 +79,6 @@
             width: 170px;
         }
 
-        /* 1. TOP TEAM NAME BADGE */
         .pred-top-tag {
             background: var(--theme);
             color: #000;
@@ -82,7 +97,6 @@
             text-overflow: ellipsis;
         }
 
-        /* 2. MAIN BODY BOX */
         .pred-body-box {
             display: flex;
             width: 100%;
@@ -130,7 +144,6 @@
             opacity: 0.4;
         }
 
-        /* 3. BOTTOM WWCD PROBABILITY BADGE */
         .pred-bottom-tag {
             background: var(--accent2);
             color: var(--text-color);
@@ -147,7 +160,7 @@
             z-index: 2;
         }
 
-        /* NEW ELIMINATION BANNER POPUP (BGMI BROADCAST STYLE) */
+        /* EXACT EXACT BGMI BROADCAST ELIMINATION BANNER STYLING */
         #elim-banner {
             position: absolute;
             left: 50%;
@@ -155,89 +168,93 @@
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
             z-index: 1000;
             opacity: 0;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #elim-banner.show {
-            bottom: 60px;
+            bottom: 70px;
             opacity: 1;
         }
 
-        .elim-top-rank {
+        .elim-container {
+            position: relative;
+            display: flex;
+            align-items: stretch;
+            height: 52px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+        }
+
+        /* OVERHANG TOP RANK BADGE (#15) */
+        .elim-rank-badge {
+            position: absolute;
+            top: -16px;
+            left: -12px;
             background: var(--theme);
             color: #000;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
-            padding: 2px 10px;
-            border-radius: 2px 2px 0 0;
-            margin-left: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            z-index: 2;
-            margin-bottom: -2px;
+            padding: 1px 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            z-index: 10;
         }
 
-        .elim-main-box {
-            display: flex;
-            height: 55px;
-            background: #0b0e11;
-            border-radius: 3px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-        }
-
-        .elim-logo-square {
-            width: 55px;
-            height: 55px;
-            background: var(--logo-bg);
+        /* WHITE LOGO SQUARE */
+        .elim-logo-box {
+            width: 58px;
+            height: 52px;
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 5px;
+            padding: 4px;
             box-sizing: border-box;
+            z-index: 2;
         }
-        .elim-logo-square img {
+        .elim-logo-box img {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
 
-        .elim-text-center {
-            background: linear-gradient(90deg, #1f0b00, #400d00, #1f0b00);
+        /* GRADIENT CENTER ELIMINATED BANNER */
+        .elim-main-text {
+            background: linear-gradient(180deg, #3d0c00 0%, #170400 100%);
+            border-top: 2px solid #ff4700;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 35px;
-            border-left: 2px solid rgba(255,255,255,0.1);
+            padding: 0 45px;
+            min-width: 200px;
         }
-        .elim-text-center span {
+        .elim-main-text span {
             font-size: 26px;
-            font-weight: 900;
+            font-weight: 800;
             color: #ffffff;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px #ff3300, 0 0 20px #ff0000;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
+            text-shadow: 0 0 12px rgba(255, 68, 0, 0.8);
         }
 
+        /* EXACT BOTTOM STRIP OVERLAP */
         .elim-bottom-strip {
+            position: absolute;
+            bottom: -15px;
+            left: 58px; /* Starts right after white logo box */
+            right: 0;
             background: var(--theme);
             color: #000;
             font-size: 13px;
             font-weight: 900;
-            padding: 3px 15px;
-            width: 85%;
-            margin-top: -3px;
-            border-radius: 0 0 2px 2px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            z-index: 2;
-            align-self: center;
+            padding: 1px 0;
             text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            z-index: 5;
         }
 
-        /* ANIMATIONS */
+        /* ANIMATION */
         .trigger-animate { animation: slideUpCenter 0.5s ease-out forwards; }
         .trigger-card-animate { animation: slideUpCenter 0.4s ease-out forwards; }
 
@@ -248,14 +265,14 @@
     </style>
 </head>
 <body>
-    <!-- NEW ELIMINATION BANNER POPUP -->
+    <!-- FIXED BGMI BROADCAST ELIMINATION BANNER -->
     <div id="elim-banner">
-        <div class="elim-top-rank" id="elim-rank-tag">#15</div>
-        <div class="elim-main-box">
-            <div class="elim-logo-square"><img id="elim-logo-img"></div>
-            <div class="elim-text-center"><span>ELIMINATED</span></div>
+        <div class="elim-container">
+            <div class="elim-rank-badge" id="elim-rank-tag">#15</div>
+            <div class="elim-logo-box"><img id="elim-logo-img"></div>
+            <div class="elim-main-text"><span>ELIMINATED</span></div>
+            <div class="elim-bottom-strip" id="elim-stats-strip">0 FINISHES &nbsp;|&nbsp; 0 PLACE PTS.</div>
         </div>
-        <div class="elim-bottom-strip" id="elim-stats-strip">0 FINISHES | 0 PLACE PTS.</div>
     </div>
     
     <div id="prediction-panel"></div>
@@ -276,13 +293,13 @@
             const cfg = data.config || {};
             Object.entries(cfg).forEach(([p,v]) => { document.documentElement.style.setProperty('--' + p, v); });
             
-            // SHOW ELIMINATION BANNER
+            // TRIGGER ELIMINATION POPUP
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 
                 document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 15}`;
                 document.getElementById('elim-logo-img').src = data.lastEliminated.logo;
-                document.getElementById('elim-stats-strip').innerText = `${data.lastEliminated.finishes || 0} FINISHES  |  ${data.lastEliminated.placePts || 0} PLACE PTS.`;
+                document.getElementById('elim-stats-strip').innerHTML = `${data.lastEliminated.finishes || 0} FINISHES &nbsp;|&nbsp; ${data.lastEliminated.placePts || 0} PLACE PTS.`;
                 
                 const banner = document.getElementById('elim-banner');
                 banner.classList.add('show'); 
@@ -310,7 +327,6 @@
                 shouldAnimateNextRender = false; 
             }
 
-            // SHOW PREDICTION CARDS WHEN 2 TO 5 TEAMS ALIVE
             if (alive.length >= 2 && alive.length <= 5) {
                 pPanel.classList.add('show'); 
                 board.style.display = "none"; 
@@ -373,7 +389,7 @@
             }
         }
 
-        // AUTO REFRESH LOOP (30s)
+        // AUTO REFRESH LOOP
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
@@ -391,3 +407,5 @@
     </script>
 </body>
 </html>
+
+```
