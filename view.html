@@ -1,3 +1,20 @@
+Bhai, bilkul sahi esports broadcast logic hai yeh! BGIS/BMPS official streams par bhi jab **Top 5 teams** basti hain tabhi Winning Prediction active hota hai aur Leaderboard hide ho jaata hai.
+
+Is logic ko perfectly implement kar diya hai:
+
+### Naya Broadcast Logic:
+
+1. **Trigger Condition (Alive Teams $\le$ 5)**:
+* **Jab 5 se zyada teams alive hain**: Screen par sirf **Leaderboard** dikhega (Prediction hidden rahega).
+* **Jaise hi 5 ya usse kam teams alive hongi**: Leaderboard **auto-hide** ho jayega aur uski jagah **Winning Prediction Cards (Top 5)** smooth animation ke saath screen par aa jayenge.
+
+
+
+---
+
+### Updated Code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,6 +56,7 @@
             padding: 8px; 
             border-radius: 4px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            transition: all 0.5s ease;
         }
         
         .header-row, .team-row { 
@@ -145,6 +163,7 @@
             display: flex;
             gap: 12px;
             z-index: 900;
+            transition: all 0.5s ease;
         }
 
         .pred-card {
@@ -205,10 +224,10 @@
             gap: 4px;
         }
 
-        /* FIXED EQUAL HEIGHT BARS FOR PREDICTION */
+        /* FIXED EQUAL HEIGHT BARS */
         .pred-player-bar {
             width: 6px;
-            height: 24px; /* Equal heights fixed */
+            height: 24px;
             border-radius: 1px;
             transition: all 0.3s ease;
         }
@@ -459,18 +478,37 @@
             const board = document.getElementById('board');
             const predContainer = document.getElementById('prediction-container');
 
+            // COUNT ALIVE TEAMS IN MATCH
+            const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
+
+            // LOGIC: IF ALIVE TEAMS <= 5 -> SHOW PREDICTION, HIDE LEADERBOARD
+            // IF ALIVE TEAMS > 5 -> SHOW LEADERBOARD, HIDE PREDICTION
+            const showPrediction = aliveTeams.length <= 5 && aliveTeams.length >= 2;
+
+            if (showPrediction) {
+                board.style.display = 'none'; // HIDE LEADERBOARD IN TOP 5
+                predContainer.style.display = 'flex'; // SHOW PREDICTION
+            } else {
+                board.style.display = 'block'; // SHOW LEADERBOARD
+                predContainer.style.display = 'none'; // HIDE PREDICTION
+                predContainer.innerHTML = '';
+            }
+
             board.classList.remove('trigger-animate');
             predContainer.classList.remove('trigger-animate');
 
             if (shouldAnimateNextRender) {
                 void board.offsetWidth;
                 void predContainer.offsetWidth;
-                board.classList.add('trigger-animate');
-                predContainer.classList.add('trigger-animate');
+                if (!showPrediction) board.classList.add('trigger-animate');
+                if (showPrediction) predContainer.classList.add('trigger-animate');
                 shouldAnimateNextRender = false;
             }
 
-            renderPrediction(predData, teams, board.classList.contains('trigger-animate'));
+            // Render Prediction (Only if Top 5 alive)
+            if (showPrediction) {
+                renderPrediction(predData, aliveTeams, predContainer.classList.contains('trigger-animate'));
+            }
 
             // Render Leaderboard
             let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
@@ -501,18 +539,16 @@
             board.innerHTML = h;
         }
 
-        function renderPrediction(rawPredData, teams, isAnimating) {
+        function renderPrediction(rawPredData, aliveTeams, isAnimating) {
             const container = document.getElementById('prediction-container');
             let displayList = [];
-
-            const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
 
             if (rawPredData) {
                 let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
                 
                 rawList.forEach(p => {
-                    let liveTeam = teams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
-                    if (liveTeam && liveTeam.alive && liveTeam.alive.some(a => a == 1 || a == '1')) {
+                    let liveTeam = aliveTeams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
+                    if (liveTeam) {
                         displayList.push({
                             name: liveTeam.name,
                             logo: liveTeam.logo || p.logo,
@@ -523,7 +559,7 @@
                 });
             }
 
-            // AUTO-CALCULATE FOR TOP 5 ALIVE TEAMS
+            // AUTO-CALCULATE FOR ALIVE TEAMS (TOP 5)
             if (displayList.length === 0 && aliveTeams.length >= 2) {
                 let totalScoreSum = aliveTeams.reduce((acc, t) => {
                     let totalPts = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
@@ -552,7 +588,6 @@
             let html = "";
             let cardAnimClass = isAnimating ? 'trigger-card-animate' : '';
 
-            // EXACT TOP 5 TEAMS DISPLAY (.slice(0, 5))
             displayList.slice(0, 5).forEach((p, idx) => {
                 let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
                 let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
@@ -601,3 +636,5 @@
     </script>
 </body>
 </html>
+
+```
