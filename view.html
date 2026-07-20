@@ -143,14 +143,14 @@
             left: 80px;
             bottom: 40px;
             display: flex;
-            gap: 20px;
+            gap: 12px;
             z-index: 900;
         }
 
         .pred-card {
             display: flex;
             flex-direction: column;
-            width: 185px;
+            width: 160px;
             position: relative;
             transition: all 0.4s ease;
         }
@@ -159,26 +159,29 @@
             background: #ffb800;
             color: #000000;
             font-weight: 800;
-            font-size: 14px;
+            font-size: 13px;
             text-align: center;
-            width: 65%;
+            width: 75%;
             margin: 0 auto;
             padding: 1px 0;
             border-radius: 2px 2px 0 0;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             z-index: 2;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .pred-middle-box {
             display: flex;
-            height: 52px;
+            height: 50px;
             background: #1e1e1e;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         .pred-logo-box {
-            width: 60px;
+            width: 52px;
             height: 100%;
             background: #ffffff;
             display: flex;
@@ -197,23 +200,19 @@
             flex: 1;
             background: #252525;
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
-            gap: 5px;
-            padding-bottom: 6px;
+            gap: 4px;
         }
 
+        /* FIXED EQUAL HEIGHT BARS FOR PREDICTION */
         .pred-player-bar {
-            width: 7px;
+            width: 6px;
+            height: 24px; /* Equal heights fixed */
             border-radius: 1px;
             transition: all 0.3s ease;
         }
-        .pred-player-bar.h1 { height: 18px; }
-        .pred-player-bar.h2 { height: 26px; }
-        .pred-player-bar.h3 { height: 32px; }
-        .pred-player-bar.h4 { height: 24px; }
 
-        /* ALIVE vs DEAD PREDICTION BARS */
         .pred-player-bar.alive {
             background: #ffcc00;
             box-shadow: 0 0 8px #ffcc00;
@@ -229,7 +228,7 @@
         .pred-bottom-bar {
             background: linear-gradient(90deg, #d83a00 0%, #b82800 100%);
             color: #ffffff;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 800;
             text-align: center;
             padding: 3px 0;
@@ -471,7 +470,6 @@
                 shouldAnimateNextRender = false;
             }
 
-            // Real-time Prediction Rendering with Dynamic Alive Filter & Recalculation
             renderPrediction(predData, teams, board.classList.contains('trigger-animate'));
 
             // Render Leaderboard
@@ -507,14 +505,11 @@
             const container = document.getElementById('prediction-container');
             let displayList = [];
 
-            // FILTER ONLY ALIVE TEAMS FOR PREDICTION
             const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
 
-            // IF DB HAS CUSTOM PREDICTION DATA
             if (rawPredData) {
                 let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
                 
-                // Match DB prediction with real-time teams alive state & remove dead teams
                 rawList.forEach(p => {
                     let liveTeam = teams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
                     if (liveTeam && liveTeam.alive && liveTeam.alive.some(a => a == 1 || a == '1')) {
@@ -522,13 +517,13 @@
                             name: liveTeam.name,
                             logo: liveTeam.logo || p.logo,
                             alive: liveTeam.alive,
-                            wwcd: p.wwcd || p.winChance || '30%'
+                            wwcd: p.wwcd || p.winChance || '20%'
                         });
                     }
                 });
             }
 
-            // AUTO-CALCULATE PREDICTION IF LESS THAN 6 ALIVE TEAMS OR DB DATA IS NOT PRESENT
+            // AUTO-CALCULATE FOR TOP 5 ALIVE TEAMS
             if (displayList.length === 0 && aliveTeams.length >= 2) {
                 let totalScoreSum = aliveTeams.reduce((acc, t) => {
                     let totalPts = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
@@ -557,12 +552,12 @@
             let html = "";
             let cardAnimClass = isAnimating ? 'trigger-card-animate' : '';
 
-            displayList.slice(0, 3).forEach((p, idx) => {
+            // EXACT TOP 5 TEAMS DISPLAY (.slice(0, 5))
+            displayList.slice(0, 5).forEach((p, idx) => {
                 let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
-                let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '25%';
+                let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
                 let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
                 
-                // Get real-time player alive states [1, 1, 0, 1]
                 let playerAliveArr = p.alive || [1, 1, 1, 1];
 
                 html += `
@@ -573,10 +568,10 @@
                                 ${logoSrc ? `<img src="${logoSrc}">` : ''}
                             </div>
                             <div class="pred-bars-box">
-                                <div class="pred-player-bar h1 ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}"></div>
-                                <div class="pred-player-bar h2 ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}"></div>
-                                <div class="pred-player-bar h3 ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}"></div>
-                                <div class="pred-player-bar h4 ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}"></div>
+                                <div class="pred-player-bar ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}"></div>
+                                <div class="pred-player-bar ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}"></div>
+                                <div class="pred-player-bar ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}"></div>
+                                <div class="pred-player-bar ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}"></div>
                             </div>
                         </div>
                         <div class="pred-bottom-bar">WWCD - ${pctText}</div>
@@ -606,5 +601,3 @@
     </script>
 </body>
 </html>
-
-```
