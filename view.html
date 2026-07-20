@@ -1,3 +1,13 @@
+Sanjay Bhai, `prediction-panel` ko bilkul top-left side par shifting dene ke liye niche updated code ready hai.
+
+Bas standard CSS rules ke mutabiq positioning adjust ki hai:
+
+* `right: 40px;` aur `bottom: 40px;` ko hata kar **`top: 40px;`** aur **`left: 40px;`** kar diya gaya hai.
+* Animation ko seamless rakhne ke liye slide direction ko left orientation ke hisaab se align kiya hai.
+
+### Updated Display Code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,11 +50,11 @@
         .bar.dead { background: #444; box-shadow: none; opacity: 0.3; }
         .total-box { background: var(--cyan); color: #000; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
         
-        /* PREDICTION PANEL MAIN BG */
+        /* PREDICTION PANEL MAIN BG - CHANGED TO TOP-LEFT POSITION */
         #prediction-panel { 
             position: absolute; 
-            bottom: 40px; 
-            right: 40px; 
+            top: 40px; 
+            left: 40px; 
             display: none; 
             flex-direction: column; 
             gap: 10px; 
@@ -64,7 +74,7 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.4); 
         }
         
-        /* NEW CLASSES FOR TRIGGERING ANIMATION ONLY WHEN NEEDED */
+        /* ANIMATION CLASSES */
         .trigger-animate {
             animation: slideUpFade 0.5s ease-out forwards;
         }
@@ -72,7 +82,7 @@
             animation: slideUpFade 0.4s ease-out forwards;
         }
 
-        /* NEW UPDATED DYNAMIC ELIMINATION POPUP STYLES */
+        /* ELIMINATION POPUP STYLES */
         #elim-popup { 
             position: fixed; 
             top: -200px; 
@@ -167,7 +177,7 @@
             const pPanel = document.getElementById('prediction-panel');
             const alive = teams.filter(t => t.alive && t.alive.some(a => a === 1));
 
-            // Purani animation status clean karo taaki glitch na ho
+            // Clean previous animation states
             board.classList.remove('trigger-animate');
             pPanel.classList.remove('trigger-animate');
             
@@ -176,7 +186,6 @@
                 void pPanel.offsetWidth;
                 board.classList.add('trigger-animate');
                 pPanel.classList.add('trigger-animate');
-                // Ek baar animation hone ke baad toggle off kar do jab tak 30s ka refresh na aaye
                 shouldAnimateNextRender = false; 
             }
 
@@ -192,8 +201,7 @@
                     let teamTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     let winPerc = Math.round((((teamTotal + t.alive.filter(x=>x==1).length * 3)/totalS)*100));
                     
-                    // Card standard animation ya empty class choose karega condition ke basis pe
-                    let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
+                    let cardAnimClass = pPanel.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
                     let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(index * 0.05) + 0.2}s"` : '';
                     
                     pPanel.innerHTML += `<div class="pred-card ${cardAnimClass}" ${cardDelay}>
@@ -218,7 +226,6 @@
                 sortedTeams.forEach((t, i) => {
                     let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                     
-                    // Check karega ki board refresh animation chahiye ya normal update
                     let rowAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
                     let rowDelay = rowAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.2}s"` : '';
 
@@ -234,22 +241,23 @@
             }
         }
 
-        // AUTOMATIC REFRESH LOOP LOGIC (Set to exactly 30 seconds as requested)
+        // AUTOMATIC REFRESH LOOP LOGIC (30s)
         setInterval(() => {
             const board = document.getElementById('board');
             const pPanel = document.getElementById('prediction-panel');
             
-            // Screen ko fade out karke clear karo
             board.style.display = "none";
             pPanel.classList.remove('show');
             
             setTimeout(() => {
                 if(cachedTeamsData.length > 0) {
-                    shouldAnimateNextRender = true; // 30s loop ke andar animation switch on!
+                    shouldAnimateNextRender = true; 
                     render(cachedTeamsData);
                 }
             }, 2500); 
-        }, 30000); // 30 Seconds Interval Loop
+        }, 30000);
     </script>
 </body>
 </html>
+
+```
