@@ -1,3 +1,13 @@
+Aap tension mat lo bhai! Ab samajh gaya, aap us **30-second loop animation** ki baat kar rahe ho jo har interval par poore leaderboard ya prediction elements ko dobara smooth wipe/shine/unfold effect ke sath refresh karke animate karta hai!
+
+Maine code mein ek **Dedicated Interval Timer (Every 30 Seconds)** setup kar diya hai. Har 30 second par:
+
+1. Status bars, leaderboard rows, aur winning prediction cards par **Re-trigger Smooth Animation** play hogi.
+2. Naye data ke saath bina frame breakup ke continuous loop animation chalta rahega.
+
+Yeh raha aapka 100% complete aur updated `overlay.html` code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,6 +78,16 @@
             filter: grayscale(1); 
         }
 
+        /* 30 Sec Loop Pulse Animation Class */
+        .loop-animate {
+            animation: rowUnfoldRefresh 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes rowUnfoldRefresh {
+            0% { transform: scaleX(0.8) translateX(30px); opacity: 0; }
+            100% { transform: scaleX(1) translateX(0); opacity: 1; }
+        }
+
         .logo-col { 
             width: 22px; 
             height: 22px; 
@@ -135,9 +155,7 @@
             100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px #ffcc00; }
         }
 
-        /* =========================================================
-           EXACT WINNING PREDICTION LAYOUT (FROM SCREENSHOT)
-           ========================================================= */
+        /* WINNING PREDICTION LAYOUT */
         #prediction-container {
             position: absolute;
             left: 80px;
@@ -152,9 +170,18 @@
             flex-direction: column;
             width: 185px;
             position: relative;
+            transition: transform 0.5s ease;
         }
 
-        /* Top Yellow Team Tag */
+        .pred-card.pred-loop {
+            animation: predCardLoop 0.7s ease-in-out;
+        }
+
+        @keyframes predCardLoop {
+            0% { transform: translateY(20px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
         .pred-top-tag {
             background: #ffb800;
             color: #000000;
@@ -170,7 +197,6 @@
             z-index: 2;
         }
 
-        /* Middle Box (Logo + Bars) */
         .pred-middle-box {
             display: flex;
             height: 52px;
@@ -204,7 +230,6 @@
             padding-bottom: 6px;
         }
 
-        /* 4 Player Vertical Bars */
         .pred-player-bar {
             width: 7px;
             background: #ffffff;
@@ -228,7 +253,6 @@
             opacity: 1;
         }
 
-        /* Bottom Orange/Red Prediction Bar */
         .pred-bottom-bar {
             background: linear-gradient(90deg, #d83a00 0%, #b82800 100%);
             color: #ffffff;
@@ -240,9 +264,7 @@
             box-shadow: 0 3px 6px rgba(0,0,0,0.4);
         }
 
-        /* =========================================================
-           EXACT UNFOLD ELIMINATION BANNER POPUP 
-           ========================================================= */
+        /* ELIMINATION BANNER POPUP */
         #elim-banner { 
             position: absolute; 
             left: 80px; 
@@ -347,28 +369,14 @@
         }
 
         @keyframes exactPageUnfold {
-            0% {
-                opacity: 0;
-                transform: rotateY(-90deg) scaleX(0.3);
-            }
-            70% {
-                transform: rotateY(12deg) scaleX(1.02);
-            }
-            100% {
-                opacity: 1;
-                transform: rotateY(0deg) scaleX(1);
-            }
+            0% { opacity: 0; transform: rotateY(-90deg) scaleX(0.3); }
+            70% { transform: rotateY(12deg) scaleX(1.02); }
+            100% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
         }
 
         @keyframes exactPageFold {
-            0% {
-                opacity: 1;
-                transform: rotateY(0deg) scaleX(1);
-            }
-            100% {
-                opacity: 0;
-                transform: rotateY(-80deg) scaleX(0.4);
-            }
+            0% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
+            100% { opacity: 0; transform: rotateY(-80deg) scaleX(0.4); }
         }
     </style>
 </head>
@@ -407,6 +415,8 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
 
         let currentElimId = "";
+        let cachedTeams = [];
+        let cachedPred = null;
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
@@ -417,13 +427,15 @@
                     document.documentElement.style.setProperty('--' + p, cfg[p]); 
                 }
             });
-            
-            // ELIMINATION POPUP SCHEDULER
+
+            cachedTeams = data.teams || [];
+            cachedPred = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction;
+
+            // ELIMINATION TRIGGER
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 
                 document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
-                
                 const logoImg = document.getElementById('elim-logo-img');
                 if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
                     logoImg.src = data.lastEliminated.logo;
@@ -433,7 +445,6 @@
                 }
 
                 document.getElementById('elim-fin-text').innerText = `${data.lastEliminated.finishes || 0} FINISHES`;
-                
                 let posPoints = 0;
                 let r = data.lastEliminated.rank || 0;
                 if(r === 1) posPoints = 10;
@@ -456,24 +467,27 @@
                     setTimeout(() => { banner.classList.remove('show', 'hide-anim'); }, 400);
                 }, 5000);
             }
-            
-            // PREDICTION RENDER
-            const rawPred = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction;
-            renderPrediction(rawPred, data.teams);
-            
-            // LEADERBOARD RENDER
-            render(data.teams || []);
+
+            renderPrediction(cachedPred, cachedTeams, false);
+            render(cachedTeams, false);
         });
 
-        // Exact Prediction Renderer (Screenshot Layout)
-        function renderPrediction(predList, teams) {
+        // 30 SECOND AUTOMATIC LOOP REFRESH ANIMATION
+        setInterval(() => {
+            if (cachedTeams.length > 0) {
+                render(cachedTeams, true);
+                renderPrediction(cachedPred, cachedTeams, true);
+            }
+        }, 30000);
+
+        // Prediction Renderer
+        function renderPrediction(predList, teams, triggerLoopAnim) {
             const container = document.getElementById('prediction-container');
             let list = [];
 
             if(predList) {
                 list = Array.isArray(predList) ? predList : Object.values(predList);
             } else if(teams && teams.length > 0) {
-                // Fallback Mock Data matching screenshot style
                 list = [
                     { name: 'TF', logo: teams[0]?.logo || '', wwcd: '29%' },
                     { name: 'IQOOSBIT', logo: teams[1]?.logo || '', wwcd: '29%' },
@@ -487,16 +501,17 @@
             }
 
             let html = "";
+            let loopClass = triggerLoopAnim ? 'pred-loop' : '';
+
             list.slice(0, 3).forEach((p, idx) => {
                 let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
                 let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '25%';
 
-                // Bar Highlights per screenshot variation
                 let bar3Class = idx === 0 ? 'active-yellow' : '';
                 let bar4Class = idx === 1 ? 'active-red' : '';
 
                 html += `
-                    <div class="pred-card">
+                    <div class="pred-card ${loopClass}">
                         <div class="pred-top-tag">${p.name || 'TEAM'}</div>
                         <div class="pred-middle-box">
                             <div class="pred-logo-box">
@@ -516,8 +531,8 @@
             container.innerHTML = html;
         }
 
-        // Leaderboard Display
-        function render(teams) {
+        // Leaderboard Render with 30s Loop Support
+        function render(teams, triggerLoopAnim) {
             const board = document.getElementById('board');
             let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
             
@@ -526,13 +541,15 @@
                 let totalB = (parseInt(b.totalFin) || 0) + (parseInt(b.totalPos) || 0);
                 return totalB - totalA;
             });
+
+            let loopClass = triggerLoopAnim ? 'loop-animate' : '';
             
             sortedTeams.forEach((t, i) => {
                 let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
                 let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}" onerror="this.style.opacity='0'">` : '';
                 let isEliminated = t.alive && t.alive.every(a => a == 0 || a == '0');
 
-                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''}">
+                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${loopClass}">
                     <div style="text-align:center;">${i+1}</div>
                     <div class="logo-col">${logoSrc}</div>
                     <div class="name-col">${t.name || 'TEAM'}</div>
