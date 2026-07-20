@@ -2,70 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>indian</title>
+    <title>BGMI Admin - 6 Color Theme System</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root { --cyan: #00f2ff; }
+        :root { --cyan: #ffbc00; }
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
-        /* Fixed Color Grid Styling */
-        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
-        .color-item span { font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
-        
-        /* Fixing the "Line" Glitch in inputs */
-        input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
+        /* EXACT 6 COLOR GRID */
+        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; background: #1c2227; padding: 15px; border-radius: 8px; border: 1px solid #333; }
+        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; }
+        .color-item span { font-size: 11px; font-weight: bold; color: #aaa; text-transform: uppercase; }
+        input[type="color"] { border: none; width: 35px; height: 25px; cursor: pointer; background: none; padding: 0; }
         
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         
-        /* Match History Buttons Styling */
-        .history-container { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
-        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; transition: 0.2s; }
+        .history-container { display: flex; gap: 8px; margin-top: 15px; margin-bottom: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
+        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
         .hist-btn:hover { background: var(--cyan); color: #000; }
 
-        /* Updated layout grid to perfectly fit Position Points */
         .team-row { background: #1c2227; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
 
-        /* POPUP MODAL WINDOW STYLES (STREAM READY DESIGN) */
+        /* MODAL */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; }
-        .modal-content { background: #0f1318; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 35px rgba(0,242,255,0.25); }
+        .modal-content { background: #0f1318; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); padding-bottom: 12px; margin-bottom: 15px; }
         .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
         
-        .event-title-input { background: transparent; border: none; border-bottom: 1px dashed #555; color: #fff; font-size: 20px; font-weight: bold; text-transform: uppercase; width: 60%; letter-spacing: 1px; }
-        .event-title-input:focus { outline: none; border-bottom: 1px solid var(--cyan); }
-
+        .event-title-input { background: transparent; border: none; border-bottom: 1px dashed #555; color: #fff; font-size: 20px; font-weight: bold; text-transform: uppercase; width: 60%; }
         .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
         .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 13px; padding: 12px 10px; border-bottom: 2px solid #2d3439; background: #15191d; }
         .pop-table td { padding: 10px; border-bottom: 1px solid #1c2227; font-size: 15px; vertical-align: middle; }
-        .pop-table tr:nth-child(even) { background: #13171c; }
-        
         .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; }
         .team-logo-img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px; }
     </style>
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - POSITION POINTS EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - 6 COLOR SYSTEM</h2>
         
+        <!-- 6 COLOR CONTROLS -->
         <div class="color-grid">
-            <div class="color-item"><span>Theme</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
-            <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
-            <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
-            <div class="color-item"><span>Text</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
-            <div class="color-item"><span>Elim BG</span><input type="color" id="cfg-elim-bg" onchange="updateCfg('elim-bg',this.value)"></div>
-            <div class="color-item"><span>Pred BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
+            <div class="color-item"><span>1. THEME (YELLOW BADGE)</span><input type="color" id="cfg-theme" onchange="updateCfg('theme',this.value)"></div>
+            <div class="color-item"><span>2. BOARD BG (MAIN BOARD)</span><input type="color" id="cfg-board-bg" onchange="updateCfg('board-bg',this.value)"></div>
+            <div class="color-item"><span>3. ROW BG (STATUS/BOX)</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
+            <div class="color-item"><span>4. TEXT COLOR</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
+            <div class="color-item"><span>5. ACCENT 2 (WWCD STRIP)</span><input type="color" id="cfg-accent2" onchange="updateCfg('accent2',this.value)"></div>
+            <div class="color-item"><span>6. LOGO BG (WHITE BOX)</span><input type="color" id="cfg-logo-bg" onchange="updateCfg('logo-bg',this.value)"></div>
         </div>
 
-        <div style="font-size: 11px; color: #888; margin-bottom: 6px; font-weight: bold; text-transform: uppercase;">Past Matches Points View:</div>
-        <div class="history-container" id="history-buttons-layout">
-            <span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>
-        </div>
+        <div style="font-size: 11px; color: #888; margin-bottom: 6px; font-weight: bold; text-transform: uppercase;">Past Matches History:</div>
+        <div class="history-container" id="history-buttons-layout"></div>
 
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
@@ -78,8 +69,8 @@
     <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <input type="text" id="event-name-input" class="event-title-input" value="BGMI TOURNAMENT 2026" placeholder="ENTER EVENT NAME...">
-                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Pointstable</h3>
+                <input type="text" id="event-name-input" class="event-title-input" value="BGMI TOURNAMENT 2026">
+                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Scoreboard</h3>
                 <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
             </div>
             <div id="modal-body"></div>
@@ -101,28 +92,32 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
         let teams = []; let config = {}; let matchHistory = {};
 
-        // Listen for data
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
-            config = data.config || { 'cyan': '#00f2ff', 'dark-blue': '#12193b', 'row-bg': '#1a2245', 'text-color': '#ffffff', 'elim-bg': '#15191d', 'pred-bg': '#0b0e11' };
-            matchHistory = data.history || {}; // Fetch saved matches history
+            config = data.config || { 
+                'theme': '#ffbc00', 
+                'board-bg': '#8e44ad', 
+                'row-bg': '#1e1f29', 
+                'text-color': '#ffffff', 
+                'accent2': '#ff4757', 
+                'logo-bg': '#ffffff' 
+            };
+            matchHistory = data.history || {};
 
-            // Update the color pickers in admin to match database
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
             });
             
-            document.documentElement.style.setProperty('--cyan', config.cyan);
-            
+            document.documentElement.style.setProperty('--cyan', config.theme);
             renderHistoryButtons();
             draw();
         });
 
         function updateCfg(param, value) {
             config[param] = value;
-            if(param === 'cyan') document.documentElement.style.setProperty('--cyan', value);
+            if(param === 'theme') document.documentElement.style.setProperty('--cyan', value);
             db.ref(SYNC_PATH + '/config').set(config);
         }
 
@@ -144,12 +139,10 @@
                     <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
-                    
                     <div><span class="label-tag">Prev Pos</span><input type="number" value="${t.prevPos || 0}" onchange="edit(${i},'prevPos',this.value)"></div>
                     <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
-                    
                     <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
-                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.cyan:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
+                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a?config.theme:'#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
                     </div></div>
                     <button style="color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
                 </div>`;
@@ -171,7 +164,18 @@
             if (teams[i].alive.every(a => a == 0)) {
                 if (!teams[i].elim) {
                     teams[i].elim = true;
-                    elim = { id: Date.now().toString(), name: teams[i].name, logo: teams[i].logo, finishes: (parseInt(teams[i].fin)||0) };
+                    // CALCULATE ELIMINATION RANK BASED ON REMAINING ALIVE TEAMS
+                    let aliveTeamsCount = teams.filter(t => t.alive.some(a => a == 1)).length;
+                    let elimRank = aliveTeamsCount + 1;
+                    
+                    elim = { 
+                        id: Date.now().toString(), 
+                        name: teams[i].name, 
+                        logo: teams[i].logo, 
+                        finishes: (parseInt(teams[i].fin)||0),
+                        placePts: (parseInt(teams[i].pos)||0),
+                        rank: elimRank
+                    };
                 }
             } else {
                 teams[i].elim = false;
@@ -181,7 +185,6 @@
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
-        // Displays past match buttons dynamically
         function renderHistoryButtons() {
             const container = document.getElementById('history-buttons-layout');
             const keys = Object.keys(matchHistory);
@@ -200,15 +203,11 @@
                 });
         }
 
-        /* ==========================================================================
-           COMPLETELY CLEAN LOGO RENDERER (NO EXTRA QUOTES / NO GLITCHES)
-           ========================================================================== */
         function showPopupTable(matchKey) {
             const modal = document.getElementById('popup-modal');
             document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
             const savedTeams = matchHistory[matchKey] || [];
 
-            // High to Low Sorting based ONLY on that specific Match Points
             let sortedTeams = [...savedTeams].sort((a,b) => {
                 let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
                 let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
@@ -229,21 +228,11 @@
 
             sortedTeams.forEach((t, idx) => {
                 let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
-                let teamName = (t.name || 'TEAM').trim();
-                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
-
-                let imgTag = logoUrl 
-                    ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` 
-                    : '';
+                let imgTag = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo.trim()}" class="team-logo-img" onerror="this.style.display='none'">` : '';
 
                 html += `<tr>
                     <td style="font-weight:bold; color:#aaa;">#${idx + 1}</td>
-                    <td>
-                        <div class="team-cell">
-                            ${imgTag}
-                            <span>${teamName}</span>
-                        </div>
-                    </td>
+                    <td><div class="team-cell">${imgTag}<span>${t.name || 'TEAM'}</span></div></td>
                     <td style="text-align:center;">${t.fin || 0}</td>
                     <td style="text-align:center;">${t.pos || 0}</td>
                     <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:16px;">${singleMatchTotal}</td>
@@ -257,32 +246,23 @@
 
         function globalNewMatch() { 
             if(confirm("New Match? Status reset hoga, points save rahenge.")) {
-                // Step 1: Current match ka data backup/history node me save karo reset hone se pehle
                 const currentMatchNumber = Object.keys(matchHistory).length + 1;
                 const matchKeyName = "Match" + currentMatchNumber;
-                
-                // Deep copy current state to history
                 matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
 
-                // Step 2: Purana logic as it is points aage transfer karne ke liye
                 teams.forEach(t => { 
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                     t.fin = 0; 
-                    
                     t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
                     t.pos = 0;
-                    
                     t.alive = [1,1,1,1]; t.elim = false; 
                 }); 
-                
                 db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
             }
         }
         
         function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("HARD RESET? History aur teams sab clean ho jayega.")) { db.ref(SYNC_PATH).set(null); } }
+        function resetAll() { if(confirm("HARD RESET?")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
-
-```
