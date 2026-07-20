@@ -1,13 +1,3 @@
-Aap tension mat lo bhai! Ab samajh gaya, aap us **30-second loop animation** ki baat kar rahe ho jo har interval par poore leaderboard ya prediction elements ko dobara smooth wipe/shine/unfold effect ke sath refresh karke animate karta hai!
-
-Maine code mein ek **Dedicated Interval Timer (Every 30 Seconds)** setup kar diya hai. Har 30 second par:
-
-1. Status bars, leaderboard rows, aur winning prediction cards par **Re-trigger Smooth Animation** play hogi.
-2. Naye data ke saath bina frame breakup ke continuous loop animation chalta rahega.
-
-Yeh raha aapka 100% complete aur updated `overlay.html` code:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,6 +13,8 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
             --text-color: #ffffff; 
             --status-bg: #252c33;
             --top-row-bg: #15191d;
+            --elim-bg: #15191d;
+            --pred-bg: #0b0e11;
         }
 
         * {
@@ -76,16 +68,6 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
         .team-row.eliminated { 
             opacity: 0.4; 
             filter: grayscale(1); 
-        }
-
-        /* 30 Sec Loop Pulse Animation Class */
-        .loop-animate {
-            animation: rowUnfoldRefresh 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes rowUnfoldRefresh {
-            0% { transform: scaleX(0.8) translateX(30px); opacity: 0; }
-            100% { transform: scaleX(1) translateX(0); opacity: 1; }
         }
 
         .logo-col { 
@@ -173,15 +155,6 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
             transition: transform 0.5s ease;
         }
 
-        .pred-card.pred-loop {
-            animation: predCardLoop 0.7s ease-in-out;
-        }
-
-        @keyframes predCardLoop {
-            0% { transform: translateY(20px) scale(0.9); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-
         .pred-top-tag {
             background: #ffb800;
             color: #000000;
@@ -262,6 +235,19 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
             padding: 3px 0;
             letter-spacing: 0.5px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        /* DYNAMIC TRIGGER ANIMATION CLASSES FROM YOUR ORIGINAL CODE */
+        .trigger-animate {
+            animation: slideUpFade 0.5s ease-out forwards;
+        }
+        .trigger-card-animate {
+            animation: slideUpFade 0.4s ease-out forwards;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* ELIMINATION BANNER POPUP */
@@ -415,21 +401,21 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
         const SYNC_PATH = 'TournamentData/LiveSession';
 
         let currentElimId = "";
-        let cachedTeams = [];
-        let cachedPred = null;
+        let cachedTeamsData = [];
+        let cachedPredData = null;
+        let shouldAnimateNextRender = true; // First load par animate hoga
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             
-            Object.keys(cfg).forEach(p => { 
-                if (cfg[p]) {
-                    document.documentElement.style.setProperty('--' + p, cfg[p]); 
-                }
+            Object.entries(cfg).forEach(([p, v]) => { 
+                if (v) document.documentElement.style.setProperty('--' + p, v); 
             });
 
-            cachedTeams = data.teams || [];
-            cachedPred = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction;
+            cachedTeamsData = data.teams || [];
+            // Real-time Prediction Data Fetching Fix
+            cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
 
             // ELIMINATION TRIGGER
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
@@ -468,31 +454,78 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
                 }, 5000);
             }
 
-            renderPrediction(cachedPred, cachedTeams, false);
-            render(cachedTeams, false);
+            render(cachedTeamsData, cachedPredData);
         });
 
-        // 30 SECOND AUTOMATIC LOOP REFRESH ANIMATION
-        setInterval(() => {
-            if (cachedTeams.length > 0) {
-                render(cachedTeams, true);
-                renderPrediction(cachedPred, cachedTeams, true);
-            }
-        }, 30000);
+        function render(teams, predData) {
+            const board = document.getElementById('board');
+            const predContainer = document.getElementById('prediction-container');
 
-        // Prediction Renderer
-        function renderPrediction(predList, teams, triggerLoopAnim) {
+            // Purani animation status clean karo
+            board.classList.remove('trigger-animate');
+            predContainer.classList.remove('trigger-animate');
+
+            if (shouldAnimateNextRender) {
+                void board.offsetWidth;
+                void predContainer.offsetWidth;
+                board.classList.add('trigger-animate');
+                predContainer.classList.add('trigger-animate');
+                shouldAnimateNextRender = false;
+            }
+
+            // Render Predictions
+            renderPrediction(predData, teams, board.classList.contains('trigger-animate'));
+
+            // Render Leaderboard
+            let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+            
+            const sortedTeams = [...teams].sort((a,b)=> {
+                let totalA = (parseInt(a.totalFin) || 0) + (parseInt(a.totalPos) || 0);
+                let totalB = (parseInt(b.totalFin) || 0) + (parseInt(b.totalPos) || 0);
+                return totalB - totalA;
+            });
+
+            sortedTeams.forEach((t, i) => {
+                let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
+                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}" onerror="this.style.opacity='0'">` : '';
+                let isEliminated = t.alive && t.alive.every(a => a == 0 || a == '0');
+
+                let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.1}s"` : '';
+
+                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${cardAnimClass}" ${cardDelay}>
+                    <div style="text-align:center;">${i+1}</div>
+                    <div class="logo-col">${logoSrc}</div>
+                    <div class="name-col">${t.name || 'TEAM'}</div>
+                    <div class="status-col">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a ? '' : 'dead'}"></div>`).join('')}</div>
+                    <div style="text-align:center;">${t.fin || 0}</div>
+                    <div class="total-box">${overallTotal}</div>
+                </div>`;
+            });
+            board.innerHTML = h;
+        }
+
+        function renderPrediction(predList, teams, isAnimating) {
             const container = document.getElementById('prediction-container');
             let list = [];
 
+            // Direct database predictions or Dynamic Auto-Calculation
             if(predList) {
                 list = Array.isArray(predList) ? predList : Object.values(predList);
             } else if(teams && teams.length > 0) {
-                list = [
-                    { name: 'TF', logo: teams[0]?.logo || '', wwcd: '29%' },
-                    { name: 'IQOOSBIT', logo: teams[1]?.logo || '', wwcd: '29%' },
-                    { name: 'GENs', logo: teams[2]?.logo || '', wwcd: '42%' }
-                ];
+                const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
+                if(aliveTeams.length >= 2 && aliveTeams.length <= 5) {
+                    let totalS = aliveTeams.reduce((acc, c) => {
+                        let tTotal = (parseInt(c.totalFin) || 0) + (parseInt(c.totalPos) || 0);
+                        return acc + (tTotal + c.alive.filter(x => x == 1 || x == '1').length * 3);
+                    }, 0) || 1;
+
+                    list = aliveTeams.map(t => {
+                        let tTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
+                        let winPerc = Math.round((((tTotal + t.alive.filter(x => x == 1 || x == '1').length * 3) / totalS) * 100));
+                        return { name: t.name, logo: t.logo, wwcd: winPerc + '%' };
+                    });
+                }
             }
 
             if(!list || list.length === 0) {
@@ -501,7 +534,7 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
             }
 
             let html = "";
-            let loopClass = triggerLoopAnim ? 'pred-loop' : '';
+            let cardAnimClass = isAnimating ? 'trigger-card-animate' : '';
 
             list.slice(0, 3).forEach((p, idx) => {
                 let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
@@ -509,9 +542,10 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
 
                 let bar3Class = idx === 0 ? 'active-yellow' : '';
                 let bar4Class = idx === 1 ? 'active-red' : '';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
 
                 html += `
-                    <div class="pred-card ${loopClass}">
+                    <div class="pred-card ${cardAnimClass}" ${cardDelay}>
                         <div class="pred-top-tag">${p.name || 'TEAM'}</div>
                         <div class="pred-middle-box">
                             <div class="pred-logo-box">
@@ -531,37 +565,24 @@ Yeh raha aapka 100% complete aur updated `overlay.html` code:
             container.innerHTML = html;
         }
 
-        // Leaderboard Render with 30s Loop Support
-        function render(teams, triggerLoopAnim) {
+        // EXACT AUTOMATIC REFRESH LOOP LOGIC (30 SECONDS INTERVAL)
+        setInterval(() => {
             const board = document.getElementById('board');
-            let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+            const predContainer = document.getElementById('prediction-container');
             
-            const sortedTeams = [...teams].sort((a,b)=> {
-                let totalA = (parseInt(a.totalFin) || 0) + (parseInt(a.totalPos) || 0);
-                let totalB = (parseInt(b.totalFin) || 0) + (parseInt(b.totalPos) || 0);
-                return totalB - totalA;
-            });
-
-            let loopClass = triggerLoopAnim ? 'loop-animate' : '';
+            // Screen elements clear/fade reset
+            board.style.opacity = "0";
+            predContainer.style.opacity = "0";
             
-            sortedTeams.forEach((t, i) => {
-                let overallTotal = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
-                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}" onerror="this.style.opacity='0'">` : '';
-                let isEliminated = t.alive && t.alive.every(a => a == 0 || a == '0');
-
-                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${loopClass}">
-                    <div style="text-align:center;">${i+1}</div>
-                    <div class="logo-col">${logoSrc}</div>
-                    <div class="name-col">${t.name || 'TEAM'}</div>
-                    <div class="status-col">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a ? '' : 'dead'}"></div>`).join('')}</div>
-                    <div style="text-align:center;">${t.fin || 0}</div>
-                    <div class="total-box">${overallTotal}</div>
-                </div>`;
-            });
-            board.innerHTML = h;
-        }
+            setTimeout(() => {
+                if(cachedTeamsData.length > 0) {
+                    shouldAnimateNextRender = true; // 30s Loop animation re-trigger switch!
+                    board.style.opacity = "1";
+                    predContainer.style.opacity = "1";
+                    render(cachedTeamsData, cachedPredData);
+                }
+            }, 300); 
+        }, 30000); // Exactly 30 Seconds
     </script>
 </body>
 </html>
-
-```
