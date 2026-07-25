@@ -24,7 +24,7 @@
 
         body { 
             margin: 0; 
-            background: #00FF00; 
+            background: transparent; /* GREEN SE TRANSPARENT KAR DIYA */
             overflow: hidden; 
             width: 1920px; 
             height: 1080px; 
@@ -95,7 +95,7 @@
             overflow: hidden; 
             white-space: nowrap; 
             text-transform: uppercase; 
-        }
+        } 
         
         /* ALIVE STATUS BARS & ANIMATION */
         .status-col { 
@@ -207,7 +207,6 @@
             gap: 4px;
         }
 
-        /* FIXED EQUAL HEIGHT BARS */
         .pred-player-bar {
             width: 6px;
             height: 24px;
@@ -238,7 +237,6 @@
             box-shadow: 0 3px 6px rgba(0,0,0,0.4);
         }
 
-        /* DYNAMIC TRIGGER ANIMATION CLASSES */
         .trigger-animate {
             animation: slideUpFade 0.5s ease-out forwards;
         }
@@ -365,6 +363,26 @@
             0% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
             100% { opacity: 0; transform: rotateY(-80deg) scaleX(0.4); }
         }
+
+        /* CUSTOM GFX TRANSPARENT LAYOUT MODE */
+        body.transparent-mode #board,
+        body.transparent-mode .header-row,
+        body.transparent-mode .team-row,
+        body.transparent-mode .status-col,
+        body.transparent-mode .total-box,
+        body.transparent-mode .pred-middle-box,
+        body.transparent-mode .pred-logo-box,
+        body.transparent-mode .pred-bars-box,
+        body.transparent-mode .pred-bottom-bar,
+        body.transparent-mode .pred-top-tag,
+        body.transparent-mode .elim-card,
+        body.transparent-mode .elim-logo-container,
+        body.transparent-mode .elim-main-banner,
+        body.transparent-mode .elim-stats-bar {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
     </style>
 </head>
 <body>
@@ -414,6 +432,13 @@
                 if (v) document.documentElement.style.setProperty('--' + p, v); 
             });
 
+            // TRANSPARENT LAYOUT TOGGLE SYNC
+            if (data.transparentLayout) {
+                document.body.classList.add('transparent-mode');
+            } else {
+                document.body.classList.remove('transparent-mode');
+            }
+
             cachedTeamsData = data.teams || [];
             cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
 
@@ -461,19 +486,15 @@
             const board = document.getElementById('board');
             const predContainer = document.getElementById('prediction-container');
 
-            // COUNT ALIVE TEAMS IN MATCH
             const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
-
-            // LOGIC: IF ALIVE TEAMS <= 5 -> SHOW PREDICTION, HIDE LEADERBOARD
-            // IF ALIVE TEAMS > 5 -> SHOW LEADERBOARD, HIDE PREDICTION
             const showPrediction = aliveTeams.length <= 5 && aliveTeams.length >= 2;
 
             if (showPrediction) {
-                board.style.display = 'none'; // HIDE LEADERBOARD IN TOP 5
-                predContainer.style.display = 'flex'; // SHOW PREDICTION
+                board.style.display = 'none';
+                predContainer.style.display = 'flex';
             } else {
-                board.style.display = 'block'; // SHOW LEADERBOARD
-                predContainer.style.display = 'none'; // HIDE PREDICTION
+                board.style.display = 'block';
+                predContainer.style.display = 'none';
                 predContainer.innerHTML = '';
             }
 
@@ -488,12 +509,10 @@
                 shouldAnimateNextRender = false;
             }
 
-            // Render Prediction (Only if Top 5 alive)
             if (showPrediction) {
                 renderPrediction(predData, aliveTeams, predContainer.classList.contains('trigger-animate'));
             }
 
-            // Render Leaderboard
             let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
             
             const sortedTeams = [...teams].sort((a,b)=> {
@@ -542,7 +561,6 @@
                 });
             }
 
-            // AUTO-CALCULATE FOR ALIVE TEAMS (TOP 5)
             if (displayList.length === 0 && aliveTeams.length >= 2) {
                 let totalScoreSum = aliveTeams.reduce((acc, t) => {
                     let totalPts = (parseInt(t.totalFin) || 0) + (parseInt(t.totalPos) || 0);
@@ -599,7 +617,6 @@
             container.innerHTML = html;
         }
 
-        // 30 SECOND LOOP REFRESH
         setInterval(() => {
             const board = document.getElementById('board');
             const predContainer = document.getElementById('prediction-container');
@@ -619,5 +636,3 @@
     </script>
 </body>
 </html>
-
-```
