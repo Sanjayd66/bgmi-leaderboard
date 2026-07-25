@@ -1,8 +1,28 @@
+Aapka Admin Code bilkul solid setup hai!
+
+Iss requirement ko poora karne ke liye, maine history buttons bar ke paas ek dedicated **`OVERALL POINTSTABLE`** button add kar diya hai.
+
+### Is Naye Feature Mein Kya Special Hai:
+
+1. **Single Match History**: Purane `MATCH 1`, `MATCH 2` buttons pe click karne par pehle ki tarah **sirf us specific match** ki performance dikhegi.
+2. **Overall Pointstable Button**: Naye Cyan Highlighted Button **`📊 OVERALL STANDINGS`** pe click karte hi saare matches ke points auto-sum ho jayenge. Isme:
+* **Total Kills**
+* **Total Position Points**
+* **Grand Total Points**
+* Auto-Rank Sorting (#1, #2, #3...) live calculation ke sath dikhegi.
+
+
+
+---
+
+### Updated Code (Copy-Paste Ready):
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>indian</title>
+    <title>BGMI Admin Panel - Overall & Match Standings</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -10,28 +30,29 @@
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
-        /* Fixed Color Grid Styling - Updated for 7 Items */
+        /* Fixed Color Grid Styling */
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
         .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
         .color-item span { font-size: 11px; font-weight: bold; color: #aaa; text-transform: uppercase; }
         
-        /* Fixing the "Line" Glitch in inputs */
         input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
         
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         
-        /* Match History Buttons Styling */
-        .history-container { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; }
+        /* Match History & Overall Buttons Styling */
+        .history-container { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; align-items: center; }
         .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Oswald', sans-serif; text-transform: uppercase; transition: 0.2s; }
         .hist-btn:hover { background: var(--cyan); color: #000; }
 
-        /* Updated layout grid to perfectly fit Position Points */
+        .overall-btn { background: linear-gradient(135deg, #00f2ff 0%, #0088ff 100%); color: #000; border: none; padding: 8px 18px; cursor: pointer; border-radius: 4px; font-weight: 800; font-family: 'Oswald', sans-serif; text-transform: uppercase; transition: 0.2s; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
+        .overall-btn:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 242, 255, 0.6); }
+
         .team-row { background: #1c2227; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
 
-        /* POPUP MODAL WINDOW STYLES (STREAM READY DESIGN) */
+        /* POPUP MODAL STYLES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; }
         .modal-content { background: #0f1318; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 35px rgba(0,242,255,0.25); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); padding-bottom: 12px; margin-bottom: 15px; }
@@ -51,7 +72,7 @@
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - POSITION POINTS EDITION</h2>
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - OVERALL & MATCH STANDINGS</h2>
         
         <!-- 7 COLOR CONTROL OPTIONS -->
         <div class="color-grid">
@@ -64,9 +85,9 @@
             <div class="color-item"><span>Elim Popup BG</span><input type="color" id="cfg-elim-bg" onchange="updateCfg('elim-bg',this.value)"></div>
         </div>
 
-        <div style="font-size: 11px; color: #888; margin-bottom: 6px; font-weight: bold; text-transform: uppercase;">Past Matches Points View:</div>
+        <div style="font-size: 11px; color: #888; margin-top: 10px; font-weight: bold; text-transform: uppercase;">Points Table Views & Match History:</div>
         <div class="history-container" id="history-buttons-layout">
-            <span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>
+            <span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to save history.</span>
         </div>
 
         <div style="display:flex; gap:10px; margin-bottom:20px; margin-top:15px;">
@@ -103,7 +124,6 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
         let teams = []; let config = {}; let matchHistory = {};
 
-        // Listen for data
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
@@ -116,9 +136,8 @@
                 'top-row-bg': '#15191d',
                 'elim-bg': '#e63900' 
             };
-            matchHistory = data.history || {}; // Fetch saved matches history
+            matchHistory = data.history || {};
 
-            // Update the color pickers in admin to match database
             Object.keys(config).forEach(k => {
                 const el = document.getElementById('cfg-' + k);
                 if(el) el.value = config[k];
@@ -181,7 +200,6 @@
             if (teams[i].alive.every(a => a == 0)) {
                 if (!teams[i].elim) {
                     teams[i].elim = true;
-                    // Auto calculate rank (#) based on remaining alive teams
                     let aliveCount = teams.filter(t => !t.elim).length;
                     let rankNum = aliveCount + 1;
                     elim = { 
@@ -200,15 +218,24 @@
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
         
-        // Displays past match buttons dynamically
+        // Displays past match buttons + OVERALL POINTSTABLE BUTTON
         function renderHistoryButtons() {
             const container = document.getElementById('history-buttons-layout');
+            container.innerHTML = '';
+
+            // ALWAYS SHOW OVERALL STANDINGS BUTTON
+            const overallBtn = document.createElement('button');
+            overallBtn.className = 'overall-btn';
+            overallBtn.innerText = '📊 OVERALL STANDINGS';
+            overallBtn.onclick = () => showOverallPopupTable();
+            container.appendChild(overallBtn);
+
             const keys = Object.keys(matchHistory);
             if(keys.length === 0) {
-                container.innerHTML = `<span style="color:#666; font-size:13px; padding: 4px;">No match saved yet. Click 'NEW MATCH' to create history.</span>`;
+                container.innerHTML += `<span style="color:#888; font-size:12px; margin-left: 10px;">(No past matches archived yet)</span>`;
                 return;
             }
-            container.innerHTML = '';
+
             keys.sort((a,b) => parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", "")))
                 .forEach(key => {
                     const btn = document.createElement('button');
@@ -219,6 +246,7 @@
                 });
         }
 
+        // 1. INDIVIDUAL MATCH POPUP
         function showPopupTable(matchKey) {
             const modal = document.getElementById('popup-modal');
             document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
@@ -246,10 +274,7 @@
                 let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
                 let teamName = (t.name || 'TEAM').trim();
                 let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
-
-                let imgTag = logoUrl 
-                    ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` 
-                    : '';
+                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
 
                 html += `<tr>
                     <td style="font-weight:bold; color:#aaa;">#${idx + 1}</td>
@@ -270,8 +295,59 @@
             modal.style.display = 'flex';
         }
 
+        // 2. OVERALL STANDINGS POPUP (SUM OF ALL MATCHES + CURRENT)
+        function showOverallPopupTable() {
+            const modal = document.getElementById('popup-modal');
+            document.getElementById('modal-title').innerText = `OVERALL TOURNAMENT STANDINGS`;
+
+            let sortedTeams = [...teams].sort((a,b) => {
+                let totalA = ((parseInt(a.prevFin)||0) + (parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0) + (parseInt(a.pos)||0));
+                let totalB = ((parseInt(b.prevFin)||0) + (parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0) + (parseInt(b.pos)||0));
+                return totalB - totalA;
+            });
+
+            let html = `<table class="pop-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Rank</th>
+                        <th>Team Name</th>
+                        <th style="text-align:center;">Total Kills</th>
+                        <th style="text-align:center;">Total Pos Points</th>
+                        <th style="text-align:center; color:var(--cyan);">OVERALL PTS</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            sortedTeams.forEach((t, idx) => {
+                let overallKills = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0);
+                let overallPos = (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
+                let grandTotal = overallKills + overallPos;
+
+                let teamName = (t.name || 'TEAM').trim();
+                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
+                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
+
+                html += `<tr>
+                    <td style="font-weight:bold; color:var(--cyan);">#${idx + 1}</td>
+                    <td>
+                        <div class="team-cell">
+                            ${imgTag}
+                            <span>${teamName}</span>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">${overallKills}</td>
+                    <td style="text-align:center;">${overallPos}</td>
+                    <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:18px;">${grandTotal}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('modal-body').innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
         function globalNewMatch() { 
-            if(confirm("New Match? Status reset hoga, points save rahenge.")) {
+            if(confirm("New Match? Status reset hoga, points history me save ho jayenge.")) {
                 const currentMatchNumber = Object.keys(matchHistory).length + 1;
                 const matchKeyName = "Match" + currentMatchNumber;
                 
@@ -296,3 +372,5 @@
     </script>
 </body>
 </html>
+
+```
