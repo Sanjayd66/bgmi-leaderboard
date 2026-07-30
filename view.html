@@ -2,383 +2,643 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BGMI Admin Panel - Standings & Overlay Control</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #ffcc00; }
-        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; margin: 0; }
-        .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1250px; margin: auto; border: 1px solid #2d3439; }
-        
-        /* 12 Color Grid Setup */
-        .color-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; border: 1px solid #333; }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; }
-        .color-item span { font-size: 11px; font-weight: bold; color: #aaa; text-transform: uppercase; }
-        
-        input[type="color"] { border: none; width: 35px; height: 25px; cursor: pointer; background: none; padding: 0; }
-        
-        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
-        
-        .trans-mode-btn { background: #2196F3; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 6px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
-        .trans-mode-btn.active { background: #e91e63; color: white; }
+        :root { 
+            --cyan: #ffcc00; 
+            --dark-blue: #12193b; 
+            --row-bg: #1a2245; 
+            --text-color: #ffffff; 
+            --status-bg: #252c33;
+            --status-bar-color: #ffcc00;
+            --top-row-bg: #15191d;
+            --elim-bg: #15191d;
+            --pred-bg: #0b0e11;
+            --pred-tag-bg: #ffb800;
+            --elim-main-bg: #e63900;
+            --elim-stats-bg: #ffaa00;
+        }
 
-        .history-container { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; align-items: center; }
-        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
-        .hist-btn:hover { background: var(--cyan); color: #000; }
+        * {
+            box-sizing: border-box;
+            font-family: 'Oswald', sans-serif;
+        }
 
-        .overall-btn { background: linear-gradient(135deg, #ffcc00 0%, #ff8800 100%); color: #000; border: none; padding: 8px 18px; cursor: pointer; border-radius: 4px; font-weight: 800; text-transform: uppercase; transition: 0.2s; box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
-        .overall-btn:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(255, 204, 0, 0.6); }
-
-        .team-row { background: #1c2227; padding: 10px 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 8px; align-items: center; }
-        input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: 'Oswald', sans-serif; }
-        .status-dot { width: 20px; height: 20px; border: 1px solid #444; border-radius: 3px; cursor: pointer; }
-        .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
-
-        /* Modal Styles */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; }
-        .modal-content { background: #0f1318; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 35px rgba(255,204,0,0.25); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); padding-bottom: 12px; margin-bottom: 15px; }
-        .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
+        body { 
+            margin: 0; 
+            background: transparent;
+            overflow: hidden; 
+            width: 1920px; 
+            height: 1080px; 
+        }
         
-        .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 13px; padding: 12px 10px; border-bottom: 2px solid #2d3439; background: #15191d; }
-        .pop-table td { padding: 10px; border-bottom: 1px solid #1c2227; font-size: 15px; vertical-align: middle; }
-        .pop-table tr:nth-child(even) { background: #13171c; }
-        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; }
-        .team-logo-img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px; }
+        /* LEADERBOARD BOARD RIGHT SIDE */
+        #board { 
+            position: absolute; 
+            right: 40px; 
+            bottom: 40px; 
+            background: var(--dark-blue); 
+            padding: 8px; 
+            border-radius: 4px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            transition: all 0.5s ease;
+        }
+        
+        .header-row, .team-row { 
+            display: grid; 
+            grid-template-columns: 25px 30px 65px 45px 30px 35px; 
+            align-items: center; 
+            gap: 2px; 
+            color: var(--text-color); 
+        }
+
+        .header-row { 
+            font-size: 11px; 
+            color: var(--cyan); 
+            background: var(--top-row-bg); 
+            border-bottom: 1px solid rgba(255,255,255,0.2); 
+            margin-bottom: 4px; 
+            text-align: center; 
+        }
+        
+        .team-row { 
+            background: var(--row-bg); 
+            height: 32px; 
+            margin-bottom: 2px; 
+            transition: all 0.3s ease; 
+        }
+
+        .team-row.eliminated { 
+            background: var(--elim-bg) !important;
+            opacity: 0.4; 
+            filter: grayscale(1); 
+        }
+
+        .logo-col { 
+            width: 22px; 
+            height: 22px; 
+            background: transparent; 
+            border-radius: 2px; 
+            margin: auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        .logo-col img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+        }
+
+        .name-col { 
+            padding-left: 5px; 
+            font-weight: bold; 
+            font-size: 13px; 
+            overflow: hidden; 
+            white-space: nowrap; 
+            text-transform: uppercase; 
+        } 
+        
+        /* ALIVE STATUS BARS & ANIMATION */
+        .status-col { 
+            display: flex; 
+            gap: 3px; 
+            justify-content: center; 
+            background: var(--status-bg); 
+            height: 100%; 
+            align-items: center; 
+            padding: 0 4px;
+        }
+
+        .bar { 
+            width: 5px; 
+            height: 18px; 
+            background: var(--status-bar-color); 
+            box-shadow: 0 0 8px var(--status-bar-color); 
+            animation: liveBarPulse 1.2s infinite ease-in-out alternate;
+        }
+
+        .bar.dead { 
+            background: #333333 !important; 
+            box-shadow: none !important; 
+            opacity: 0.3; 
+            animation: none !important; 
+        }
+
+        .total-box { 
+            background: var(--cyan); 
+            color: #000; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 900; 
+        }
+        
+        @keyframes liveBarPulse {
+            0% { transform: scaleY(0.85); opacity: 0.7; }
+            100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
+        }
+
+        /* WINNING PREDICTION LAYOUT */
+        #prediction-container {
+            position: absolute;
+            left: 80px;
+            bottom: 40px;
+            display: flex;
+            gap: 12px;
+            z-index: 900;
+            transition: all 0.5s ease;
+        }
+
+        .pred-card {
+            display: flex;
+            flex-direction: column;
+            width: 160px;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .pred-top-tag {
+            background: var(--pred-tag-bg);
+            color: #000000;
+            font-weight: 800;
+            font-size: 13px;
+            text-align: center;
+            width: 75%;
+            margin: 0 auto;
+            padding: 1px 0;
+            border-radius: 2px 2px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 2;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .pred-middle-box {
+            display: flex;
+            height: 50px;
+            background: var(--pred-bg);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .pred-logo-box {
+            width: 52px;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .pred-logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .pred-bars-box {
+            flex: 1;
+            background: #252525;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .pred-player-bar {
+            width: 6px;
+            height: 24px;
+            border-radius: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .pred-player-bar.alive {
+            background: var(--status-bar-color);
+            box-shadow: 0 0 8px var(--status-bar-color);
+            opacity: 1;
+        }
+        
+        .pred-player-bar.dead {
+            background: #444444;
+            box-shadow: none;
+            opacity: 0.3;
+        }
+
+        .pred-bottom-bar {
+            background: linear-gradient(90deg, #d83a00 0%, #b82800 100%);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            text-align: center;
+            padding: 3px 0;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        .trigger-animate {
+            animation: slideUpFade 0.5s ease-out forwards;
+        }
+        .trigger-card-animate {
+            animation: slideUpFade 0.4s ease-out forwards;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ELIMINATION BANNER POPUP */
+        #elim-banner { 
+            position: absolute; 
+            left: 80px; 
+            bottom: 240px; 
+            display: none; 
+            z-index: 1000; 
+            perspective: 1200px;
+        }
+        
+        #elim-banner.show { 
+            display: block; 
+        }
+        
+        #elim-banner.show .elim-card {
+            animation: exactPageUnfold 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        #elim-banner.hide-anim .elim-card {
+            animation: exactPageFold 0.4s ease-in forwards;
+        }
+
+        .elim-card { 
+            display: flex; 
+            align-items: stretch; 
+            position: relative; 
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+            transform-origin: left center;
+            opacity: 0;
+            background: #ffffff;
+        }
+
+        .elim-rank-tag {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background: var(--elim-stats-bg);
+            color: #000000;
+            font-size: 26px;
+            font-weight: 800;
+            padding: 2px 10px;
+            line-height: 1;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .elim-logo-container {
+            width: 80px;
+            height: 80px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            z-index: 10;
+        }
+
+        .elim-logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .elim-right-content {
+            display: flex;
+            flex-direction: column;
+            width: 360px;
+        }
+
+        .elim-main-banner {
+            background: var(--elim-main-bg);
+            height: 50px;
+            display: flex;
+            align-items: center;
+            padding-left: 18px;
+        }
+
+        .elim-main-banner span {
+            font-size: 38px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .elim-stats-bar {
+            background: var(--elim-stats-bg);
+            height: 30px;
+            display: flex;
+            align-items: center;
+            padding-left: 18px;
+            gap: 12px;
+            color: #000000;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .elim-stats-bar .sep {
+            font-weight: 400;
+            opacity: 0.4;
+        }
+
+        @keyframes exactPageUnfold {
+            0% { opacity: 0; transform: rotateY(-90deg) scaleX(0.3); }
+            70% { transform: rotateY(12deg) scaleX(1.02); }
+            100% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
+        }
+
+        @keyframes exactPageFold {
+            0% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
+            100% { opacity: 0; transform: rotateY(-80deg) scaleX(0.4); }
+        }
+
+        /* CUSTOM GFX TRANSPARENT LAYOUT MODE */
+        body.transparent-mode #board,
+        body.transparent-mode .header-row,
+        body.transparent-mode .team-row,
+        body.transparent-mode .status-col,
+        body.transparent-mode .total-box,
+        body.transparent-mode .pred-middle-box,
+        body.transparent-mode .pred-logo-box,
+        body.transparent-mode .pred-bars-box,
+        body.transparent-mode .pred-bottom-bar,
+        body.transparent-mode .pred-top-tag,
+        body.transparent-mode .elim-card,
+        body.transparent-mode .elim-logo-container,
+        body.transparent-mode .elim-main-banner,
+        body.transparent-mode .elim-stats-bar {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
     </style>
 </head>
 <body>
-    <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN PANEL - CONTROL CENTER</h2>
-        
-        <!-- 12 COLOR CONFIGURATION -->
-        <div class="color-grid">
-            <div class="color-item"><span>Cyan / Accent</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
-            <div class="color-item"><span>Dark Blue (Board BG)</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
-            <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
-            <div class="color-item"><span>Text Color</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
-            
-            <div class="color-item"><span>Status BG</span><input type="color" id="cfg-status-bg" onchange="updateCfg('status-bg',this.value)"></div>
-            <div class="color-item"><span>Status Bar Active</span><input type="color" id="cfg-status-bar-color" onchange="updateCfg('status-bar-color',this.value)"></div>
-            <div class="color-item"><span>Top Row BG</span><input type="color" id="cfg-top-row-bg" onchange="updateCfg('top-row-bg',this.value)"></div>
-            <div class="color-item"><span>Eliminated Row BG</span><input type="color" id="cfg-elim-bg" onchange="updateCfg('elim-bg',this.value)"></div>
 
-            <div class="color-item"><span>Prediction BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
-            <div class="color-item"><span>Pred Tag BG</span><input type="color" id="cfg-pred-tag-bg" onchange="updateCfg('pred-tag-bg',this.value)"></div>
-            <div class="color-item"><span>Elim Banner Main</span><input type="color" id="cfg-elim-main-bg" onchange="updateCfg('elim-main-bg',this.value)"></div>
-            <div class="color-item"><span>Elim Banner Stats</span><input type="color" id="cfg-elim-stats-bg" onchange="updateCfg('elim-stats-bg',this.value)"></div>
-        </div>
-
-        <div style="font-size: 11px; color: #888; margin-top: 10px; font-weight: bold; text-transform: uppercase;">Points Table Views & Match Archives:</div>
-        <div class="history-container" id="history-buttons-layout"></div>
-
-        <div style="display:flex; gap:10px; margin-bottom:15px; margin-top:15px; flex-wrap:wrap;">
-            <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
-            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">NEW MATCH (RESET ALIVE)</button>
-            <button id="trans-btn" class="trans-mode-btn" onclick="toggleTransparentLayout()">LAYOUT: DEFAULT</button>
-            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">HARD RESET ALL</button>
-        </div>
-        <div id="team-list"></div>
-    </div>
-
-    <!-- MODAL FOR POINTS TABLES -->
-    <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Pointstable</h3>
-                <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
+    <!-- ELIMINATION BANNER POPUP -->
+    <div id="elim-banner">
+        <div class="elim-card">
+            <div class="elim-rank-tag" id="elim-rank-tag">#5</div>
+            <div class="elim-logo-container">
+                <img id="elim-logo-img" src="" onerror="this.style.display='none'">
             </div>
-            <div id="modal-body"></div>
+            <div class="elim-right-content">
+                <div class="elim-main-banner">
+                    <span>ELIMINATED</span>
+                </div>
+                <div class="elim-stats-bar">
+                    <span id="elim-fin-text">1 FINISHES</span>
+                    <span class="sep">|</span>
+                    <span id="elim-pos-text">3 PLACE PTS.</span>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- WINNING PREDICTION FORECAST -->
+    <div id="prediction-container"></div>
+    
+    <!-- LEADERBOARD SIDEBAR -->
+    <div id="board"></div>
 
     <script>
-        const pass = prompt("Sanjay Bhai, Password daalo:");
-        if(pass === "DT@97") {
-            document.getElementById('admin-content').style.display = 'block';
-        } else {
-            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>ACCESS DENIED</h1>";
-            window.stop();
-        }
-
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
-        let teams = []; let config = {}; let matchHistory = {};
-        let isTransparentLayout = false;
+
+        let currentElimId = "";
+        let cachedTeamsData = [];
+        let cachedPredData = null;
+        let shouldAnimateNextRender = true;
 
         db.ref(SYNC_PATH).on('value', (snap) => {
-            const data = snap.val() || {};
-            teams = data.teams || []; 
-            config = data.config || { 
-                'cyan': '#ffcc00', 
-                'dark-blue': '#12193b', 
-                'row-bg': '#1a2245', 
-                'text-color': '#ffffff', 
-                'status-bg': '#252c33',
-                'status-bar-color': '#ffcc00',
-                'top-row-bg': '#15191d',
-                'elim-bg': '#15191d',
-                'pred-bg': '#0b0e11',
-                'pred-tag-bg': '#ffb800',
-                'elim-main-bg': '#e63900',
-                'elim-stats-bg': '#ffaa00'
-            };
-            matchHistory = data.history || {};
-            isTransparentLayout = !!data.transparentLayout;
-
-            updateTransBtnUI();
-
-            Object.keys(config).forEach(k => {
-                const el = document.getElementById('cfg-' + k);
-                if(el) el.value = config[k];
+            const data = snap.val(); if(!data) return;
+            const cfg = data.config || {};
+            
+            Object.entries(cfg).forEach(([p, v]) => { 
+                if (v) document.documentElement.style.setProperty('--' + p, v); 
             });
-            
-            document.documentElement.style.setProperty('--cyan', config.cyan || '#ffcc00');
-            
-            renderHistoryButtons();
-            draw();
+
+            // TRANSPARENT LAYOUT TOGGLE SYNC
+            if (data.transparentLayout) {
+                document.body.classList.add('transparent-mode');
+            } else {
+                document.body.classList.remove('transparent-mode');
+            }
+
+            cachedTeamsData = data.teams || [];
+            cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
+
+            // ELIMINATION POPUP TRIGGER
+            if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
+                currentElimId = data.lastEliminated.id;
+                
+                document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
+                const logoImg = document.getElementById('elim-logo-img');
+                if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
+                    logoImg.src = data.lastEliminated.logo;
+                    logoImg.style.display = 'block';
+                } else {
+                    logoImg.style.display = 'none';
+                }
+
+                document.getElementById('elim-fin-text').innerText = `${data.lastEliminated.finishes || 0} FINISHES`;
+                let posPoints = 0;
+                let r = data.lastEliminated.rank || 0;
+                if(r === 1) posPoints = 10;
+                else if(r === 2) posPoints = 6;
+                else if(r === 3) posPoints = 5;
+                else if(r === 4) posPoints = 4;
+                else if(r === 5) posPoints = 3;
+                else if(r === 6) posPoints = 2;
+                else if(r === 7 || r === 8) posPoints = 1;
+
+                document.getElementById('elim-pos-text').innerText = `${posPoints} PLACE PTS.`;
+                
+                const banner = document.getElementById('elim-banner');
+                banner.classList.remove('show', 'hide-anim');
+                void banner.offsetWidth; 
+                banner.classList.add('show'); 
+                
+                setTimeout(() => { 
+                    banner.classList.add('hide-anim');
+                    setTimeout(() => { banner.classList.remove('show', 'hide-anim'); }, 400);
+                }, 5000);
+            }
+
+            render(cachedTeamsData, cachedPredData);
         });
 
-        function updateTransBtnUI() {
-            const btn = document.getElementById('trans-btn');
-            if(btn) {
-                if(isTransparentLayout) {
-                    btn.innerText = "LAYOUT: TRANSPARENT (CUSTOM GFX)";
-                    btn.classList.add('active');
-                } else {
-                    btn.innerText = "LAYOUT: DEFAULT";
-                    btn.classList.remove('active');
-                }
+        function render(teams, predData) {
+            const board = document.getElementById('board');
+            const predContainer = document.getElementById('prediction-container');
+
+            const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
+            const showPrediction = aliveTeams.length <= 5 && aliveTeams.length >= 2;
+
+            if (showPrediction) {
+                board.style.display = 'none';
+                predContainer.style.display = 'flex';
+            } else {
+                board.style.display = 'block';
+                predContainer.style.display = 'none';
+                predContainer.innerHTML = '';
             }
-        }
 
-        function toggleTransparentLayout() {
-            isTransparentLayout = !isTransparentLayout;
-            db.ref(SYNC_PATH + '/transparentLayout').set(isTransparentLayout);
-        }
+            board.classList.remove('trigger-animate');
+            predContainer.classList.remove('trigger-animate');
 
-        function updateCfg(param, value) {
-            config[param] = value;
-            if(param === 'cyan') document.documentElement.style.setProperty('--cyan', value);
-            db.ref(SYNC_PATH + '/config').set(config);
-        }
+            if (shouldAnimateNextRender) {
+                void board.offsetWidth;
+                void predContainer.offsetWidth;
+                if (!showPrediction) board.classList.add('trigger-animate');
+                if (showPrediction) predContainer.classList.add('trigger-animate');
+                shouldAnimateNextRender = false;
+            }
 
-        function sync(elimData = null) { 
-            teams.forEach(t => { 
-                t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
+            if (showPrediction) {
+                renderPrediction(predData, aliveTeams, predContainer.classList.contains('trigger-animate'));
+            }
+
+            let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+            
+            const sortedTeams = [...teams].sort((a,b)=> {
+                let totalA = ((parseInt(a.prevFin) || 0) + (parseInt(a.fin) || 0)) + ((parseInt(a.prevPos) || 0) + (parseInt(a.pos) || 0));
+                let totalB = ((parseInt(b.prevFin) || 0) + (parseInt(b.fin) || 0)) + ((parseInt(b.prevPos) || 0) + (parseInt(b.pos) || 0));
+                return totalB - totalA;
             });
-            const payload = { teams, config, history: matchHistory, transparentLayout: isTransparentLayout };
-            if(elimData) payload.lastEliminated = elimData;
-            db.ref(SYNC_PATH).update(payload);
-        }
 
-        function draw() {
-            const list = document.getElementById('team-list'); list.innerHTML = '';
-            teams.forEach((t, i) => {
-                list.innerHTML += `<div class="team-row">
-                    <div><span class="label-tag">Team</span><input type="text" value="${t.name || ''}" onchange="edit(${i},'name',this.value)"></div>
-                    <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
-                    <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
-                    <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
-                    
-                    <div><span class="label-tag">Prev Pos</span><input type="number" value="${t.prevPos || 0}" onchange="edit(${i},'prevPos',this.value)"></div>
-                    <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
-                    
-                    <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
-                        ${(t.alive || [1,1,1,1]).map((a,pi)=>`<button class="status-dot" style="background:${a? (config['status-bar-color'] || '#ffcc00') : '#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
-                    </div></div>
-                    <button style="color:red; background:none; border:none; cursor:pointer; font-weight:bold; font-size:16px;" onclick="removeTeam(${i})">✖</button>
+            sortedTeams.forEach((t, i) => {
+                let currentKills = parseInt(t.fin) || 0;
+                let overallTotal = ((parseInt(t.prevFin) || 0) + currentKills) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}" onerror="this.style.opacity='0'">` : '';
+                let isEliminated = t.elim || (t.alive && t.alive.every(a => a == 0 || a == '0'));
+
+                let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.1}s"` : '';
+
+                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${cardAnimClass}" ${cardDelay}>
+                    <div style="text-align:center;">${i+1}</div>
+                    <div class="logo-col">${logoSrc}</div>
+                    <div class="name-col">${t.name || 'TEAM'}</div>
+                    <div class="status-col">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}"></div>`).join('')}</div>
+                    <div style="text-align:center;">${currentKills}</div>
+                    <div class="total-box">${overallTotal}</div>
                 </div>`;
             });
+            board.innerHTML = h;
         }
 
-        function edit(i,f,v) { 
-            if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
-                teams[i][f] = parseInt(v) || 0;
-            } else {
-                teams[i][f] = v;
+        function renderPrediction(rawPredData, aliveTeams, isAnimating) {
+            const container = document.getElementById('prediction-container');
+            let displayList = [];
+
+            if (rawPredData) {
+                let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
+                
+                rawList.forEach(p => {
+                    let liveTeam = aliveTeams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
+                    if (liveTeam) {
+                        displayList.push({
+                            name: liveTeam.name,
+                            logo: liveTeam.logo || p.logo,
+                            alive: liveTeam.alive,
+                            wwcd: p.wwcd || p.winChance || '20%'
+                        });
+                    }
+                });
             }
-            sync(); 
-        }
-        
-        function tog(i,pi) {
-            if(!teams[i].alive) teams[i].alive = [1,1,1,1];
-            teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
-            let elim = null;
-            if (teams[i].alive.every(a => a == 0)) {
-                if (!teams[i].elim) {
-                    teams[i].elim = true;
-                    let aliveCount = teams.filter(t => !t.elim).length;
-                    let rankNum = aliveCount + 1;
-                    elim = { 
-                        id: Date.now().toString(), 
-                        name: teams[i].name, 
-                        logo: teams[i].logo, 
-                        finishes: (parseInt(teams[i].fin)||0),
-                        rank: rankNum
+
+            if (displayList.length === 0 && aliveTeams.length >= 2) {
+                let totalScoreSum = aliveTeams.reduce((acc, t) => {
+                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
+                    return acc + (totalPts + (aliveCount * 4));
+                }, 0) || 1;
+
+                displayList = aliveTeams.map(t => {
+                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
+                    let prob = Math.round((((totalPts + (aliveCount * 4)) / totalScoreSum) * 100));
+                    return {
+                        name: t.name,
+                        logo: t.logo,
+                        alive: t.alive,
+                        wwcd: prob + '%'
                     };
-                }
-            } else {
-                teams[i].elim = false;
+                }).sort((a,b) => parseInt(b.wwcd) - parseInt(a.wwcd));
             }
-            sync(elim);
-        }
 
-        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
-        
-        function renderHistoryButtons() {
-            const container = document.getElementById('history-buttons-layout');
-            container.innerHTML = '';
-
-            const overallBtn = document.createElement('button');
-            overallBtn.className = 'overall-btn';
-            overallBtn.innerText = '📊 OVERALL STANDINGS';
-            overallBtn.onclick = () => showOverallPopupTable();
-            container.appendChild(overallBtn);
-
-            const keys = Object.keys(matchHistory);
-            if(keys.length === 0) {
-                container.innerHTML += `<span style="color:#888; font-size:12px; margin-left: 10px;">(No archived matches)</span>`;
+            if (displayList.length === 0) {
+                container.innerHTML = "";
                 return;
             }
 
-            keys.sort((a,b) => parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", "")))
-                .forEach(key => {
-                    const btn = document.createElement('button');
-                    btn.className = 'hist-btn';
-                    btn.innerText = key.replace("Match", "MATCH ");
-                    btn.onclick = () => showPopupTable(key);
-                    container.appendChild(btn);
-                });
-        }
+            let html = "";
+            let cardAnimClass = isAnimating ? 'trigger-card-animate' : '';
 
-        function showPopupTable(matchKey) {
-            const modal = document.getElementById('popup-modal');
-            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
-            const savedTeams = matchHistory[matchKey] || [];
-
-            let sortedTeams = [...savedTeams].sort((a,b) => {
-                let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
-                let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
-                return totalB - totalA;
-            });
-
-            let html = `<table class="pop-table">
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">Rank</th>
-                        <th>Team Name</th>
-                        <th style="text-align:center;">Match Kills</th>
-                        <th style="text-align:center;">Match Pos Points</th>
-                        <th style="text-align:center; color:var(--cyan);">Total Match Pts</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-            sortedTeams.forEach((t, idx) => {
-                let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
-                let teamName = (t.name || 'TEAM').trim();
-                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
-                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
-
-                html += `<tr>
-                    <td style="font-weight:bold; color:#aaa;">#${idx + 1}</td>
-                    <td>
-                        <div class="team-cell">
-                            ${imgTag}
-                            <span>${teamName}</span>
-                        </div>
-                    </td>
-                    <td style="text-align:center;">${t.fin || 0}</td>
-                    <td style="text-align:center;">${t.pos || 0}</td>
-                    <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:16px;">${singleMatchTotal}</td>
-                </tr>`;
-            });
-
-            html += `</tbody></table>`;
-            document.getElementById('modal-body').innerHTML = html;
-            modal.style.display = 'flex';
-        }
-
-        function showOverallPopupTable() {
-            const modal = document.getElementById('popup-modal');
-            document.getElementById('modal-title').innerText = `OVERALL TOURNAMENT STANDINGS`;
-
-            let sortedTeams = [...teams].sort((a,b) => {
-                let totalA = ((parseInt(a.prevFin)||0) + (parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0) + (parseInt(a.pos)||0));
-                let totalB = ((parseInt(b.prevFin)||0) + (parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0) + (parseInt(b.pos)||0));
-                return totalB - totalA;
-            });
-
-            let html = `<table class="pop-table">
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">Rank</th>
-                        <th>Team Name</th>
-                        <th style="text-align:center;">Total Kills</th>
-                        <th style="text-align:center;">Total Pos Points</th>
-                        <th style="text-align:center; color:var(--cyan);">OVERALL PTS</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-            sortedTeams.forEach((t, idx) => {
-                let overallKills = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0);
-                let overallPos = (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
-                let grandTotal = overallKills + overallPos;
-
-                let teamName = (t.name || 'TEAM').trim();
-                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
-                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
-
-                html += `<tr>
-                    <td style="font-weight:bold; color:var(--cyan);">#${idx + 1}</td>
-                    <td>
-                        <div class="team-cell">
-                            ${imgTag}
-                            <span>${teamName}</span>
-                        </div>
-                    </td>
-                    <td style="text-align:center;">${overallKills}</td>
-                    <td style="text-align:center;">${overallPos}</td>
-                    <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:18px;">${grandTotal}</td>
-                </tr>`;
-            });
-
-            html += `</tbody></table>`;
-            document.getElementById('modal-body').innerHTML = html;
-            modal.style.display = 'flex';
-        }
-
-        function globalNewMatch() { 
-            if(confirm("New Match start karein? Points archive mein save honge aur alive status reset hoga.")) {
-                const currentMatchNumber = Object.keys(matchHistory).length + 1;
-                const matchKeyName = "Match" + currentMatchNumber;
+            displayList.slice(0, 5).forEach((p, idx) => {
+                let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
+                let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
                 
-                matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
+                let playerAliveArr = p.alive || [1, 1, 1, 1];
 
-                teams.forEach(t => { 
-                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                    t.fin = 0; 
-                    
-                    t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
-                    t.pos = 0;
-                    
-                    t.alive = [1,1,1,1]; t.elim = false; 
-                }); 
-                
-                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
-            }
+                html += `
+                    <div class="pred-card ${cardAnimClass}" ${cardDelay}>
+                        <div class="pred-top-tag">${p.name || 'TEAM'}</div>
+                        <div class="pred-middle-box">
+                            <div class="pred-logo-box">
+                                ${logoSrc ? `<img src="${logoSrc}">` : ''}
+                            </div>
+                            <div class="pred-bars-box">
+                                <div class="pred-player-bar ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}"></div>
+                                <div class="pred-player-bar ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}"></div>
+                                <div class="pred-player-bar ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}"></div>
+                                <div class="pred-player-bar ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}"></div>
+                            </div>
+                        </div>
+                        <div class="pred-bottom-bar">WWCD - ${pctText}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
-        
-        function removeTeam(i) { if(confirm("Team delete karein?")) { teams.splice(i, 1); sync(); } }
-        function resetAll() { if(confirm("Complete Reset? Saara data aur history delete ho jayegi.")) { db.ref(SYNC_PATH).set(null); } }
+
+        setInterval(() => {
+            const board = document.getElementById('board');
+            const predContainer = document.getElementById('prediction-container');
+            
+            board.style.opacity = "0";
+            predContainer.style.opacity = "0";
+            
+            setTimeout(() => {
+                if(cachedTeamsData.length > 0) {
+                    shouldAnimateNextRender = true;
+                    board.style.opacity = "1";
+                    predContainer.style.opacity = "1";
+                    render(cachedTeamsData, cachedPredData);
+                }
+            }, 300); 
+        }, 30000);
     </script>
 </body>
 </html>
