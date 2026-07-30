@@ -143,7 +143,7 @@
             100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
         }
 
-        /* WINNING PREDICTION LAYOUT */
+        /* WINNING PREDICTION LAYOUT (DYNAMIC COLORS FIXED) */
         #prediction-container {
             position: absolute;
             left: 80px;
@@ -205,7 +205,7 @@
 
         .pred-bars-box {
             flex: 1;
-            background: #252525;
+            background: var(--status-bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -232,7 +232,7 @@
         }
 
         .pred-bottom-bar {
-            background: linear-gradient(90deg, #d83a00 0%, #b82800 100%);
+            background: var(--elim-main-bg);
             color: #ffffff;
             font-size: 14px;
             font-weight: 800;
@@ -254,7 +254,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ELIMINATION BANNER POPUP */
+        /* ELIMINATION BANNER POPUP (DYNAMIC COLORS FIXED) */
         #elim-banner { 
             position: absolute; 
             left: 80px; 
@@ -290,7 +290,7 @@
             position: absolute;
             top: -15px;
             left: -15px;
-            background: var(--elim-stats-bg);
+            background: var(--pred-tag-bg);
             color: #000000;
             font-size: 26px;
             font-weight: 800;
@@ -429,12 +429,31 @@
         let cachedPredData = null;
         let shouldAnimateNextRender = true;
 
+        // DYNAMIC COLOR CONFIG MAPPER
+        const COLOR_MAP = {
+            'cyan': '--cyan',
+            'dark-blue': '--dark-blue',
+            'row-bg': '--row-bg',
+            'text-color': '--text-color',
+            'status-bg': '--status-bg',
+            'status-bar-color': '--status-bar-color',
+            'top-row-bg': '--top-row-bg',
+            'elim-bg': '--elim-bg',
+            'pred-bg': '--pred-bg',
+            'pred-tag-bg': '--pred-tag-bg',
+            'elim-main-bg': '--elim-main-bg',
+            'elim-stats-bg': '--elim-stats-bg'
+        };
+
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             
-            Object.entries(cfg).forEach(([p, v]) => { 
-                if (v) document.documentElement.style.setProperty('--' + p, v); 
+            // DYNAMICALLY SET ALL ROOT CSS VARIABLES
+            Object.keys(COLOR_MAP).forEach(k => {
+                if (cfg[k]) {
+                    document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
+                }
             });
 
             // TRANSPARENT LAYOUT TOGGLE SYNC
