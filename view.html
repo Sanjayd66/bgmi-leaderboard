@@ -2,314 +2,383 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Live Stream Overlay Standings</title>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGMI Admin Panel - Standings & Overlay Control</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --cyan: #c000bb;
-            --dark-blue: #d881cc;
-            --row-bg: #e7a3dd;
-            --text-color: #ffffff;
-            --status-bg: #ffffff;
-            --status-bar-color: #ffcc00;
-            --top-row-bg: #d881cc;
-            --rank-bg: #e7a3dd;
-            --fin-bg: #e7a3dd;
-            --total-bg: #190240;
-            --elim-bg: #3a001e;
-            --elim-popup-bg: #e63900;
-        }
+        :root { --cyan: #ffcc00; }
+        body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; margin: 0; }
+        .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1250px; margin: auto; border: 1px solid #2d3439; }
+        
+        /* 12 Color Grid Setup */
+        .color-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 20px; background: #1c2227; padding: 15px; border-radius: 8px; border: 1px solid #333; }
+        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 8px 12px; border-radius: 6px; }
+        .color-item span { font-size: 11px; font-weight: bold; color: #aaa; text-transform: uppercase; }
+        
+        input[type="color"] { border: none; width: 35px; height: 25px; cursor: pointer; background: none; padding: 0; }
+        
+        .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
+        
+        .trans-mode-btn { background: #2196F3; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 6px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
+        .trans-mode-btn.active { background: #e91e63; color: white; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Oswald', sans-serif; }
-        body { background: transparent; overflow: hidden; width: 100vw; height: 100vh; display: flex; align-items: flex-start; justify-content: flex-start; padding: 10px; }
+        .history-container { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; align-items: center; }
+        .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
+        .hist-btn:hover { background: var(--cyan); color: #000; }
 
-        /* Main Leaderboard Box */
-        .board-container {
-            width: 320px;
-            background: var(--dark-blue);
-            border: 3px solid var(--cyan);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(0,0,0,0.8);
-            transition: all 0.3s ease;
-        }
+        .overall-btn { background: linear-gradient(135deg, #ffcc00 0%, #ff8800 100%); color: #000; border: none; padding: 8px 18px; cursor: pointer; border-radius: 4px; font-weight: 800; text-transform: uppercase; transition: 0.2s; box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
+        .overall-btn:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(255, 204, 0, 0.6); }
 
-        .board-container.transparent-mode {
-            background: transparent !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-        }
+        .team-row { background: #1c2227; padding: 10px 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 8px; align-items: center; }
+        input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; font-family: 'Oswald', sans-serif; }
+        .status-dot { width: 20px; height: 20px; border: 1px solid #444; border-radius: 3px; cursor: pointer; }
+        .label-tag { font-size: 9px; color: #888; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-        /* Header Row */
-        .header-row {
-            display: grid;
-            grid-template-columns: 28px 32px 1fr 65px 35px 38px;
-            background: var(--top-row-bg);
-            color: var(--text-color);
-            font-size: 11px;
-            font-weight: 800;
-            text-align: center;
-            align-items: center;
-            padding: 4px 2px;
-            text-transform: uppercase;
-            border-bottom: 2px solid var(--cyan);
-        }
-
-        /* Team Row */
-        .team-row {
-            display: grid;
-            grid-template-columns: 28px 32px 1fr 65px 35px 38px;
-            background: var(--row-bg);
-            color: var(--text-color);
-            align-items: center;
-            margin-bottom: 2px;
-            height: 32px;
-            transition: background 0.3s;
-        }
-
-        .team-row.eliminated {
-            background: var(--elim-bg) !important;
-            opacity: 0.75;
-        }
-
-        .rank-col {
-            background: var(--rank-bg);
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 14px;
-        }
-
-        .logo-col {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 2px;
-        }
-
-        .logo-col img {
-            width: 26px;
-            height: 26px;
-            object-fit: contain;
-        }
-
-        .name-col {
-            font-weight: 700;
-            font-size: 13px;
-            padding-left: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-        }
-
-        /* Status Bars Container */
-        .status-col {
-            background: var(--status-bg);
-            height: 20px;
-            margin: 0 3px;
-            border-radius: 3px;
-            display: flex;
-            align-items: center;
-            justify-content: space-evenly;
-            padding: 0 2px;
-        }
-
-        .status-bar {
-            width: 9px;
-            height: 14px;
-            background: var(--status-bar-color);
-            border-radius: 1px;
-            box-shadow: 0 0 4px var(--status-bar-color);
-        }
-
-        .status-bar.dead {
-            background: rgba(0,0,0,0.2) !important;
-            box-shadow: none !important;
-        }
-
-        .fin-col {
-            background: var(--fin-bg);
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 14px;
-        }
-
-        .total-col {
-            background: var(--total-bg);
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 15px;
-            color: var(--text-color);
-        }
-
-        /* Elimination Popup GFX Banner */
-        .elim-popup {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--elim-popup-bg);
-            color: #fff;
-            padding: 10px 25px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 18px;
-            font-weight: 800;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 999;
-            text-transform: uppercase;
-        }
-
-        .elim-popup.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; }
+        .modal-content { background: #0f1318; border: 2px solid var(--cyan); padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 35px rgba(255,204,0,0.25); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); padding-bottom: 12px; margin-bottom: 15px; }
+        .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
+        
+        .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 13px; padding: 12px 10px; border-bottom: 2px solid #2d3439; background: #15191d; }
+        .pop-table td { padding: 10px; border-bottom: 1px solid #1c2227; font-size: 15px; vertical-align: middle; }
+        .pop-table tr:nth-child(even) { background: #13171c; }
+        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; }
+        .team-logo-img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px; }
     </style>
 </head>
 <body>
+    <div id="admin-content" class="admin-panel" style="display:none;">
+        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN PANEL - CONTROL CENTER</h2>
+        
+        <!-- 12 COLOR CONFIGURATION -->
+        <div class="color-grid">
+            <div class="color-item"><span>Cyan / Accent</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
+            <div class="color-item"><span>Dark Blue (Board BG)</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
+            <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
+            <div class="color-item"><span>Text Color</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
+            
+            <div class="color-item"><span>Status BG</span><input type="color" id="cfg-status-bg" onchange="updateCfg('status-bg',this.value)"></div>
+            <div class="color-item"><span>Status Bar Active</span><input type="color" id="cfg-status-bar-color" onchange="updateCfg('status-bar-color',this.value)"></div>
+            <div class="color-item"><span>Top Row BG</span><input type="color" id="cfg-top-row-bg" onchange="updateCfg('top-row-bg',this.value)"></div>
+            <div class="color-item"><span>Eliminated Row BG</span><input type="color" id="cfg-elim-bg" onchange="updateCfg('elim-bg',this.value)"></div>
 
-    <div class="board-container" id="board">
-        <div class="header-row">
-            <div>#</div>
-            <div>LOGO</div>
-            <div style="text-align:left; padding-left:4px;">TEAM</div>
-            <div>STATUS</div>
-            <div>FIN.</div>
-            <div>TOTAL</div>
+            <div class="color-item"><span>Prediction BG</span><input type="color" id="cfg-pred-bg" onchange="updateCfg('pred-bg',this.value)"></div>
+            <div class="color-item"><span>Pred Tag BG</span><input type="color" id="cfg-pred-tag-bg" onchange="updateCfg('pred-tag-bg',this.value)"></div>
+            <div class="color-item"><span>Elim Banner Main</span><input type="color" id="cfg-elim-main-bg" onchange="updateCfg('elim-main-bg',this.value)"></div>
+            <div class="color-item"><span>Elim Banner Stats</span><input type="color" id="cfg-elim-stats-bg" onchange="updateCfg('elim-stats-bg',this.value)"></div>
         </div>
-        <div id="team-rows"></div>
+
+        <div style="font-size: 11px; color: #888; margin-top: 10px; font-weight: bold; text-transform: uppercase;">Points Table Views & Match Archives:</div>
+        <div class="history-container" id="history-buttons-layout"></div>
+
+        <div style="display:flex; gap:10px; margin-bottom:15px; margin-top:15px; flex-wrap:wrap;">
+            <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
+            <button class="btn" style="background:#ffa502; color:white;" onclick="globalNewMatch()">NEW MATCH (RESET ALIVE)</button>
+            <button id="trans-btn" class="trans-mode-btn" onclick="toggleTransparentLayout()">LAYOUT: DEFAULT</button>
+            <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">HARD RESET ALL</button>
+        </div>
+        <div id="team-list"></div>
     </div>
 
-    <!-- Elimination Popup Banner -->
-    <div id="elim-banner" class="elim-popup">
-        <img id="elim-logo" src="" style="width:35px; height:35px; object-fit:contain; display:none;">
-        <div>
-            <span id="elim-team-name" style="color: #ffeb3b;">TEAM</span> ELIMINATED!
-            <div style="font-size: 12px; color: #ddd; font-weight: 500;">RANK: #<span id="elim-rank">0</span> | KILLS: <span id="elim-kills">0</span></div>
+    <!-- MODAL FOR POINTS TABLES -->
+    <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Pointstable</h3>
+                <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
+            </div>
+            <div id="modal-body"></div>
         </div>
     </div>
 
     <script>
+        const pass = prompt("Sanjay Bhai, Password daalo:");
+        if(pass === "DT@97") {
+            document.getElementById('admin-content').style.display = 'block';
+        } else {
+            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>ACCESS DENIED</h1>";
+            window.stop();
+        }
+
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
-
-        let lastElimId = null;
+        let teams = []; let config = {}; let matchHistory = {};
+        let isTransparentLayout = false;
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
-            const teams = data.teams || [];
-            const config = data.config || {};
-            const isTransparent = !!data.transparentLayout;
-            const lastElim = data.lastEliminated || null;
+            teams = data.teams || []; 
+            config = data.config || { 
+                'cyan': '#ffcc00', 
+                'dark-blue': '#12193b', 
+                'row-bg': '#1a2245', 
+                'text-color': '#ffffff', 
+                'status-bg': '#252c33',
+                'status-bar-color': '#ffcc00',
+                'top-row-bg': '#15191d',
+                'elim-bg': '#15191d',
+                'pred-bg': '#0b0e11',
+                'pred-tag-bg': '#ffb800',
+                'elim-main-bg': '#e63900',
+                'elim-stats-bg': '#ffaa00'
+            };
+            matchHistory = data.history || {};
+            isTransparentLayout = !!data.transparentLayout;
 
-            // Apply 12 Colors dynamically to CSS variables
-            document.documentElement.style.setProperty('--cyan', config['cyan'] || '#c000bb');
-            document.documentElement.style.setProperty('--dark-blue', config['dark-blue'] || '#d881cc');
-            document.documentElement.style.setProperty('--row-bg', config['row-bg'] || '#e7a3dd');
-            document.documentElement.style.setProperty('--text-color', config['text-color'] || '#ffffff');
-            document.documentElement.style.setProperty('--status-bg', config['status-bg'] || '#ffffff');
-            document.documentElement.style.setProperty('--status-bar-color', config['status-bar-color'] || '#ffcc00');
-            document.documentElement.style.setProperty('--top-row-bg', config['top-row-bg'] || '#d881cc');
-            document.documentElement.style.setProperty('--rank-bg', config['rank-bg'] || '#e7a3dd');
-            document.documentElement.style.setProperty('--fin-bg', config['fin-bg'] || '#e7a3dd');
-            document.documentElement.style.setProperty('--total-bg', config['total-bg'] || '#190240');
-            document.documentElement.style.setProperty('--elim-bg', config['elim-bg'] || '#3a001e');
-            document.documentElement.style.setProperty('--elim-popup-bg', config['elim-popup-bg'] || '#e63900');
+            updateTransBtnUI();
 
-            // Toggle Transparent GFX background
-            const board = document.getElementById('board');
-            if(isTransparent) {
-                board.classList.add('transparent-mode');
-            } else {
-                board.classList.remove('transparent-mode');
-            }
-
-            renderOverlay(teams);
-
-            // Handle Elimination Popup GFX
-            if (lastElim && lastElim.id !== lastElimId) {
-                lastElimId = lastElim.id;
-                triggerElimBanner(lastElim);
-            }
+            Object.keys(config).forEach(k => {
+                const el = document.getElementById('cfg-' + k);
+                if(el) el.value = config[k];
+            });
+            
+            document.documentElement.style.setProperty('--cyan', config.cyan || '#ffcc00');
+            
+            renderHistoryButtons();
+            draw();
         });
 
-        function renderOverlay(teams) {
-            const container = document.getElementById('team-rows');
-            container.innerHTML = '';
+        function updateTransBtnUI() {
+            const btn = document.getElementById('trans-btn');
+            if(btn) {
+                if(isTransparentLayout) {
+                    btn.innerText = "LAYOUT: TRANSPARENT (CUSTOM GFX)";
+                    btn.classList.add('active');
+                } else {
+                    btn.innerText = "LAYOUT: DEFAULT";
+                    btn.classList.remove('active');
+                }
+            }
+        }
 
-            // Calculate totals and sort ranking live
-            let sorted = [...teams].map(t => {
-                let currentFin = parseInt(t.fin) || 0;
-                let prevFin = parseInt(t.prevFin) || 0;
-                let currentPos = parseInt(t.pos) || 0;
-                let prevPos = parseInt(t.prevPos) || 0;
-                
-                let totalFin = prevFin + currentFin;
-                let grandTotal = totalFin + prevPos + currentPos;
-                
-                return { ...t, currentFin, totalFin, grandTotal };
-            }).sort((a,b) => b.grandTotal - a.grandTotal);
+        function toggleTransparentLayout() {
+            isTransparentLayout = !isTransparentLayout;
+            db.ref(SYNC_PATH + '/transparentLayout').set(isTransparentLayout);
+        }
 
-            sorted.forEach((t, idx) => {
-                let logoHtml = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo.trim()}" onerror="this.style.display='none'">` : '';
-                let isElim = t.elim || t.alive.every(a => a == 0);
+        function updateCfg(param, value) {
+            config[param] = value;
+            if(param === 'cyan') document.documentElement.style.setProperty('--cyan', value);
+            db.ref(SYNC_PATH + '/config').set(config);
+        }
 
-                let barsHtml = t.alive.map(a => `<div class="status-bar ${a ? '' : 'dead'}"></div>`).join('');
+        function sync(elimData = null) { 
+            teams.forEach(t => { 
+                t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
+                t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
+            });
+            const payload = { teams, config, history: matchHistory, transparentLayout: isTransparentLayout };
+            if(elimData) payload.lastEliminated = elimData;
+            db.ref(SYNC_PATH).update(payload);
+        }
 
-                container.innerHTML += `
-                    <div class="team-row ${isElim ? 'eliminated' : ''}">
-                        <div class="rank-col">${idx + 1}</div>
-                        <div class="logo-col">${logoHtml}</div>
-                        <div class="name-col">${t.name || 'TEAM'}</div>
-                        <div class="status-col">${barsHtml}</div>
-                        <div class="fin-col">${t.currentFin}</div>
-                        <div class="total-col">${t.grandTotal}</div>
-                    </div>
-                `;
+        function draw() {
+            const list = document.getElementById('team-list'); list.innerHTML = '';
+            teams.forEach((t, i) => {
+                list.innerHTML += `<div class="team-row">
+                    <div><span class="label-tag">Team</span><input type="text" value="${t.name || ''}" onchange="edit(${i},'name',this.value)"></div>
+                    <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
+                    <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
+                    <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
+                    
+                    <div><span class="label-tag">Prev Pos</span><input type="number" value="${t.prevPos || 0}" onchange="edit(${i},'prevPos',this.value)"></div>
+                    <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
+                    
+                    <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
+                        ${(t.alive || [1,1,1,1]).map((a,pi)=>`<button class="status-dot" style="background:${a? (config['status-bar-color'] || '#ffcc00') : '#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
+                    </div></div>
+                    <button style="color:red; background:none; border:none; cursor:pointer; font-weight:bold; font-size:16px;" onclick="removeTeam(${i})">✖</button>
+                </div>`;
             });
         }
 
-        function triggerElimBanner(elim) {
-            const banner = document.getElementById('elim-banner');
-            const name = document.getElementById('elim-team-name');
-            const rank = document.getElementById('elim-rank');
-            const kills = document.getElementById('elim-kills');
-            const logo = document.getElementById('elim-logo');
-
-            name.innerText = elim.name || 'TEAM';
-            rank.innerText = elim.rank || '0';
-            kills.innerText = elim.finishes || '0';
-
-            if(elim.logo && elim.logo.trim() !== '') {
-                logo.src = elim.logo.trim();
-                logo.style.display = 'block';
+        function edit(i,f,v) { 
+            if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
+                teams[i][f] = parseInt(v) || 0;
             } else {
-                logo.style.display = 'none';
+                teams[i][f] = v;
+            }
+            sync(); 
+        }
+        
+        function tog(i,pi) {
+            if(!teams[i].alive) teams[i].alive = [1,1,1,1];
+            teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
+            let elim = null;
+            if (teams[i].alive.every(a => a == 0)) {
+                if (!teams[i].elim) {
+                    teams[i].elim = true;
+                    let aliveCount = teams.filter(t => !t.elim).length;
+                    let rankNum = aliveCount + 1;
+                    elim = { 
+                        id: Date.now().toString(), 
+                        name: teams[i].name, 
+                        logo: teams[i].logo, 
+                        finishes: (parseInt(teams[i].fin)||0),
+                        rank: rankNum
+                    };
+                }
+            } else {
+                teams[i].elim = false;
+            }
+            sync(elim);
+        }
+
+        function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
+        
+        function renderHistoryButtons() {
+            const container = document.getElementById('history-buttons-layout');
+            container.innerHTML = '';
+
+            const overallBtn = document.createElement('button');
+            overallBtn.className = 'overall-btn';
+            overallBtn.innerText = '📊 OVERALL STANDINGS';
+            overallBtn.onclick = () => showOverallPopupTable();
+            container.appendChild(overallBtn);
+
+            const keys = Object.keys(matchHistory);
+            if(keys.length === 0) {
+                container.innerHTML += `<span style="color:#888; font-size:12px; margin-left: 10px;">(No archived matches)</span>`;
+                return;
             }
 
-            banner.classList.add('show');
-            setTimeout(() => {
-                banner.classList.remove('show');
-            }, 4000);
+            keys.sort((a,b) => parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", "")))
+                .forEach(key => {
+                    const btn = document.createElement('button');
+                    btn.className = 'hist-btn';
+                    btn.innerText = key.replace("Match", "MATCH ");
+                    btn.onclick = () => showPopupTable(key);
+                    container.appendChild(btn);
+                });
         }
+
+        function showPopupTable(matchKey) {
+            const modal = document.getElementById('popup-modal');
+            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
+            const savedTeams = matchHistory[matchKey] || [];
+
+            let sortedTeams = [...savedTeams].sort((a,b) => {
+                let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
+                let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
+                return totalB - totalA;
+            });
+
+            let html = `<table class="pop-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Rank</th>
+                        <th>Team Name</th>
+                        <th style="text-align:center;">Match Kills</th>
+                        <th style="text-align:center;">Match Pos Points</th>
+                        <th style="text-align:center; color:var(--cyan);">Total Match Pts</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            sortedTeams.forEach((t, idx) => {
+                let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
+                let teamName = (t.name || 'TEAM').trim();
+                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
+                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
+
+                html += `<tr>
+                    <td style="font-weight:bold; color:#aaa;">#${idx + 1}</td>
+                    <td>
+                        <div class="team-cell">
+                            ${imgTag}
+                            <span>${teamName}</span>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">${t.fin || 0}</td>
+                    <td style="text-align:center;">${t.pos || 0}</td>
+                    <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:16px;">${singleMatchTotal}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('modal-body').innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        function showOverallPopupTable() {
+            const modal = document.getElementById('popup-modal');
+            document.getElementById('modal-title').innerText = `OVERALL TOURNAMENT STANDINGS`;
+
+            let sortedTeams = [...teams].sort((a,b) => {
+                let totalA = ((parseInt(a.prevFin)||0) + (parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0) + (parseInt(a.pos)||0));
+                let totalB = ((parseInt(b.prevFin)||0) + (parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0) + (parseInt(b.pos)||0));
+                return totalB - totalA;
+            });
+
+            let html = `<table class="pop-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Rank</th>
+                        <th>Team Name</th>
+                        <th style="text-align:center;">Total Kills</th>
+                        <th style="text-align:center;">Total Pos Points</th>
+                        <th style="text-align:center; color:var(--cyan);">OVERALL PTS</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            sortedTeams.forEach((t, idx) => {
+                let overallKills = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0);
+                let overallPos = (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
+                let grandTotal = overallKills + overallPos;
+
+                let teamName = (t.name || 'TEAM').trim();
+                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
+                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
+
+                html += `<tr>
+                    <td style="font-weight:bold; color:var(--cyan);">#${idx + 1}</td>
+                    <td>
+                        <div class="team-cell">
+                            ${imgTag}
+                            <span>${teamName}</span>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">${overallKills}</td>
+                    <td style="text-align:center;">${overallPos}</td>
+                    <td style="text-align:center; font-weight:bold; color:var(--cyan); font-size:18px;">${grandTotal}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('modal-body').innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        function globalNewMatch() { 
+            if(confirm("New Match start karein? Points archive mein save honge aur alive status reset hoga.")) {
+                const currentMatchNumber = Object.keys(matchHistory).length + 1;
+                const matchKeyName = "Match" + currentMatchNumber;
+                
+                matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
+
+                teams.forEach(t => { 
+                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
+                    t.fin = 0; 
+                    
+                    t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
+                    t.pos = 0;
+                    
+                    t.alive = [1,1,1,1]; t.elim = false; 
+                }); 
+                
+                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
+            }
+        }
+        
+        function removeTeam(i) { if(confirm("Team delete karein?")) { teams.splice(i, 1); sync(); } }
+        function resetAll() { if(confirm("Complete Reset? Saara data aur history delete ho jayegi.")) { db.ref(SYNC_PATH).set(null); } }
     </script>
 </body>
 </html>
