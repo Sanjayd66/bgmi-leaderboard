@@ -11,13 +11,6 @@
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; margin: 0; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
-        /* 12 Color Grid Setup */
-        .color-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 25px; background: #1c2227; padding: 20px; border-radius: 8px; border: 1px solid #333; }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #252c33; padding: 10px; border-radius: 6px; }
-        .color-item span { font-size: 11px; font-weight: bold; color: #aaa; text-transform: uppercase; }
-        
-        input[type="color"] { border: none; width: 40px; height: 25px; cursor: pointer; background: none; padding: 0; }
-        
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
         
         .trans-mode-btn { background: #2196F3; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
@@ -53,24 +46,6 @@
     <div id="admin-content" class="admin-panel" style="display:none;">
         <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - OVERALL & MATCH STANDINGS</h2>
         
-        <!-- 12 COLOR SELECTION OPTIONS -->
-        <div class="color-grid">
-            <div class="color-item"><span>Theme Color</span><input type="color" id="cfg-cyan" onchange="updateCfg('cyan',this.value)"></div>
-            <div class="color-item"><span>Board BG</span><input type="color" id="cfg-dark-blue" onchange="updateCfg('dark-blue',this.value)"></div>
-            <div class="color-item"><span>Row BG</span><input type="color" id="cfg-row-bg" onchange="updateCfg('row-bg',this.value)"></div>
-            <div class="color-item"><span>Text Color</span><input type="color" id="cfg-text-color" onchange="updateCfg('text-color',this.value)"></div>
-            
-            <div class="color-item"><span>Status Bar BG</span><input type="color" id="cfg-status-bg" onchange="updateCfg('status-bg',this.value)"></div>
-            <div class="color-item"><span>Status Bar Active</span><input type="color" id="cfg-status-bar-color" onchange="updateCfg('status-bar-color',this.value)"></div>
-            <div class="color-item"><span>Header BG</span><input type="color" id="cfg-top-row-bg" onchange="updateCfg('top-row-bg',this.value)"></div>
-            <div class="color-item"><span>Rank BG</span><input type="color" id="cfg-rank-bg" onchange="updateCfg('rank-bg',this.value)"></div>
-
-            <div class="color-item"><span>Finishes BG</span><input type="color" id="cfg-fin-bg" onchange="updateCfg('fin-bg',this.value)"></div>
-            <div class="color-item"><span>Total Points BG</span><input type="color" id="cfg-total-bg" onchange="updateCfg('total-bg',this.value)"></div>
-            <div class="color-item"><span>Eliminated Row BG</span><input type="color" id="cfg-elim-bg" onchange="updateCfg('elim-bg',this.value)"></div>
-            <div class="color-item"><span>Elim Popup BG</span><input type="color" id="cfg-elim-popup-bg" onchange="updateCfg('elim-popup-bg',this.value)"></div>
-        </div>
-
         <div style="font-size: 11px; color: #888; margin-top: 10px; font-weight: bold; text-transform: uppercase;">Points Table Views & Match History:</div>
         <div class="history-container" id="history-buttons-layout"></div>
 
@@ -106,38 +81,16 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
-        let teams = []; let config = {}; let matchHistory = {};
+        let teams = []; let matchHistory = {};
         let isTransparentLayout = false;
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
             teams = data.teams || []; 
-            config = data.config || { 
-                'cyan': '#c000bb', 
-                'dark-blue': '#d881cc', 
-                'row-bg': '#e7a3dd', 
-                'text-color': '#ffffff', 
-                'status-bg': '#ffffff',
-                'status-bar-color': '#ffcc00',
-                'top-row-bg': '#d881cc',
-                'rank-bg': '#e7a3dd',
-                'fin-bg': '#e7a3dd',
-                'total-bg': '#190240',
-                'elim-bg': '#3a001e',
-                'elim-popup-bg': '#e63900' 
-            };
             matchHistory = data.history || {};
             isTransparentLayout = !!data.transparentLayout;
 
             updateTransBtnUI();
-
-            Object.keys(config).forEach(k => {
-                const el = document.getElementById('cfg-' + k);
-                if(el) el.value = config[k];
-            });
-            
-            document.documentElement.style.setProperty('--cyan', config.cyan || '#00f2ff');
-            
             renderHistoryButtons();
             draw();
         });
@@ -160,18 +113,12 @@
             db.ref(SYNC_PATH + '/transparentLayout').set(isTransparentLayout);
         }
 
-        function updateCfg(param, value) {
-            config[param] = value;
-            if(param === 'cyan') document.documentElement.style.setProperty('--cyan', value);
-            db.ref(SYNC_PATH + '/config').set(config);
-        }
-
         function sync(elimData = null) { 
             teams.forEach(t => { 
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                 t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
             });
-            const payload = { teams, config, history: matchHistory, transparentLayout: isTransparentLayout };
+            const payload = { teams, history: matchHistory, transparentLayout: isTransparentLayout };
             if(elimData) payload.lastEliminated = elimData;
             db.ref(SYNC_PATH).update(payload);
         }
@@ -189,7 +136,7 @@
                     <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
                     
                     <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
-                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a? (config['status-bar-color'] || '#ffcc00') : '#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
+                        ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a? '#ffcc00' : '#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
                     </div></div>
                     <button style="color:red; background:none; border:none; cursor:pointer;" onclick="removeTeam(${i})">✖</button>
                 </div>`;
