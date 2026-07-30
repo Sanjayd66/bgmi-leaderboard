@@ -136,14 +136,14 @@
             align-items: center; 
             justify-content: center; 
             font-weight: 900; 
-        }
+        } 
         
         @keyframes liveBarPulse {
             0% { transform: scaleY(0.85); opacity: 0.7; }
             100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
         }
 
-        /* WINNING PREDICTION LAYOUT (DYNAMIC COLORS FIXED) */
+        /* WINNING PREDICTION LAYOUT */
         #prediction-container {
             position: absolute;
             left: 80px;
@@ -254,7 +254,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ELIMINATION BANNER POPUP (DYNAMIC COLORS FIXED) */
+        /* ELIMINATION BANNER POPUP */
         #elim-banner { 
             position: absolute; 
             left: 80px; 
@@ -388,22 +388,31 @@
             box-shadow: none !important;
             border: none !important;
         }
+
+        /* VISUAL CLICK-TO-COLOR PICKER MODE STYLES */
+        body.picker-active * {
+            cursor: crosshair !important;
+        }
+        body.picker-active *:hover {
+            outline: 2px dashed #00f2ff !important;
+            outline-offset: -2px;
+        }
     </style>
 </head>
 <body>
 
     <!-- ELIMINATION BANNER POPUP -->
     <div id="elim-banner">
-        <div class="elim-card">
-            <div class="elim-rank-tag" id="elim-rank-tag">#5</div>
+        <div class="elim-card" data-var="elim-main-bg">
+            <div class="elim-rank-tag" id="elim-rank-tag" data-var="pred-tag-bg">#5</div>
             <div class="elim-logo-container">
                 <img id="elim-logo-img" src="" onerror="this.style.display='none'">
             </div>
             <div class="elim-right-content">
-                <div class="elim-main-banner">
+                <div class="elim-main-banner" data-var="elim-main-bg">
                     <span>ELIMINATED</span>
                 </div>
-                <div class="elim-stats-bar">
+                <div class="elim-stats-bar" data-var="elim-stats-bg">
                     <span id="elim-fin-text">1 FINISHES</span>
                     <span class="sep">|</span>
                     <span id="elim-pos-text">3 PLACE PTS.</span>
@@ -416,7 +425,7 @@
     <div id="prediction-container"></div>
     
     <!-- LEADERBOARD SIDEBAR -->
-    <div id="board"></div>
+    <div id="board" data-var="dark-blue"></div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
@@ -428,6 +437,7 @@
         let cachedTeamsData = [];
         let cachedPredData = null;
         let shouldAnimateNextRender = true;
+        let pickerModeActive = false;
 
         // DYNAMIC COLOR CONFIG MAPPER
         const COLOR_MAP = {
@@ -455,6 +465,14 @@
                     document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
                 }
             });
+
+            // PICKER MODE SYNC FROM ADMIN
+            pickerModeActive = !!data.pickerActive;
+            if(pickerModeActive) {
+                document.body.classList.add('picker-active');
+            } else {
+                document.body.classList.remove('picker-active');
+            }
 
             // TRANSPARENT LAYOUT TOGGLE SYNC
             if (data.transparentLayout) {
@@ -506,6 +524,26 @@
             render(cachedTeamsData, cachedPredData);
         });
 
+        // CLICK EVENT LISTENER FOR VISUAL MOUSE CLICK COLOR PICKING
+        document.addEventListener('click', (e) => {
+            if(!pickerModeActive) return;
+
+            let target = e.target.closest('[data-var]');
+            if(target) {
+                e.preventDefault();
+                e.stopPropagation();
+                let varKey = target.getAttribute('data-var');
+                
+                // Prompt user to pick color for clicked element
+                let currentColor = getComputedStyle(document.documentElement).getPropertyValue(COLOR_MAP[varKey]).trim();
+                let newColor = prompt(`Editing Color for element: ${varKey}\nEnter Hex or Color Code:`, currentColor);
+                
+                if(newColor) {
+                    db.ref(SYNC_PATH + '/config/' + varKey).set(newColor.trim());
+                }
+            }
+        });
+
         function render(teams, predData) {
             const board = document.getElementById('board');
             const predContainer = document.getElementById('prediction-container');
@@ -537,7 +575,7 @@
                 renderPrediction(predData, aliveTeams, predContainer.classList.contains('trigger-animate'));
             }
 
-            let h = `<div class="header-row"><div>#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+            let h = `<div class="header-row" data-var="top-row-bg"><div data-var="cyan">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
             
             const sortedTeams = [...teams].sort((a,b)=> {
                 let totalA = ((parseInt(a.prevFin) || 0) + (parseInt(a.fin) || 0)) + ((parseInt(a.prevPos) || 0) + (parseInt(a.pos) || 0));
@@ -554,13 +592,13 @@
                 let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
                 let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.1}s"` : '';
 
-                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${cardAnimClass}" ${cardDelay}>
+                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${cardAnimClass}" ${cardDelay} data-var="row-bg">
                     <div style="text-align:center;">${i+1}</div>
                     <div class="logo-col">${logoSrc}</div>
-                    <div class="name-col">${t.name || 'TEAM'}</div>
-                    <div class="status-col">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}"></div>`).join('')}</div>
+                    <div class="name-col" data-var="text-color">${t.name || 'TEAM'}</div>
+                    <div class="status-col" data-var="status-bg">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}" data-var="status-bar-color"></div>`).join('')}</div>
                     <div style="text-align:center;">${currentKills}</div>
-                    <div class="total-box">${overallTotal}</div>
+                    <div class="total-box" data-var="cyan">${overallTotal}</div>
                 </div>`;
             });
             board.innerHTML = h;
@@ -623,19 +661,19 @@
 
                 html += `
                     <div class="pred-card ${cardAnimClass}" ${cardDelay}>
-                        <div class="pred-top-tag">${p.name || 'TEAM'}</div>
-                        <div class="pred-middle-box">
+                        <div class="pred-top-tag" data-var="pred-tag-bg">${p.name || 'TEAM'}</div>
+                        <div class="pred-middle-box" data-var="pred-bg">
                             <div class="pred-logo-box">
                                 ${logoSrc ? `<img src="${logoSrc}">` : ''}
                             </div>
-                            <div class="pred-bars-box">
-                                <div class="pred-player-bar ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}"></div>
-                                <div class="pred-player-bar ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}"></div>
-                                <div class="pred-player-bar ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}"></div>
-                                <div class="pred-player-bar ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}"></div>
+                            <div class="pred-bars-box" data-var="status-bg">
+                                <div class="pred-player-bar ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
                             </div>
                         </div>
-                        <div class="pred-bottom-bar">WWCD - ${pctText}</div>
+                        <div class="pred-bottom-bar" data-var="elim-main-bg">WWCD - ${pctText}</div>
                     </div>
                 `;
             });
