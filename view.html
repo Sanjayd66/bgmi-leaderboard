@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BGMI Live Standings Overlay</title>
+    <title>BGMI Broadcast Overlay</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
@@ -16,31 +16,25 @@
 
         :root {
             --cyan: #00f2ff;
+            --blue-main: #005bb5;
+            --blue-dark: #003875;
             --dark-blue: #12193b;
             --row-bg: #1a2245;
             --text-color: #ffffff;
             --status-bg: #0b0f26;
             --status-bar-color: #00f2ff;
             --top-row-bg: #090d21;
-            --elim-bg: #0b0e14;
-            --pred-bg: #101622;
-            --pred-tag-bg: #00f2ff;
-            --elim-main-bg: #e63900;
-            --elim-stats-bg: #ffaa00;
         }
 
         * { box-sizing: border-box; font-family: 'Oswald', sans-serif; }
-        body { margin: 0; padding: 20px; background: transparent; overflow: hidden; }
+        body { margin: 0; padding: 0; background: transparent; overflow: hidden; width: 100vw; height: 100vh; }
 
-        body.transparent-mode .leaderboard,
-        body.transparent-mode .prediction-card-container { background: transparent !important; }
-
-        .picker-active [data-var] { outline: 2px dashed #00f2ff !important; cursor: pointer !important; }
-        .picker-active [data-var]:hover { outline: 2px solid #ff0055 !important; }
-
+        /* --- MODE 1: LIVE IN-GAME SIDE LEADERBOARD --- */
         .leaderboard {
+            position: absolute; top: 20px; left: 20px;
             width: 420px; background: var(--dark-blue); border-radius: 8px;
             overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 1; transition: opacity 0.3s ease-in-out;
+            display: block;
         }
 
         .header-row {
@@ -58,67 +52,110 @@
         .team-row.eliminated { opacity: 0.5; filter: grayscale(1); }
         .logo-col img { width: 30px; height: 30px; object-fit: contain; }
         .name-col { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; font-size: 15px; }
-
         .status-col { display: flex; gap: 3px; justify-content: center; background: var(--status-bg); padding: 4px; border-radius: 4px; }
         .bar { width: 8px; height: 14px; background: var(--status-bar-color); border-radius: 2px; }
         .bar.dead { background: #333 !important; }
-
         .total-box { background: var(--cyan); color: #000; font-weight: 800; border-radius: 4px; padding: 2px 0; text-align: center; }
 
-        /* PREDICTION SYSTEM */
-        .prediction-card-container { display: none; gap: 10px; width: 100%; max-width: 900px; justify-content: center; }
-        .pred-card { background: var(--pred-bg); border-radius: 8px; overflow: hidden; width: 160px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .pred-top-tag { background: var(--pred-tag-bg); color: #000; font-weight: 800; font-size: 13px; padding: 4px; text-transform: uppercase; }
-        .pred-middle-box { padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .pred-logo-box img { width: 45px; height: 45px; object-fit: contain; }
-        .pred-bars-box { display: flex; gap: 4px; background: var(--status-bg); padding: 4px 8px; border-radius: 4px; }
-        .pred-player-bar { width: 8px; height: 16px; background: var(--status-bar-color); border-radius: 2px; }
-        .pred-player-bar.dead { background: #333 !important; }
-        .pred-bottom-bar { background: var(--elim-main-bg); color: #fff; font-weight: 800; font-size: 14px; padding: 6px; }
-
-        /* ELIMINATION BANNER POPUP */
-        .elim-banner {
-            position: fixed; top: 20px; right: -400px; width: 320px; background: var(--elim-bg);
-            border-left: 5px solid var(--elim-main-bg); border-radius: 6px; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999;
+        /* --- MODE 2: FULL SCREEN MATCH RANKINGS GRAPHIC (EXACT IMAGE MATCH) --- */
+        .full-screen-rankings {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #ffffff; color: #000; z-index: 9999;
         }
-        .elim-banner.show { right: 20px; }
-        .elim-banner.hide-anim { right: -400px; }
-        .elim-top { background: var(--elim-main-bg); color: #fff; font-weight: 800; padding: 4px 10px; display: flex; justify-content: space-between; font-size: 14px; }
-        .elim-body { display: flex; align-items: center; padding: 10px; gap: 12px; }
-        .elim-logo img { width: 50px; height: 50px; object-fit: contain; }
-        .elim-details { display: flex; flex-direction: column; }
-        .elim-stats { display: flex; gap: 10px; margin-top: 4px; }
-        .elim-stat-tag { background: var(--elim-stats-bg); color: #000; font-weight: 800; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
 
-        /* ANIMATIONS */
-        .trigger-animate .team-row, .trigger-animate .pred-card { opacity: 0; animation: fadeInUp 0.4s forwards ease-out; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        /* Top Header Banner */
+        .rankings-header {
+            position: absolute; top: 20px; right: 0; width: 75%; height: 80px;
+            background: var(--blue-main); clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%);
+            display: flex; align-items: center; justify-content: flex-end; padding-right: 50px;
+        }
+        .rankings-header-title { color: #ffffff; font-size: 55px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+
+        .rankings-header-decor {
+            position: absolute; top: 20px; left: 18%; width: 120px; height: 80px;
+            background: var(--blue-main); transform: skewX(-25deg);
+        }
+
+        /* Left Side Branding Panel */
+        .left-brand-panel {
+            position: absolute; left: 0; top: 0; width: 22%; height: calc(100vh - 60px);
+            display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: 20px 10px;
+        }
+        .brand-logo-main { max-width: 80%; max-height: 220px; object-fit: contain; }
+        .decor-icon { width: 60px; opacity: 0.8; }
+
+        /* Grid Layout for 18 Teams (2 Columns x 9 Rows) */
+        .rankings-grid {
+            position: absolute; top: 120px; right: 20px; width: 76%; height: calc(100vh - 200px);
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(9, 1fr); gap: 10px 20px;
+        }
+
+        .rank-card {
+            background: var(--blue-main); color: #fff; display: flex; align-items: center;
+            height: 100%; border-radius: 2px; overflow: hidden; position: relative;
+            clip-path: polygon(0 0, 92% 0, 100% 100%, 0 100%);
+        }
+
+        .rank-num {
+            width: 50px; height: 100%; background: #111b36; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 800; color: #fff;
+        }
+
+        .rank-logo { width: 45px; height: 100%; display: flex; align-items: center; justify-content: center; padding: 2px; }
+        .rank-logo img { width: 32px; height: 32px; object-fit: contain; }
+
+        .rank-name {
+            flex: 1; font-size: 18px; font-weight: 700; text-transform: uppercase;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px;
+        }
+
+        .rank-stats-group { display: flex; align-items: center; padding-right: 40px; gap: 15px; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        .stat-val { font-size: 18px; font-weight: 800; color: #fff; }
+        .stat-lbl { font-size: 9px; opacity: 0.7; text-transform: uppercase; margin-top: -3px; }
+
+        /* Bottom Footer Strip */
+        .bottom-footer {
+            position: absolute; bottom: 0; left: 0; width: 100vw; height: 60px;
+            background: #0d88d6; color: #fff; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; font-weight: 700; font-size: 18px; text-transform: uppercase;
+        }
+        .footer-item { display: flex; align-items: center; gap: 10px; }
+        .footer-logo { height: 35px; object-fit: contain; }
     </style>
 </head>
 <body>
 
-    <!-- LIVE BOARD -->
+    <!-- MODE 1: LIVE FLOATING OVERLAY -->
     <div id="board" class="leaderboard"></div>
 
-    <!-- PREDICTION BOARD -->
-    <div id="prediction-container" class="prediction-card-container"></div>
-
-    <!-- ELIMINATION BANNER POPUP -->
-    <div id="elim-banner" class="elim-banner">
-        <div class="elim-top" data-var="elim-main-bg">
-            <span>TEAM ELIMINATED</span>
-            <span id="elim-rank-tag">#--</span>
+    <!-- MODE 2: FULL SCREEN MATCH RANKINGS SCREEN -->
+    <div id="full-rankings-screen" class="full-screen-rankings">
+        <div class="rankings-header-decor"></div>
+        <div class="rankings-header">
+            <div id="rankings-header-title" class="rankings-header-title">MATCH RANKINGS</div>
         </div>
-        <div class="elim-body" data-var="elim-bg">
-            <div class="elim-logo">
-                <img id="elim-logo-img" src="" alt="">
+
+        <div class="left-brand-panel">
+            <img class="decor-icon" src="https://cdn-icons-png.flaticon.com/512/808/808431.png" alt="Icon">
+            <img id="brand-event-logo" class="brand-logo-main" src="" alt="Event Logo">
+            <img class="decor-icon" src="https://cdn-icons-png.flaticon.com/512/808/808431.png" alt="Icon">
+        </div>
+
+        <div id="rankings-grid" class="rankings-grid"></div>
+
+        <div class="bottom-footer">
+            <div id="footer-presented-by">ORGANIZER PRESENTS</div>
+            <div class="footer-item">
+                <span>Follow us on Instagram :</span>
+                <span id="footer-insta" style="color:#fff; font-weight:800;">@INSTAGRAM</span>
             </div>
-            <div class="elim-details">
-                <div class="elim-stats">
-                    <span id="elim-fin-text" class="elim-stat-tag" data-var="elim-stats-bg">0 FINISHES</span>
-                    <span id="elim-pos-text" class="elim-stat-tag" data-var="elim-stats-bg">0 PLACE PTS.</span>
-                </div>
+            <div class="footer-item">
+                <span>Catch the live on YouTube :</span>
+                <span id="footer-yt" style="color:#fff; font-weight:800;">YOUTUBE CHANNEL</span>
+            </div>
+            <div class="footer-item">
+                <img id="footer-org-logo" class="footer-logo" src="" alt="">
             </div>
         </div>
     </div>
@@ -127,262 +164,119 @@
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        const BASE_PATH = 'TournamentData';
+        const BASE_PATH = 'TournamentData/LiveSession';
 
-        let currentElimId = "";
-        let cachedTeamsData = [];
-        let cachedPredData = null;
-        let shouldAnimateNextRender = true;
-        let pickerModeActive = false;
+        db.ref(BASE_PATH).on('value', (snap) => {
+            const data = snap.val() || {};
+            const activeMatch = data.activeMatch || 'LIVE';
+            const info = data.info || {};
 
-        const COLOR_MAP = {
-            'cyan': '--cyan',
-            'dark-blue': '--dark-blue',
-            'row-bg': '--row-bg',
-            'text-color': '--text-color',
-            'status-bg': '--status-bg',
-            'status-bar-color': '--status-bar-color',
-            'top-row-bg': '--top-row-bg',
-            'elim-bg': '--elim-bg',
-            'pred-bg': '--pred-bg',
-            'pred-tag-bg': '--pred-tag-bg',
-            'elim-main-bg': '--elim-main-bg',
-            'elim-stats-bg': '--elim-stats-bg'
-        };
+            // Dynamic Branding Updates
+            document.getElementById('brand-event-logo').src = info.tourneyLogo || 'https://via.placeholder.com/200?text=EVENT+LOGO';
+            document.getElementById('footer-org-logo').src = info.orgLogo || 'https://via.placeholder.com/100?text=ORG';
+            document.getElementById('footer-presented-by').innerText = info.presentedBy ? `${info.presentedBy} PRESENTS` : 'EVENT PRESENTS';
+            document.getElementById('footer-insta').innerText = info.instaHandle || '@ESPORTS';
+            document.getElementById('footer-yt').innerText = info.ytHandle || 'LIVE GAMING';
 
-        // Listen to LiveSession Config & Sync Dynamic Match State
-        db.ref(`${BASE_PATH}/LiveSession`).on('value', (snap) => {
-            const liveData = snap.val() || {};
+            if (activeMatch === 'LIVE') {
+                // Show Floating Live Leaderboard
+                document.getElementById('board').style.display = 'block';
+                document.getElementById('full-rankings-screen').style.display = 'none';
+                renderLiveBoard(data.teams || []);
+            } else {
+                // Show Full Screen Graphic Overlay
+                document.getElementById('board').style.display = 'none';
+                document.getElementById('full-rankings-screen').style.display = 'block';
 
-            // Color Sync
-            const cfg = liveData.config || {};
-            Object.keys(COLOR_MAP).forEach(k => {
-                if (cfg[k]) document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
-            });
-
-            pickerModeActive = !!liveData.pickerActive;
-            if(pickerModeActive) document.body.classList.add('picker-active');
-            else document.body.classList.remove('picker-active');
-
-            if (liveData.transparentLayout) document.body.classList.add('transparent-mode');
-            else document.body.classList.remove('transparent-mode');
-
-            // Elimination Banner Dynamic Popup Trigger
-            if(liveData.lastEliminated && liveData.lastEliminated.id !== currentElimId) {
-                currentElimId = liveData.lastEliminated.id;
-                
-                document.getElementById('elim-rank-tag').innerText = `#${liveData.lastEliminated.rank || 1}`;
-                const logoImg = document.getElementById('elim-logo-img');
-                if(liveData.lastEliminated.logo && liveData.lastEliminated.logo.trim() !== "") {
-                    logoImg.src = liveData.lastEliminated.logo;
-                    logoImg.style.display = 'block';
+                let matchTeams = [];
+                if (activeMatch === 'OVERALL') {
+                    document.getElementById('rankings-header-title').innerText = 'OVERALL STANDINGS';
+                    matchTeams = data.teams || [];
                 } else {
-                    logoImg.style.display = 'none';
+                    document.getElementById('rankings-header-title').innerText = activeMatch.replace('Match', 'MATCH ') + ' RANKINGS';
+                    matchTeams = (data.history && data.history[activeMatch]) ? data.history[activeMatch] : [];
                 }
 
-                document.getElementById('elim-fin-text').innerText = `${liveData.lastEliminated.finishes || 0} FINISHES`;
-                let posPoints = 0;
-                let r = liveData.lastEliminated.rank || 0;
-                if(r === 1) posPoints = 10;
-                else if(r === 2) posPoints = 6;
-                else if(r === 3) posPoints = 5;
-                else if(r === 4) posPoints = 4;
-                else if(r === 5) posPoints = 3;
-                else if(r === 6) posPoints = 2;
-                else if(r === 7 || r === 8) posPoints = 1;
-
-                document.getElementById('elim-pos-text').innerText = `${posPoints} PLACE PTS.`;
-                
-                const banner = document.getElementById('elim-banner');
-                banner.classList.remove('show', 'hide-anim');
-                void banner.offsetWidth; 
-                banner.classList.add('show'); 
-                
-                setTimeout(() => { 
-                    banner.classList.add('hide-anim');
-                    setTimeout(() => { banner.classList.remove('show', 'hide-anim'); }, 400);
-                }, 5000);
-            }
-
-            // Sync Selected Match Data
-            const activeMatchKey = liveData.activeMatch || 'LIVE';
-            
-            if(activeMatchKey === 'LIVE' || !liveData.history || !liveData.history[activeMatchKey]) {
-                cachedTeamsData = liveData.teams || [];
-            } else {
-                cachedTeamsData = liveData.history[activeMatchKey] || [];
-            }
-            
-            cachedPredData = liveData.predictions || null;
-            render(cachedTeamsData, cachedPredData);
-        });
-
-        document.addEventListener('click', (e) => {
-            if(!pickerModeActive) return;
-            let target = e.target.closest('[data-var]');
-            if(target) {
-                e.preventDefault();
-                e.stopPropagation();
-                let varKey = target.getAttribute('data-var');
-                let currentColor = getComputedStyle(document.documentElement).getPropertyValue(COLOR_MAP[varKey]).trim();
-                let newColor = prompt(`Editing Color for element: ${varKey}\nEnter Hex or Color Code:`, currentColor);
-                if(newColor) {
-                    db.ref(`${BASE_PATH}/LiveSession/config/${varKey}`).set(newColor.trim());
-                }
+                renderFullScreenGrid(matchTeams, activeMatch === 'OVERALL');
             }
         });
 
-        function render(teams, predData) {
+        // 1. Live In-Game Floating Overlay Render
+        function renderLiveBoard(teams) {
             const board = document.getElementById('board');
-            const predContainer = document.getElementById('prediction-container');
+            let h = `<div class="header-row"><div style="color:var(--cyan)">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
 
-            const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
-            const showPrediction = aliveTeams.length <= 5 && aliveTeams.length >= 2;
-
-            if (showPrediction) {
-                board.style.display = 'none';
-                predContainer.style.display = 'flex';
-            } else {
-                board.style.display = 'block';
-                predContainer.style.display = 'none';
-                predContainer.innerHTML = '';
-            }
-
-            board.classList.remove('trigger-animate');
-            predContainer.classList.remove('trigger-animate');
-
-            if (shouldAnimateNextRender) {
-                void board.offsetWidth;
-                void predContainer.offsetWidth;
-                if (!showPrediction) board.classList.add('trigger-animate');
-                if (showPrediction) predContainer.classList.add('trigger-animate');
-                shouldAnimateNextRender = false;
-            }
-
-            if (showPrediction) {
-                renderPrediction(predData, aliveTeams, predContainer.classList.contains('trigger-animate'));
-            }
-
-            let h = `<div class="header-row" data-var="top-row-bg"><div data-var="cyan">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
-            
-            const sortedTeams = [...teams].sort((a,b)=> {
-                let totalA = ((parseInt(a.prevFin) || 0) + (parseInt(a.fin) || 0)) + ((parseInt(a.prevPos) || 0) + (parseInt(a.pos) || 0));
-                let totalB = ((parseInt(b.prevFin) || 0) + (parseInt(b.fin) || 0)) + ((parseInt(b.prevPos) || 0) + (parseInt(b.pos) || 0));
+            const sorted = [...teams].sort((a,b) => {
+                let totalA = ((parseInt(a.prevFin)||0) + (parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0) + (parseInt(a.pos)||0));
+                let totalB = ((parseInt(b.prevFin)||0) + (parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0) + (parseInt(b.pos)||0));
                 return totalB - totalA;
             });
 
-            sortedTeams.forEach((t, i) => {
+            sorted.forEach((t, i) => {
                 let currentKills = parseInt(t.fin) || 0;
                 let overallTotal = ((parseInt(t.prevFin) || 0) + currentKills) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
-                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}" onerror="this.style.opacity='0'">` : '';
+                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}">` : '';
                 let isEliminated = t.elim || (t.alive && t.alive.every(a => a == 0 || a == '0'));
 
-                let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
-                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.1}s"` : '';
-
-                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${cardAnimClass}" ${cardDelay} data-var="row-bg">
+                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''}">
                     <div style="text-align:center;">${i+1}</div>
                     <div class="logo-col">${logoSrc}</div>
-                    <div class="name-col" data-var="text-color">${t.name || 'TEAM'}</div>
-                    <div class="status-col" data-var="status-bg">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}" data-var="status-bar-color"></div>`).join('')}</div>
+                    <div class="name-col">${t.name || 'TEAM'}</div>
+                    <div class="status-col">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}"></div>`).join('')}</div>
                     <div style="text-align:center;">${currentKills}</div>
-                    <div class="total-box" data-var="cyan">${overallTotal}</div>
+                    <div class="total-box">${overallTotal}</div>
                 </div>`;
             });
             board.innerHTML = h;
         }
 
-        function renderPrediction(rawPredData, aliveTeams, isAnimating) {
-            const container = document.getElementById('prediction-container');
-            let displayList = [];
+        // 2. Full Screen Image Matching Graphic Grid
+        function renderFullScreenGrid(teamsList, isOverall) {
+            const grid = document.getElementById('rankings-grid');
+            grid.innerHTML = '';
 
-            if (rawPredData) {
-                let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
-                rawList.forEach(p => {
-                    let liveTeam = aliveTeams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
-                    if (liveTeam) {
-                        displayList.push({
-                            name: liveTeam.name,
-                            logo: liveTeam.logo || p.logo,
-                            alive: liveTeam.alive,
-                            wwcd: p.wwcd || p.winChance || '20%'
-                        });
-                    }
-                });
-            }
+            let sorted = [...teamsList].sort((a,b) => {
+                let totalA = isOverall ? 
+                    (((parseInt(a.prevFin)||0)+(parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0)+(parseInt(a.pos)||0))) :
+                    ((parseInt(a.fin)||0) + (parseInt(a.pos)||0));
+                let totalB = isOverall ? 
+                    (((parseInt(b.prevFin)||0)+(parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0)+(parseInt(b.pos)||0))) :
+                    ((parseInt(b.fin)||0) + (parseInt(b.pos)||0));
+                return totalB - totalA;
+            });
 
-            if (displayList.length === 0 && aliveTeams.length >= 2) {
-                let totalScoreSum = aliveTeams.reduce((acc, t) => {
-                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
-                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
-                    return acc + (totalPts + (aliveCount * 4));
-                }, 0) || 1;
+            // Fill up to 18 slots as per image layout
+            for (let i = 0; i < 18; i++) {
+                let t = sorted[i];
+                if (t) {
+                    let kills = isOverall ? ((parseInt(t.prevFin)||0) + (parseInt(t.fin)||0)) : (parseInt(t.fin)||0);
+                    let posPts = isOverall ? ((parseInt(t.prevPos)||0) + (parseInt(t.pos)||0)) : (parseInt(t.pos)||0);
+                    let totalPts = kills + posPts;
+                    let logoHtml = t.logo ? `<img src="${t.logo}" onerror="this.style.display='none'">` : '';
 
-                displayList = aliveTeams.map(t => {
-                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
-                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
-                    let prob = Math.round((((totalPts + (aliveCount * 4)) / totalScoreSum) * 100));
-                    return {
-                        name: t.name,
-                        logo: t.logo,
-                        alive: t.alive,
-                        wwcd: prob + '%'
-                    };
-                }).sort((a,b) => parseInt(b.wwcd) - parseInt(a.wwcd));
-            }
-
-            if (displayList.length === 0) {
-                container.innerHTML = "";
-                return;
-            }
-
-            let html = "";
-            let cardAnimClass = isAnimating ? 'trigger-card-animate' : '';
-
-            displayList.slice(0, 5).forEach((p, idx) => {
-                let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
-                let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
-                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
-                let playerAliveArr = p.alive || [1, 1, 1, 1];
-
-                html += `
-                    <div class="pred-card ${cardAnimClass}" ${cardDelay}>
-                        <div class="pred-top-tag" data-var="pred-tag-bg">${p.name || 'TEAM'}</div>
-                        <div class="pred-middle-box" data-var="pred-bg">
-                            <div class="pred-logo-box">
-                                ${logoSrc ? `<img src="${logoSrc}">` : ''}
-                            </div>
-                            <div class="pred-bars-box" data-var="status-bg">
-                                <div class="pred-player-bar ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
-                                <div class="pred-player-bar ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
-                                <div class="pred-player-bar ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
-                                <div class="pred-player-bar ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                    grid.innerHTML += `
+                        <div class="rank-card">
+                            <div class="rank-num">${i + 1}</div>
+                            <div class="rank-logo">${logoHtml}</div>
+                            <div class="rank-name">${t.name || 'TEAM'}</div>
+                            <div class="rank-stats-group">
+                                <div class="stat-box"><span class="stat-val">${posPts}</span><span class="stat-lbl">PLACE PTS</span></div>
+                                <div class="stat-box"><span class="stat-val">${kills}</span><span class="stat-lbl">KILLS</span></div>
+                                <div class="stat-box"><span class="stat-val" style="color:var(--cyan);">${totalPts}</span><span class="stat-lbl">TOTAL</span></div>
                             </div>
                         </div>
-                        <div class="pred-bottom-bar" data-var="elim-main-bg">WWCD - ${pctText}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        setInterval(() => {
-            const board = document.getElementById('board');
-            const predContainer = document.getElementById('prediction-container');
-            
-            board.style.opacity = "0";
-            predContainer.style.opacity = "0";
-            
-            setTimeout(() => {
-                if(cachedTeamsData.length > 0) {
-                    shouldAnimateNextRender = true;
-                    board.style.opacity = "1";
-                    predContainer.style.opacity = "1";
-                    render(cachedTeamsData, cachedPredData);
+                    `;
+                } else {
+                    // Empty Card Shell
+                    grid.innerHTML += `
+                        <div class="rank-card" style="opacity: 0.3;">
+                            <div class="rank-num">${i + 1}</div>
+                            <div class="rank-name">--</div>
+                        </div>
+                    `;
                 }
-            }, 300); 
-        }, 30000);
+            }
+        }
     </script>
 </body>
 </html>
