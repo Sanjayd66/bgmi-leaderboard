@@ -6,6 +6,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'Agency FB';
+            src: local('Agency FB Bold'), local('AgencyFB-Bold'), local('Agency FB');
+            font-weight: bold;
+        }
+
         :root { 
             --cyan: #ffcc00; 
             --dark-blue: #12193b; 
@@ -23,15 +29,23 @@
 
         * {
             box-sizing: border-box;
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Agency FB', 'Oswald', sans-serif;
+            font-weight: bold;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
 
-        body { 
+        html, body { 
             margin: 0; 
+            padding: 0;
             background: transparent;
             overflow: hidden; 
             width: 1920px; 
             height: 1080px; 
+            transform-origin: top left;
         }
         
         /* LEADERBOARD BOARD RIGHT SIDE */
@@ -42,32 +56,37 @@
             background: var(--dark-blue); 
             padding: 8px; 
             border-radius: 4px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
             transition: all 0.5s ease;
+            backface-visibility: hidden;
+            transform: translateZ(0);
         }
         
         .header-row, .team-row { 
             display: grid; 
-            grid-template-columns: 25px 30px 65px 45px 30px 35px; 
+            grid-template-columns: 30px 35px 85px 55px 40px 45px; 
             align-items: center; 
-            gap: 2px; 
+            gap: 4px; 
             color: var(--text-color); 
         }
 
         .header-row { 
-            font-size: 11px; 
+            font-size: 15px; 
             color: var(--cyan); 
             background: var(--top-row-bg); 
-            border-bottom: 1px solid rgba(255,255,255,0.2); 
+            border-bottom: 2px solid rgba(255,255,255,0.2); 
             margin-bottom: 4px; 
             text-align: center; 
+            padding: 4px 0;
+            letter-spacing: 1px;
         }
         
         .team-row { 
             background: var(--row-bg); 
-            height: 32px; 
-            margin-bottom: 2px; 
+            height: 36px; 
+            margin-bottom: 3px; 
             transition: all 0.3s ease; 
+            font-size: 18px;
         }
 
         .team-row.eliminated { 
@@ -77,8 +96,8 @@
         }
 
         .logo-col { 
-            width: 22px; 
-            height: 22px; 
+            width: 26px; 
+            height: 26px; 
             background: transparent; 
             border-radius: 2px; 
             margin: auto; 
@@ -91,21 +110,23 @@
             width: 100%; 
             height: 100%; 
             object-fit: contain; 
+            image-rendering: -webkit-optimize-contrast;
         }
 
         .name-col { 
             padding-left: 5px; 
             font-weight: bold; 
-            font-size: 13px; 
+            font-size: 18px; 
             overflow: hidden; 
             white-space: nowrap; 
             text-transform: uppercase; 
+            letter-spacing: 0.5px;
         } 
         
         /* ALIVE STATUS BARS & ANIMATION */
         .status-col { 
             display: flex; 
-            gap: 3px; 
+            gap: 4px; 
             justify-content: center; 
             background: var(--status-bg); 
             height: 100%; 
@@ -114,8 +135,8 @@
         }
 
         .bar { 
-            width: 5px; 
-            height: 18px; 
+            width: 6px; 
+            height: 20px; 
             background: var(--status-bar-color); 
             box-shadow: 0 0 8px var(--status-bar-color); 
             animation: liveBarPulse 1.2s infinite ease-in-out alternate;
@@ -136,6 +157,7 @@
             align-items: center; 
             justify-content: center; 
             font-weight: 900; 
+            font-size: 20px;
         } 
         
         @keyframes liveBarPulse {
@@ -157,7 +179,7 @@
         .pred-card {
             display: flex;
             flex-direction: column;
-            width: 160px;
+            width: 170px;
             position: relative;
             transition: all 0.4s ease;
         }
@@ -166,11 +188,11 @@
             background: var(--pred-tag-bg);
             color: #000000;
             font-weight: 800;
-            font-size: 13px;
+            font-size: 16px;
             text-align: center;
-            width: 75%;
+            width: 80%;
             margin: 0 auto;
-            padding: 1px 0;
+            padding: 2px 0;
             border-radius: 2px 2px 0 0;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -182,13 +204,13 @@
 
         .pred-middle-box {
             display: flex;
-            height: 50px;
+            height: 54px;
             background: var(--pred-bg);
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         .pred-logo-box {
-            width: 52px;
+            width: 54px;
             height: 100%;
             background: #ffffff;
             display: flex;
@@ -201,6 +223,7 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
         }
 
         .pred-bars-box {
@@ -213,8 +236,8 @@
         }
 
         .pred-player-bar {
-            width: 6px;
-            height: 24px;
+            width: 7px;
+            height: 26px;
             border-radius: 1px;
             transition: all 0.3s ease;
         }
@@ -234,10 +257,10 @@
         .pred-bottom-bar {
             background: var(--elim-main-bg);
             color: #ffffff;
-            font-size: 14px;
+            font-size: 18px;
             font-weight: 800;
             text-align: center;
-            padding: 3px 0;
+            padding: 4px 0;
             letter-spacing: 0.5px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.4);
         }
@@ -292,17 +315,17 @@
             left: -15px;
             background: var(--pred-tag-bg);
             color: #000000;
-            font-size: 26px;
+            font-size: 30px;
             font-weight: 800;
-            padding: 2px 10px;
+            padding: 2px 12px;
             line-height: 1;
             box-shadow: 2px 4px 10px rgba(0,0,0,0.5);
             z-index: 20;
         }
 
         .elim-logo-container {
-            width: 80px;
-            height: 80px;
+            width: 85px;
+            height: 85px;
             background: #ffffff;
             display: flex;
             align-items: center;
@@ -315,24 +338,25 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
         }
 
         .elim-right-content {
             display: flex;
             flex-direction: column;
-            width: 360px;
+            width: 380px;
         }
 
         .elim-main-banner {
             background: var(--elim-main-bg);
-            height: 50px;
+            height: 52px;
             display: flex;
             align-items: center;
             padding-left: 18px;
         }
 
         .elim-main-banner span {
-            font-size: 38px;
+            font-size: 42px;
             font-weight: 800;
             color: #ffffff;
             letter-spacing: 2px;
@@ -342,13 +366,13 @@
 
         .elim-stats-bar {
             background: var(--elim-stats-bg);
-            height: 30px;
+            height: 33px;
             display: flex;
             align-items: center;
             padding-left: 18px;
             gap: 12px;
             color: #000000;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 800;
             text-transform: uppercase;
         }
@@ -439,7 +463,6 @@
         let shouldAnimateNextRender = true;
         let pickerModeActive = false;
 
-        // DYNAMIC COLOR CONFIG MAPPER
         const COLOR_MAP = {
             'cyan': '--cyan',
             'dark-blue': '--dark-blue',
@@ -459,14 +482,12 @@
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
             
-            // DYNAMICALLY SET ALL ROOT CSS VARIABLES
             Object.keys(COLOR_MAP).forEach(k => {
                 if (cfg[k]) {
                     document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
                 }
             });
 
-            // PICKER MODE SYNC FROM ADMIN
             pickerModeActive = !!data.pickerActive;
             if(pickerModeActive) {
                 document.body.classList.add('picker-active');
@@ -474,7 +495,6 @@
                 document.body.classList.remove('picker-active');
             }
 
-            // TRANSPARENT LAYOUT TOGGLE SYNC
             if (data.transparentLayout) {
                 document.body.classList.add('transparent-mode');
             } else {
@@ -484,7 +504,6 @@
             cachedTeamsData = data.teams || [];
             cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
 
-            // ELIMINATION POPUP TRIGGER
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
                 
@@ -524,7 +543,6 @@
             render(cachedTeamsData, cachedPredData);
         });
 
-        // CLICK EVENT LISTENER FOR VISUAL MOUSE CLICK COLOR PICKING
         document.addEventListener('click', (e) => {
             if(!pickerModeActive) return;
 
@@ -533,8 +551,6 @@
                 e.preventDefault();
                 e.stopPropagation();
                 let varKey = target.getAttribute('data-var');
-                
-                // Prompt user to pick color for clicked element
                 let currentColor = getComputedStyle(document.documentElement).getPropertyValue(COLOR_MAP[varKey]).trim();
                 let newColor = prompt(`Editing Color for element: ${varKey}\nEnter Hex or Color Code:`, currentColor);
                 
