@@ -2,436 +2,133 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGMI Live Standings Overlay</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --cyan: #ffcc00; 
-            --dark-blue: #12193b; 
-            --row-bg: #1a2245; 
-            --text-color: #ffffff; 
-            --status-bg: #252c33;
-            --status-bar-color: #ffcc00;
-            --top-row-bg: #15191d;
-            --elim-bg: #15191d;
-            --pred-bg: #0b0e11;
-            --pred-tag-bg: #ffb800;
+        @font-face {
+            font-family: 'Agency FB';
+            src: local('Agency FB Bold'), local('AgencyFB-Bold'), local('Agency FB');
+            font-weight: bold;
+        }
+
+        :root {
+            --cyan: #00f2ff;
+            --dark-blue: #12193b;
+            --row-bg: #1a2245;
+            --text-color: #ffffff;
+            --status-bg: #0b0f26;
+            --status-bar-color: #00f2ff;
+            --top-row-bg: #090d21;
+            --elim-bg: #0b0e14;
+            --pred-bg: #101622;
+            --pred-tag-bg: #00f2ff;
             --elim-main-bg: #e63900;
             --elim-stats-bg: #ffaa00;
         }
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Oswald', sans-serif;
+        * { box-sizing: border-box; font-family: 'Oswald', sans-serif; }
+        body { margin: 0; padding: 20px; background: transparent; overflow: hidden; }
+
+        body.transparent-mode .leaderboard,
+        body.transparent-mode .prediction-card-container { background: transparent !important; }
+
+        .picker-active [data-var] { outline: 2px dashed #00f2ff !important; cursor: pointer !important; }
+        .picker-active [data-var]:hover { outline: 2px solid #ff0055 !important; }
+
+        .leaderboard {
+            width: 420px; background: var(--dark-blue); border-radius: 8px;
+            overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 1; transition: opacity 0.3s ease-in-out;
         }
 
-        body { 
-            margin: 0; 
-            background: transparent;
-            overflow: hidden; 
-            width: 1920px; 
-            height: 1080px; 
-        }
-        
-        /* LEADERBOARD BOARD RIGHT SIDE */
-        #board { 
-            position: absolute; 
-            right: 40px; 
-            bottom: 40px; 
-            background: var(--dark-blue); 
-            padding: 8px; 
-            border-radius: 4px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            transition: all 0.5s ease;
-        }
-        
-        .header-row, .team-row { 
-            display: grid; 
-            grid-template-columns: 25px 30px 65px 45px 30px 35px; 
-            align-items: center; 
-            gap: 2px; 
-            color: var(--text-color); 
+        .header-row {
+            display: grid; grid-template-columns: 35px 45px 1fr 65px 45px 55px;
+            background: var(--top-row-bg); padding: 10px 8px; font-weight: 800;
+            font-size: 14px; color: var(--text-color); align-items: center; text-align: center;
         }
 
-        .header-row { 
-            font-size: 11px; 
-            color: var(--cyan); 
-            background: var(--top-row-bg); 
-            border-bottom: 1px solid rgba(255,255,255,0.2); 
-            margin-bottom: 4px; 
-            text-align: center; 
-        }
-        
-        .team-row { 
-            background: var(--row-bg); 
-            height: 32px; 
-            margin-bottom: 2px; 
-            transition: all 0.3s ease; 
+        .team-row {
+            display: grid; grid-template-columns: 35px 45px 1fr 65px 45px 55px;
+            background: var(--row-bg); margin-top: 2px; padding: 6px 8px;
+            align-items: center; color: var(--text-color); font-weight: 700; font-size: 16px;
         }
 
-        .team-row.eliminated { 
-            background: var(--elim-bg) !important;
-            opacity: 0.4; 
-            filter: grayscale(1); 
-        }
+        .team-row.eliminated { opacity: 0.5; filter: grayscale(1); }
+        .logo-col img { width: 30px; height: 30px; object-fit: contain; }
+        .name-col { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; font-size: 15px; }
 
-        .logo-col { 
-            width: 22px; 
-            height: 22px; 
-            background: transparent; 
-            border-radius: 2px; 
-            margin: auto; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-        }
+        .status-col { display: flex; gap: 3px; justify-content: center; background: var(--status-bg); padding: 4px; border-radius: 4px; }
+        .bar { width: 8px; height: 14px; background: var(--status-bar-color); border-radius: 2px; }
+        .bar.dead { background: #333 !important; }
 
-        .logo-col img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; 
-        }
+        .total-box { background: var(--cyan); color: #000; font-weight: 800; border-radius: 4px; padding: 2px 0; text-align: center; }
 
-        .name-col { 
-            padding-left: 5px; 
-            font-weight: bold; 
-            font-size: 13px; 
-            overflow: hidden; 
-            white-space: nowrap; 
-            text-transform: uppercase; 
-        } 
-        
-        /* ALIVE STATUS BARS & ANIMATION */
-        .status-col { 
-            display: flex; 
-            gap: 3px; 
-            justify-content: center; 
-            background: var(--status-bg); 
-            height: 100%; 
-            align-items: center; 
-            padding: 0 4px;
-        }
-
-        .bar { 
-            width: 5px; 
-            height: 18px; 
-            background: var(--status-bar-color); 
-            box-shadow: 0 0 8px var(--status-bar-color); 
-            animation: liveBarPulse 1.2s infinite ease-in-out alternate;
-        }
-
-        .bar.dead { 
-            background: #333333 !important; 
-            box-shadow: none !important; 
-            opacity: 0.3; 
-            animation: none !important; 
-        }
-
-        .total-box { 
-            background: var(--cyan); 
-            color: #000; 
-            height: 100%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: 900; 
-        } 
-        
-        @keyframes liveBarPulse {
-            0% { transform: scaleY(0.85); opacity: 0.7; }
-            100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
-        }
-
-        /* WINNING PREDICTION LAYOUT */
-        #prediction-container {
-            position: absolute;
-            left: 80px;
-            bottom: 40px;
-            display: flex;
-            gap: 12px;
-            z-index: 900;
-            transition: all 0.5s ease;
-        }
-
-        .pred-card {
-            display: flex;
-            flex-direction: column;
-            width: 160px;
-            position: relative;
-            transition: all 0.4s ease;
-        }
-
-        .pred-top-tag {
-            background: var(--pred-tag-bg);
-            color: #000000;
-            font-weight: 800;
-            font-size: 13px;
-            text-align: center;
-            width: 75%;
-            margin: 0 auto;
-            padding: 1px 0;
-            border-radius: 2px 2px 0 0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            z-index: 2;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
-
-        .pred-middle-box {
-            display: flex;
-            height: 50px;
-            background: var(--pred-bg);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .pred-logo-box {
-            width: 52px;
-            height: 100%;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
-        }
-
-        .pred-logo-box img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .pred-bars-box {
-            flex: 1;
-            background: var(--status-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .pred-player-bar {
-            width: 6px;
-            height: 24px;
-            border-radius: 1px;
-            transition: all 0.3s ease;
-        }
-
-        .pred-player-bar.alive {
-            background: var(--status-bar-color);
-            box-shadow: 0 0 8px var(--status-bar-color);
-            opacity: 1;
-        }
-        
-        .pred-player-bar.dead {
-            background: #444444;
-            box-shadow: none;
-            opacity: 0.3;
-        }
-
-        .pred-bottom-bar {
-            background: var(--elim-main-bg);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-            text-align: center;
-            padding: 3px 0;
-            letter-spacing: 0.5px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-        }
-
-        .trigger-animate {
-            animation: slideUpFade 0.5s ease-out forwards;
-        }
-        .trigger-card-animate {
-            animation: slideUpFade 0.4s ease-out forwards;
-        }
-
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* PREDICTION SYSTEM */
+        .prediction-card-container { display: none; gap: 10px; width: 100%; max-width: 900px; justify-content: center; }
+        .pred-card { background: var(--pred-bg); border-radius: 8px; overflow: hidden; width: 160px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .pred-top-tag { background: var(--pred-tag-bg); color: #000; font-weight: 800; font-size: 13px; padding: 4px; text-transform: uppercase; }
+        .pred-middle-box { padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .pred-logo-box img { width: 45px; height: 45px; object-fit: contain; }
+        .pred-bars-box { display: flex; gap: 4px; background: var(--status-bg); padding: 4px 8px; border-radius: 4px; }
+        .pred-player-bar { width: 8px; height: 16px; background: var(--status-bar-color); border-radius: 2px; }
+        .pred-player-bar.dead { background: #333 !important; }
+        .pred-bottom-bar { background: var(--elim-main-bg); color: #fff; font-weight: 800; font-size: 14px; padding: 6px; }
 
         /* ELIMINATION BANNER POPUP */
-        #elim-banner { 
-            position: absolute; 
-            left: 80px; 
-            bottom: 240px; 
-            display: none; 
-            z-index: 1000; 
-            perspective: 1200px;
+        .elim-banner {
+            position: fixed; top: 20px; right: -400px; width: 320px; background: var(--elim-bg);
+            border-left: 5px solid var(--elim-main-bg); border-radius: 6px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999;
         }
-        
-        #elim-banner.show { 
-            display: block; 
-        }
-        
-        #elim-banner.show .elim-card {
-            animation: exactPageUnfold 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        
-        #elim-banner.hide-anim .elim-card {
-            animation: exactPageFold 0.4s ease-in forwards;
-        }
+        .elim-banner.show { right: 20px; }
+        .elim-banner.hide-anim { right: -400px; }
+        .elim-top { background: var(--elim-main-bg); color: #fff; font-weight: 800; padding: 4px 10px; display: flex; justify-content: space-between; font-size: 14px; }
+        .elim-body { display: flex; align-items: center; padding: 10px; gap: 12px; }
+        .elim-logo img { width: 50px; height: 50px; object-fit: contain; }
+        .elim-details { display: flex; flex-direction: column; }
+        .elim-stats { display: flex; gap: 10px; margin-top: 4px; }
+        .elim-stat-tag { background: var(--elim-stats-bg); color: #000; font-weight: 800; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
 
-        .elim-card { 
-            display: flex; 
-            align-items: stretch; 
-            position: relative; 
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
-            transform-origin: left center;
-            opacity: 0;
-            background: #ffffff;
-        }
-
-        .elim-rank-tag {
-            position: absolute;
-            top: -15px;
-            left: -15px;
-            background: var(--pred-tag-bg);
-            color: #000000;
-            font-size: 26px;
-            font-weight: 800;
-            padding: 2px 10px;
-            line-height: 1;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.5);
-            z-index: 20;
-        }
-
-        .elim-logo-container {
-            width: 80px;
-            height: 80px;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px;
-            z-index: 10;
-        }
-
-        .elim-logo-container img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .elim-right-content {
-            display: flex;
-            flex-direction: column;
-            width: 360px;
-        }
-
-        .elim-main-banner {
-            background: var(--elim-main-bg);
-            height: 50px;
-            display: flex;
-            align-items: center;
-            padding-left: 18px;
-        }
-
-        .elim-main-banner span {
-            font-size: 38px;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-
-        .elim-stats-bar {
-            background: var(--elim-stats-bg);
-            height: 30px;
-            display: flex;
-            align-items: center;
-            padding-left: 18px;
-            gap: 12px;
-            color: #000000;
-            font-size: 18px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .elim-stats-bar .sep {
-            font-weight: 400;
-            opacity: 0.4;
-        }
-
-        @keyframes exactPageUnfold {
-            0% { opacity: 0; transform: rotateY(-90deg) scaleX(0.3); }
-            70% { transform: rotateY(12deg) scaleX(1.02); }
-            100% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
-        }
-
-        @keyframes exactPageFold {
-            0% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
-            100% { opacity: 0; transform: rotateY(-80deg) scaleX(0.4); }
-        }
-
-        /* CUSTOM GFX TRANSPARENT LAYOUT MODE */
-        body.transparent-mode #board,
-        body.transparent-mode .header-row,
-        body.transparent-mode .team-row,
-        body.transparent-mode .status-col,
-        body.transparent-mode .total-box,
-        body.transparent-mode .pred-middle-box,
-        body.transparent-mode .pred-logo-box,
-        body.transparent-mode .pred-bars-box,
-        body.transparent-mode .pred-bottom-bar,
-        body.transparent-mode .pred-top-tag,
-        body.transparent-mode .elim-card,
-        body.transparent-mode .elim-logo-container,
-        body.transparent-mode .elim-main-banner,
-        body.transparent-mode .elim-stats-bar {
-            background: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
-        }
-
-        /* VISUAL CLICK-TO-COLOR PICKER MODE STYLES */
-        body.picker-active * {
-            cursor: crosshair !important;
-        }
-        body.picker-active *:hover {
-            outline: 2px dashed #00f2ff !important;
-            outline-offset: -2px;
-        }
+        /* ANIMATIONS */
+        .trigger-animate .team-row, .trigger-animate .pred-card { opacity: 0; animation: fadeInUp 0.4s forwards ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+    <!-- LIVE BOARD -->
+    <div id="board" class="leaderboard"></div>
+
+    <!-- PREDICTION BOARD -->
+    <div id="prediction-container" class="prediction-card-container"></div>
+
     <!-- ELIMINATION BANNER POPUP -->
-    <div id="elim-banner">
-        <div class="elim-card" data-var="elim-main-bg">
-            <div class="elim-rank-tag" id="elim-rank-tag" data-var="pred-tag-bg">#5</div>
-            <div class="elim-logo-container">
-                <img id="elim-logo-img" src="" onerror="this.style.display='none'">
+    <div id="elim-banner" class="elim-banner">
+        <div class="elim-top" data-var="elim-main-bg">
+            <span>TEAM ELIMINATED</span>
+            <span id="elim-rank-tag">#--</span>
+        </div>
+        <div class="elim-body" data-var="elim-bg">
+            <div class="elim-logo">
+                <img id="elim-logo-img" src="" alt="">
             </div>
-            <div class="elim-right-content">
-                <div class="elim-main-banner" data-var="elim-main-bg">
-                    <span>ELIMINATED</span>
-                </div>
-                <div class="elim-stats-bar" data-var="elim-stats-bg">
-                    <span id="elim-fin-text">1 FINISHES</span>
-                    <span class="sep">|</span>
-                    <span id="elim-pos-text">3 PLACE PTS.</span>
+            <div class="elim-details">
+                <div class="elim-stats">
+                    <span id="elim-fin-text" class="elim-stat-tag" data-var="elim-stats-bg">0 FINISHES</span>
+                    <span id="elim-pos-text" class="elim-stat-tag" data-var="elim-stats-bg">0 PLACE PTS.</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- WINNING PREDICTION FORECAST -->
-    <div id="prediction-container"></div>
-    
-    <!-- LEADERBOARD SIDEBAR -->
-    <div id="board" data-var="dark-blue"></div>
-
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const SYNC_PATH = 'TournamentData/LiveSession';
+        
+        const BASE_PATH = 'TournamentData';
 
         let currentElimId = "";
         let cachedTeamsData = [];
@@ -439,7 +136,6 @@
         let shouldAnimateNextRender = true;
         let pickerModeActive = false;
 
-        // DYNAMIC COLOR CONFIG MAPPER
         const COLOR_MAP = {
             'cyan': '--cyan',
             'dark-blue': '--dark-blue',
@@ -455,51 +151,39 @@
             'elim-stats-bg': '--elim-stats-bg'
         };
 
-        db.ref(SYNC_PATH).on('value', (snap) => {
-            const data = snap.val(); if(!data) return;
-            const cfg = data.config || {};
-            
-            // DYNAMICALLY SET ALL ROOT CSS VARIABLES
+        // Listen to LiveSession Config & Sync Dynamic Match State
+        db.ref(`${BASE_PATH}/LiveSession`).on('value', (snap) => {
+            const liveData = snap.val() || {};
+
+            // Color Sync
+            const cfg = liveData.config || {};
             Object.keys(COLOR_MAP).forEach(k => {
-                if (cfg[k]) {
-                    document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
-                }
+                if (cfg[k]) document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
             });
 
-            // PICKER MODE SYNC FROM ADMIN
-            pickerModeActive = !!data.pickerActive;
-            if(pickerModeActive) {
-                document.body.classList.add('picker-active');
-            } else {
-                document.body.classList.remove('picker-active');
-            }
+            pickerModeActive = !!liveData.pickerActive;
+            if(pickerModeActive) document.body.classList.add('picker-active');
+            else document.body.classList.remove('picker-active');
 
-            // TRANSPARENT LAYOUT TOGGLE SYNC
-            if (data.transparentLayout) {
-                document.body.classList.add('transparent-mode');
-            } else {
-                document.body.classList.remove('transparent-mode');
-            }
+            if (liveData.transparentLayout) document.body.classList.add('transparent-mode');
+            else document.body.classList.remove('transparent-mode');
 
-            cachedTeamsData = data.teams || [];
-            cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
-
-            // ELIMINATION POPUP TRIGGER
-            if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
-                currentElimId = data.lastEliminated.id;
+            // Elimination Banner Dynamic Popup Trigger
+            if(liveData.lastEliminated && liveData.lastEliminated.id !== currentElimId) {
+                currentElimId = liveData.lastEliminated.id;
                 
-                document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
+                document.getElementById('elim-rank-tag').innerText = `#${liveData.lastEliminated.rank || 1}`;
                 const logoImg = document.getElementById('elim-logo-img');
-                if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
-                    logoImg.src = data.lastEliminated.logo;
+                if(liveData.lastEliminated.logo && liveData.lastEliminated.logo.trim() !== "") {
+                    logoImg.src = liveData.lastEliminated.logo;
                     logoImg.style.display = 'block';
                 } else {
                     logoImg.style.display = 'none';
                 }
 
-                document.getElementById('elim-fin-text').innerText = `${data.lastEliminated.finishes || 0} FINISHES`;
+                document.getElementById('elim-fin-text').innerText = `${liveData.lastEliminated.finishes || 0} FINISHES`;
                 let posPoints = 0;
-                let r = data.lastEliminated.rank || 0;
+                let r = liveData.lastEliminated.rank || 0;
                 if(r === 1) posPoints = 10;
                 else if(r === 2) posPoints = 6;
                 else if(r === 3) posPoints = 5;
@@ -521,25 +205,30 @@
                 }, 5000);
             }
 
+            // Sync Selected Match Data
+            const activeMatchKey = liveData.activeMatch || 'LIVE';
+            
+            if(activeMatchKey === 'LIVE' || !liveData.history || !liveData.history[activeMatchKey]) {
+                cachedTeamsData = liveData.teams || [];
+            } else {
+                cachedTeamsData = liveData.history[activeMatchKey] || [];
+            }
+            
+            cachedPredData = liveData.predictions || null;
             render(cachedTeamsData, cachedPredData);
         });
 
-        // CLICK EVENT LISTENER FOR VISUAL MOUSE CLICK COLOR PICKING
         document.addEventListener('click', (e) => {
             if(!pickerModeActive) return;
-
             let target = e.target.closest('[data-var]');
             if(target) {
                 e.preventDefault();
                 e.stopPropagation();
                 let varKey = target.getAttribute('data-var');
-                
-                // Prompt user to pick color for clicked element
                 let currentColor = getComputedStyle(document.documentElement).getPropertyValue(COLOR_MAP[varKey]).trim();
                 let newColor = prompt(`Editing Color for element: ${varKey}\nEnter Hex or Color Code:`, currentColor);
-                
                 if(newColor) {
-                    db.ref(SYNC_PATH + '/config/' + varKey).set(newColor.trim());
+                    db.ref(`${BASE_PATH}/LiveSession/config/${varKey}`).set(newColor.trim());
                 }
             }
         });
@@ -610,7 +299,6 @@
 
             if (rawPredData) {
                 let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
-                
                 rawList.forEach(p => {
                     let liveTeam = aliveTeams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
                     if (liveTeam) {
@@ -656,7 +344,6 @@
                 let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
                 let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
                 let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
-                
                 let playerAliveArr = p.alive || [1, 1, 1, 1];
 
                 html += `
