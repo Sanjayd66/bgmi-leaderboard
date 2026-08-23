@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Match Rankings Overlay</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&family=Montserrat:wght@600;800;900&display=swap" rel="stylesheet">
@@ -13,32 +12,396 @@
             font-weight: bold;
         }
 
-        :root {
+        :root { 
+            --cyan: #ffcc00; 
+            --dark-blue: #12193b; 
+            --row-bg: #1a2245; 
+            --text-color: #ffffff; 
+            --status-bg: #252c33;
+            --status-bar-color: #ffcc00;
+            --top-row-bg: #15191d;
+            --elim-bg: #15191d;
+            --pred-bg: #0b0e11;
+            --pred-tag-bg: #ffb800;
+            --elim-main-bg: #e63900;
+            --elim-stats-bg: #ffaa00;
+
+            /* MATCH RANKINGS SCREEN VARS */
             --primary-blue: #0060ad;
             --accent-blue: #0088e0;
-            --dark-blue: #083259;
             --bottom-bar-bg: #008be3;
-            --text-color: #ffffff;
         }
 
         * {
             box-sizing: border-box;
             font-family: 'Agency FB', 'Oswald', sans-serif;
             font-weight: bold;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
             margin: 0;
             padding: 0;
-            -webkit-font-smoothing: antialiased;
         }
 
-        html, body {
-            width: 1920px;
-            height: 1080px;
-            background: #0d121d; /* Production mai background: transparent rakh sakte ho */
-            overflow: hidden;
+        html, body { 
+            margin: 0; 
+            padding: 0;
+            background: transparent;
+            overflow: hidden; 
+            width: 1920px; 
+            height: 1080px; 
+            transform-origin: top left;
             position: relative;
         }
+        
+        /* ------------------ IN-GAME HUD OVERLAY (SIDEBAR) ------------------ */
+        #ingame-hud {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+        }
 
-        /* TOP HEADER BANNER */
+        #board { 
+            position: absolute; 
+            right: 40px; 
+            bottom: 40px; 
+            background: var(--dark-blue); 
+            padding: 8px; 
+            border-radius: 4px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+            transition: all 0.5s ease;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+        
+        .header-row, .team-row { 
+            display: grid; 
+            grid-template-columns: 30px 35px 85px 55px 40px 45px; 
+            align-items: center; 
+            gap: 4px; 
+            color: var(--text-color); 
+        }
+
+        .header-row { 
+            font-size: 15px; 
+            color: var(--cyan); 
+            background: var(--top-row-bg); 
+            border-bottom: 2px solid rgba(255,255,255,0.2); 
+            margin-bottom: 4px; 
+            text-align: center; 
+            padding: 4px 0;
+            letter-spacing: 1px;
+        }
+        
+        .team-row { 
+            background: var(--row-bg); 
+            height: 36px; 
+            margin-bottom: 3px; 
+            transition: all 0.3s ease; 
+            font-size: 18px;
+        }
+
+        .team-row.eliminated { 
+            background: var(--elim-bg) !important;
+            opacity: 0.4; 
+            filter: grayscale(1); 
+        }
+
+        .logo-col { 
+            width: 26px; 
+            height: 26px; 
+            background: transparent; 
+            border-radius: 2px; 
+            margin: auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        .logo-col img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        .name-col { 
+            padding-left: 5px; 
+            font-weight: bold; 
+            font-size: 18px; 
+            overflow: hidden; 
+            white-space: nowrap; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        } 
+        
+        .status-col { 
+            display: flex; 
+            gap: 4px; 
+            justify-content: center; 
+            background: var(--status-bg); 
+            height: 100%; 
+            align-items: center; 
+            padding: 0 4px;
+        }
+
+        .bar { 
+            width: 6px; 
+            height: 20px; 
+            background: var(--status-bar-color); 
+            box-shadow: 0 0 8px var(--status-bar-color); 
+            animation: liveBarPulse 1.2s infinite ease-in-out alternate;
+        }
+
+        .bar.dead { 
+            background: #333333 !important; 
+            box-shadow: none !important; 
+            opacity: 0.3; 
+            animation: none !important; 
+        }
+
+        .total-box { 
+            background: var(--cyan); 
+            color: #000; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 900; 
+            font-size: 20px;
+        } 
+        
+        @keyframes liveBarPulse {
+            0% { transform: scaleY(0.85); opacity: 0.7; }
+            100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
+        }
+
+        #prediction-container {
+            position: absolute;
+            left: 80px;
+            bottom: 40px;
+            display: flex;
+            gap: 12px;
+            z-index: 900;
+            transition: all 0.5s ease;
+        }
+
+        .pred-card {
+            display: flex;
+            flex-direction: column;
+            width: 170px;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .pred-top-tag {
+            background: var(--pred-tag-bg);
+            color: #000000;
+            font-weight: 800;
+            font-size: 16px;
+            text-align: center;
+            width: 80%;
+            margin: 0 auto;
+            padding: 2px 0;
+            border-radius: 2px 2px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 2;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .pred-middle-box {
+            display: flex;
+            height: 54px;
+            background: var(--pred-bg);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .pred-logo-box {
+            width: 54px;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .pred-logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .pred-bars-box {
+            flex: 1;
+            background: var(--status-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .pred-player-bar {
+            width: 7px;
+            height: 26px;
+            border-radius: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .pred-player-bar.alive {
+            background: var(--status-bar-color);
+            box-shadow: 0 0 8px var(--status-bar-color);
+            opacity: 1;
+        }
+        
+        .pred-player-bar.dead {
+            background: #444444;
+            box-shadow: none;
+            opacity: 0.3;
+        }
+
+        .pred-bottom-bar {
+            background: var(--elim-main-bg);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 800;
+            text-align: center;
+            padding: 4px 0;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        .trigger-animate { animation: slideUpFade 0.5s ease-out forwards; }
+        .trigger-card-animate { animation: slideUpFade 0.4s ease-out forwards; }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #elim-banner { 
+            position: absolute; 
+            left: 80px; 
+            bottom: 240px; 
+            display: none; 
+            z-index: 1000; 
+            perspective: 1200px;
+        }
+        
+        #elim-banner.show { display: block; }
+        #elim-banner.show .elim-card { animation: exactPageUnfold 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        #elim-banner.hide-anim .elim-card { animation: exactPageFold 0.4s ease-in forwards; }
+
+        .elim-card { 
+            display: flex; 
+            align-items: stretch; 
+            position: relative; 
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+            transform-origin: left center;
+            opacity: 0;
+            background: #ffffff;
+        }
+
+        .elim-rank-tag {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background: var(--pred-tag-bg);
+            color: #000000;
+            font-size: 30px;
+            font-weight: 800;
+            padding: 2px 12px;
+            line-height: 1;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .elim-logo-container {
+            width: 85px;
+            height: 85px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            z-index: 10;
+        }
+
+        .elim-logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .elim-right-content {
+            display: flex;
+            flex-direction: column;
+            width: 380px;
+        }
+
+        .elim-main-banner {
+            background: var(--elim-main-bg);
+            height: 52px;
+            display: flex;
+            align-items: center;
+            padding-left: 18px;
+        }
+
+        .elim-main-banner span {
+            font-size: 42px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .elim-stats-bar {
+            background: var(--elim-stats-bg);
+            height: 33px;
+            display: flex;
+            align-items: center;
+            padding-left: 18px;
+            gap: 12px;
+            color: #000000;
+            font-size: 22px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .elim-stats-bar .sep { font-weight: 400; opacity: 0.4; }
+
+        @keyframes exactPageUnfold {
+            0% { opacity: 0; transform: rotateY(-90deg) scaleX(0.3); }
+            70% { transform: rotateY(12deg) scaleX(1.02); }
+            100% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
+        }
+
+        @keyframes exactPageFold {
+            0% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
+            100% { opacity: 0; transform: rotateY(-80deg) scaleX(0.4); }
+        }
+
+        /* ------------------ MATCH RANKINGS FULLSCREEN LAYOUT ------------------ */
+        #match-rankings-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 1080px;
+            background: #0d121d; /* Transparent broadcast ke liye */
+            display: none; /* Admin toggle karne par show hoga */
+            z-index: 2000;
+        }
+
         .header-banner {
             position: absolute;
             top: 25px;
@@ -51,7 +414,6 @@
             align-items: center;
             justify-content: flex-end;
             padding-right: 60px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
         .header-title {
@@ -64,7 +426,6 @@
             text-shadow: 3px 3px 10px rgba(0,0,0,0.4);
         }
 
-        /* LEFT SIDEBAR AREA */
         .left-sidebar {
             position: absolute;
             left: 50px;
@@ -77,27 +438,10 @@
             justify-content: space-between;
         }
 
-        .top-sub-logo {
-            width: 180px;
-            height: 60px;
-            object-fit: contain;
-        }
+        .top-sub-logo { width: 180px; height: 60px; object-fit: contain; }
+        .main-tournament-logo { width: 300px; height: 380px; object-fit: contain; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7)); }
+        .bottom-pan-img { width: 110px; height: 110px; object-fit: contain; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.6)); }
 
-        .main-tournament-logo {
-            width: 300px;
-            height: 380px;
-            object-fit: contain;
-            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7));
-        }
-
-        .bottom-pan-img {
-            width: 110px;
-            height: 110px;
-            object-fit: contain;
-            filter: drop-shadow(0 8px 15px rgba(0,0,0,0.6));
-        }
-
-        /* TABLES GRID (2 COLUMNS) */
         .rankings-container {
             position: absolute;
             top: 170px;
@@ -110,20 +454,7 @@
             row-gap: 12px;
         }
 
-        /* TABLE HEADER COLUMNS */
-        .col-headers {
-            position: absolute;
-            top: -28px;
-            width: 100%;
-            display: grid;
-            grid-template-columns: 75px 1fr 110px 110px 120px;
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            text-align: center;
-            letter-spacing: 1px;
-        }
-
-        .team-row {
+        .mr-team-row {
             height: 68px;
             display: grid;
             grid-template-columns: 75px 1fr 110px 110px 120px;
@@ -132,57 +463,15 @@
             clip-path: polygon(0 0, 95% 0, 100% 100%, 0% 100%);
             color: #ffffff;
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            transition: all 0.3s ease;
         }
 
-        .rank-box {
-            font-size: 36px;
-            font-weight: 800;
-            text-align: center;
-            color: #ffffff;
-        }
+        .mr-rank-box { font-size: 36px; font-weight: 800; text-align: center; color: #ffffff; }
+        .mr-team-info { display: flex; align-items: center; gap: 15px; padding-left: 10px; overflow: hidden; }
+        .mr-team-logo { width: 45px; height: 45px; object-fit: contain; }
+        .mr-team-name { font-size: 28px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
+        .mr-stat-box { font-size: 30px; text-align: center; font-weight: 700; }
+        .mr-total-pts { background: rgba(0,0,0,0.15); height: 100%; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; color: #ffffff; }
 
-        .team-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding-left: 10px;
-            overflow: hidden;
-        }
-
-        .team-logo {
-            width: 45px;
-            height: 45px;
-            object-fit: contain;
-        }
-
-        .team-name {
-            font-size: 28px;
-            letter-spacing: 1px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-        }
-
-        .stat-box {
-            font-size: 30px;
-            text-align: center;
-            font-weight: 700;
-        }
-
-        .total-pts {
-            background: rgba(0,0,0,0.15);
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 34px;
-            font-weight: 900;
-            color: #ffffff;
-        }
-
-        /* BOTTOM FOOTER BAR */
         .footer-bar {
             position: absolute;
             bottom: 0;
@@ -197,111 +486,106 @@
             box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
 
-        .presented-by {
-            font-size: 24px;
-            color: #ffffff;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+        .presented-by { font-size: 24px; color: #ffffff; text-transform: uppercase; letter-spacing: 1.5px; }
+        .social-handles { display: flex; align-items: center; gap: 40px; font-family: 'Montserrat', sans-serif; font-size: 18px; color: #ffffff; }
+        .social-item { display: flex; align-items: center; gap: 12px; }
+        .social-icon { width: 32px; height: 32px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .social-icon img { width: 20px; height: 20px; }
+        .organizer-logo-box { display: flex; align-items: center; gap: 12px; }
+        .organizer-logo-box img { height: 45px; object-fit: contain; }
+        .organizer-name { font-size: 22px; text-transform: uppercase; }
+
+        /* TRANSPARENT MODE & PICKER STYLES */
+        body.transparent-mode #board,
+        body.transparent-mode .header-row,
+        body.transparent-mode .team-row,
+        body.transparent-mode .status-col,
+        body.transparent-mode .total-box,
+        body.transparent-mode .pred-middle-box,
+        body.transparent-mode .pred-logo-box,
+        body.transparent-mode .pred-bars-box,
+        body.transparent-mode .pred-bottom-bar,
+        body.transparent-mode .pred-top-tag,
+        body.transparent-mode .elim-card,
+        body.transparent-mode .elim-logo-container,
+        body.transparent-mode .elim-main-banner,
+        body.transparent-mode .elim-stats-bar {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
         }
 
-        .social-handles {
-            display: flex;
-            align-items: center;
-            gap: 40px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 18px;
-            color: #ffffff;
-        }
-
-        .social-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .social-icon {
-            width: 32px;
-            height: 32px;
-            background: #ffffff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .social-icon img {
-            width: 20px;
-            height: 20px;
-        }
-
-        .organizer-logo-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .organizer-logo-box img {
-            height: 45px;
-            object-fit: contain;
-        }
-
-        .organizer-name {
-            font-size: 22px;
-            text-transform: uppercase;
-        }
+        body.picker-active * { cursor: crosshair !important; }
+        body.picker-active *:hover { outline: 2px dashed #00f2ff !important; outline-offset: -2px; }
     </style>
 </head>
 <body>
 
-    <!-- TOP TITLE HEADER -->
-    <div class="header-banner">
-        <div class="header-title" id="page-title">MATCH RANKINGS</div>
-    </div>
-
-    <!-- LEFT SIDE LOGOS -->
-    <div class="left-sidebar">
-        <img id="sub-logo" class="top-sub-logo" src="" alt="">
-        <img id="tournament-logo" class="main-tournament-logo" src="" alt="">
-        <img id="organizer-logo-side" class="bottom-pan-img" src="" alt="">
-    </div>
-
-    <!-- RANKING TABLE GRID -->
-    <div class="rankings-container" id="rankings-grid">
-        <!-- JS generates 18 rows dynamically -->
-    </div>
-
-    <!-- BOTTOM SOCIAL & FOOTER BAR -->
-    <div class="footer-bar">
-        <div class="presented-by" id="presented-text">DIVINE OMEN PRESENTS</div>
-
-        <div class="social-handles">
-            <!-- INSTAGRAM -->
-            <div class="social-item">
-                <div class="social-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="IG">
+    <!-- 1. LIVE IN-GAME SIDEBAR & PREDICTION OVERLAY -->
+    <div id="ingame-hud">
+        <div id="elim-banner">
+            <div class="elim-card" data-var="elim-main-bg">
+                <div class="elim-rank-tag" id="elim-rank-tag" data-var="pred-tag-bg">#5</div>
+                <div class="elim-logo-container">
+                    <img id="elim-logo-img" src="" onerror="this.style.display='none'">
                 </div>
-                <div>
-                    <div style="font-size: 11px; opacity: 0.9;">Follow us on Instagram :</div>
-                    <div id="ig-handle" style="font-weight: 800;">DIVINE_OMEN</div>
-                </div>
-            </div>
-
-            <!-- YOUTUBE -->
-            <div class="social-item">
-                <div class="social-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT">
-                </div>
-                <div>
-                    <div style="font-size: 11px; opacity: 0.9;">Catch the live on YouTube:</div>
-                    <div id="yt-handle" style="font-weight: 800;">GODS OMEN</div>
+                <div class="elim-right-content">
+                    <div class="elim-main-banner" data-var="elim-main-bg">
+                        <span>ELIMINATED</span>
+                    </div>
+                    <div class="elim-stats-bar" data-var="elim-stats-bg">
+                        <span id="elim-fin-text">1 FINISHES</span>
+                        <span class="sep">|</span>
+                        <span id="elim-pos-text">3 PLACE PTS.</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- ORGANIZER LOGO RIGHT -->
-        <div class="organizer-logo-box">
-            <img id="organizer-logo-bottom" src="" alt="">
-            <div class="organizer-name" id="organizer-name">DIVINE OMEN</div>
+        <div id="prediction-container"></div>
+        <div id="board" data-var="dark-blue"></div>
+    </div>
+
+    <!-- 2. FULLSCREEN MATCH RANKINGS RESULT SCREEN -->
+    <div id="match-rankings-screen">
+        <div class="header-banner">
+            <div class="header-title" id="page-title">MATCH RANKINGS</div>
+        </div>
+
+        <div class="left-sidebar">
+            <img id="sub-logo" class="top-sub-logo" src="" alt="">
+            <img id="tournament-logo" class="main-tournament-logo" src="" alt="">
+            <img id="organizer-logo-side" class="bottom-pan-img" src="" alt="">
+        </div>
+
+        <div class="rankings-container" id="rankings-grid"></div>
+
+        <div class="footer-bar">
+            <div class="presented-by" id="presented-text">DIVINE OMEN PRESENTS</div>
+            <div class="social-handles">
+                <div class="social-item">
+                    <div class="social-icon">
+                        <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="IG">
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; opacity: 0.9;">Follow us on Instagram :</div>
+                        <div id="ig-handle" style="font-weight: 800;">DIVINE_OMEN</div>
+                    </div>
+                </div>
+                <div class="social-item">
+                    <div class="social-icon">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT">
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; opacity: 0.9;">Catch the live on YouTube:</div>
+                        <div id="yt-handle" style="font-weight: 800;">GODS OMEN</div>
+                    </div>
+                </div>
+            </div>
+            <div class="organizer-logo-box">
+                <img id="organizer-logo-bottom" src="" alt="">
+                <div class="organizer-name" id="organizer-name">DIVINE OMEN</div>
+            </div>
         </div>
     </div>
 
@@ -309,14 +593,41 @@
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const SYNC_PATH = 'TournamentData/LiveSession';
 
-        // Realtime Sync Listener
-        db.ref('TournamentData/LiveSession').on('value', (snap) => {
-            const data = snap.val();
-            if (!data) return;
+        let currentElimId = "";
+        let cachedTeamsData = [];
+        let cachedPredData = null;
+        let shouldAnimateNextRender = true;
+        let pickerModeActive = false;
 
-            // 1. UPDATE BRANDING & CONFIG DETAILS FROM ADMIN PANEL
+        const COLOR_MAP = {
+            'cyan': '--cyan',
+            'dark-blue': '--dark-blue',
+            'row-bg': '--row-bg',
+            'text-color': '--text-color',
+            'status-bg': '--status-bg',
+            'status-bar-color': '--status-bar-color',
+            'top-row-bg': '--top-row-bg',
+            'elim-bg': '--elim-bg',
+            'pred-bg': '--pred-bg',
+            'pred-tag-bg': '--pred-tag-bg',
+            'elim-main-bg': '--elim-main-bg',
+            'elim-stats-bg': '--elim-stats-bg'
+        };
+
+        db.ref(SYNC_PATH).on('value', (snap) => {
+            const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
+            
+            // Apply Dynamic Colors
+            Object.keys(COLOR_MAP).forEach(k => {
+                if (cfg[k]) {
+                    document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
+                }
+            });
+
+            // Update Admin Config Branding Texts and Logos
             if(cfg.presentedBy) document.getElementById('presented-text').innerText = cfg.presentedBy;
             if(cfg.igHandle) document.getElementById('ig-handle').innerText = cfg.igHandle;
             if(cfg.ytHandle) document.getElementById('yt-handle').innerText = cfg.ytHandle;
@@ -329,61 +640,283 @@
                 document.getElementById('organizer-logo-bottom').src = cfg.organizerLogo;
             }
 
-            // 2. CHECK SELECTED MATCH FROM ADMIN PANEL
-            // E.g. data.selectedMatch = "match1", "match2", or "overall"
-            const activeMatchKey = data.selectedMatch || 'match1';
-            
-            let teamsList = [];
-            if(data.matches && data.matches[activeMatchKey]) {
-                teamsList = data.matches[activeMatchKey].teams || [];
+            pickerModeActive = !!data.pickerActive;
+            if(pickerModeActive) document.body.classList.add('picker-active');
+            else document.body.classList.remove('picker-active');
+
+            if (data.transparentLayout) document.body.classList.add('transparent-mode');
+            else document.body.classList.remove('transparent-mode');
+
+            // ---------------- TOGGLE BETWEEN LIVE HUD & MATCH RANKING SCREEN ----------------
+            const resultScreen = document.getElementById('match-rankings-screen');
+            const ingameHud = document.getElementById('ingame-hud');
+
+            // Admin panel "showResult" flag control karega (true hone par match screen, false/null par normal sidebar)
+            if (data.showResult === true) {
+                ingameHud.style.display = 'none';
+                resultScreen.style.display = 'block';
+
+                const activeMatchKey = data.selectedMatch || 'match1';
+                let matchTeams = [];
+                if(data.matches && data.matches[activeMatchKey]) {
+                    matchTeams = data.matches[activeMatchKey].teams || [];
+                } else {
+                    matchTeams = data.teams || [];
+                }
+
+                document.getElementById('page-title').innerText = data.selectedMatchName || (activeMatchKey.toUpperCase() + " RANKINGS");
+                renderMatchRankingsScreen(matchTeams);
             } else {
-                teamsList = data.teams || [];
+                resultScreen.style.display = 'none';
+                ingameHud.style.display = 'block';
             }
 
-            // Update Header Title (MATCH 1 RANKINGS / OVERALL RANKINGS)
-            if(data.selectedMatchName) {
-                document.getElementById('page-title').innerText = data.selectedMatchName;
-            } else {
-                document.getElementById('page-title').innerText = activeMatchKey.toUpperCase() + " RANKINGS";
+            // In-Game Live Overlay Data Updating
+            cachedTeamsData = data.teams || [];
+            cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
+
+            if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
+                currentElimId = data.lastEliminated.id;
+                
+                document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
+                const logoImg = document.getElementById('elim-logo-img');
+                if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
+                    logoImg.src = data.lastEliminated.logo;
+                    logoImg.style.display = 'block';
+                } else {
+                    logoImg.style.display = 'none';
+                }
+
+                document.getElementById('elim-fin-text').innerText = `${data.lastEliminated.finishes || 0} FINISHES`;
+                let posPoints = 0;
+                let r = data.lastEliminated.rank || 0;
+                if(r === 1) posPoints = 10;
+                else if(r === 2) posPoints = 6;
+                else if(r === 3) posPoints = 5;
+                else if(r === 4) posPoints = 4;
+                else if(r === 5) posPoints = 3;
+                else if(r === 6) posPoints = 2;
+                else if(r === 7 || r === 8) posPoints = 1;
+
+                document.getElementById('elim-pos-text').innerText = `${posPoints} PLACE PTS.`;
+                
+                const banner = document.getElementById('elim-banner');
+                banner.classList.remove('show', 'hide-anim');
+                void banner.offsetWidth; 
+                banner.classList.add('show'); 
+                
+                setTimeout(() => { 
+                    banner.classList.add('hide-anim');
+                    setTimeout(() => { banner.classList.remove('show', 'hide-anim'); }, 400);
+                }, 5000);
             }
 
-            renderRankings(teamsList);
+            render(cachedTeamsData, cachedPredData);
         });
 
-        function renderRankings(teams) {
+        // Click to Color Picker handler
+        document.addEventListener('click', (e) => {
+            if(!pickerModeActive) return;
+
+            let target = e.target.closest('[data-var]');
+            if(target) {
+                e.preventDefault();
+                e.stopPropagation();
+                let varKey = target.getAttribute('data-var');
+                let currentColor = getComputedStyle(document.documentElement).getPropertyValue(COLOR_MAP[varKey]).trim();
+                let newColor = prompt(`Editing Color for element: ${varKey}\nEnter Hex or Color Code:`, currentColor);
+                
+                if(newColor) {
+                    db.ref(SYNC_PATH + '/config/' + varKey).set(newColor.trim());
+                }
+            }
+        });
+
+        // ---------------- RENDER IN-GAME HUD ----------------
+        function render(teams, predData) {
+            const board = document.getElementById('board');
+            const predContainer = document.getElementById('prediction-container');
+
+            const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
+            const showPrediction = aliveTeams.length <= 5 && aliveTeams.length >= 2;
+
+            if (showPrediction) {
+                board.style.display = 'none';
+                predContainer.style.display = 'flex';
+            } else {
+                board.style.display = 'block';
+                predContainer.style.display = 'none';
+                predContainer.innerHTML = '';
+            }
+
+            board.classList.remove('trigger-animate');
+            predContainer.classList.remove('trigger-animate');
+
+            if (shouldAnimateNextRender) {
+                void board.offsetWidth;
+                void predContainer.offsetWidth;
+                if (!showPrediction) board.classList.add('trigger-animate');
+                if (showPrediction) predContainer.classList.add('trigger-animate');
+                shouldAnimateNextRender = false;
+            }
+
+            if (showPrediction) {
+                renderPrediction(predData, aliveTeams, predContainer.classList.contains('trigger-animate'));
+            }
+
+            let h = `<div class="header-row" data-var="top-row-bg"><div data-var="cyan">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+            
+            const sortedTeams = [...teams].sort((a,b)=> {
+                let totalA = ((parseInt(a.prevFin) || 0) + (parseInt(a.fin) || 0)) + ((parseInt(a.prevPos) || 0) + (parseInt(a.pos) || 0));
+                let totalB = ((parseInt(b.prevFin) || 0) + (parseInt(b.fin) || 0)) + ((parseInt(b.prevPos) || 0) + (parseInt(b.pos) || 0));
+                return totalB - totalA;
+            });
+
+            sortedTeams.forEach((t, i) => {
+                let currentKills = parseInt(t.fin) || 0;
+                let overallTotal = ((parseInt(t.prevFin) || 0) + currentKills) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}" onerror="this.style.opacity='0'">` : '';
+                let isEliminated = t.elim || (t.alive && t.alive.every(a => a == 0 || a == '0'));
+
+                let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.1}s"` : '';
+
+                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${cardAnimClass}" ${cardDelay} data-var="row-bg">
+                    <div style="text-align:center;">${i+1}</div>
+                    <div class="logo-col">${logoSrc}</div>
+                    <div class="name-col" data-var="text-color">${t.name || 'TEAM'}</div>
+                    <div class="status-col" data-var="status-bg">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}" data-var="status-bar-color"></div>`).join('')}</div>
+                    <div style="text-align:center;">${currentKills}</div>
+                    <div class="total-box" data-var="cyan">${overallTotal}</div>
+                </div>`;
+            });
+            board.innerHTML = h;
+        }
+
+        function renderPrediction(rawPredData, aliveTeams, isAnimating) {
+            const container = document.getElementById('prediction-container');
+            let displayList = [];
+
+            if (rawPredData) {
+                let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
+                rawList.forEach(p => {
+                    let liveTeam = aliveTeams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
+                    if (liveTeam) {
+                        displayList.push({
+                            name: liveTeam.name,
+                            logo: liveTeam.logo || p.logo,
+                            alive: liveTeam.alive,
+                            wwcd: p.wwcd || p.winChance || '20%'
+                        });
+                    }
+                });
+            }
+
+            if (displayList.length === 0 && aliveTeams.length >= 2) {
+                let totalScoreSum = aliveTeams.reduce((acc, t) => {
+                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
+                    return acc + (totalPts + (aliveCount * 4));
+                }, 0) || 1;
+
+                displayList = aliveTeams.map(t => {
+                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
+                    let prob = Math.round((((totalPts + (aliveCount * 4)) / totalScoreSum) * 100));
+                    return {
+                        name: t.name,
+                        logo: t.logo,
+                        alive: t.alive,
+                        wwcd: prob + '%'
+                    };
+                }).sort((a,b) => parseInt(b.wwcd) - parseInt(a.wwcd));
+            }
+
+            if (displayList.length === 0) {
+                container.innerHTML = "";
+                return;
+            }
+
+            let html = "";
+            let cardAnimClass = isAnimating ? 'trigger-card-animate' : '';
+
+            displayList.slice(0, 5).forEach((p, idx) => {
+                let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
+                let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
+                let playerAliveArr = p.alive || [1, 1, 1, 1];
+
+                html += `
+                    <div class="pred-card ${cardAnimClass}" ${cardDelay}>
+                        <div class="pred-top-tag" data-var="pred-tag-bg">${p.name || 'TEAM'}</div>
+                        <div class="pred-middle-box" data-var="pred-bg">
+                            <div class="pred-logo-box">
+                                ${logoSrc ? `<img src="${logoSrc}">` : ''}
+                            </div>
+                            <div class="pred-bars-box" data-var="status-bg">
+                                <div class="pred-player-bar ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                            </div>
+                        </div>
+                        <div class="pred-bottom-bar" data-var="elim-main-bg">WWCD - ${pctText}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // ---------------- RENDER MATCH RANKINGS FULLSCREEN ----------------
+        function renderMatchRankingsScreen(teams) {
             const grid = document.getElementById('rankings-grid');
             
-            // Sort teams by Total Points
             const sorted = [...teams].sort((a,b) => {
                 let totalA = (parseInt(a.pos) || 0) + (parseInt(a.fin) || 0);
                 let totalB = (parseInt(b.pos) || 0) + (parseInt(b.fin) || 0);
                 return totalB - totalA;
             });
 
-            // Ensure 18 slots
             let html = '';
             for (let i = 0; i < 18; i++) {
                 const t = sorted[i] || { name: '---', pos: 0, fin: 0, logo: '' };
                 const placePts = parseInt(t.pos) || 0;
                 const killPts = parseInt(t.fin) || 0;
                 const totalPts = placePts + killPts;
-                const logoImg = t.logo ? `<img class="team-logo" src="${t.logo}" onerror="this.style.opacity='0'">` : '';
+                const logoImg = t.logo ? `<img class="mr-team-logo" src="${t.logo}" onerror="this.style.opacity='0'">` : '';
 
                 html += `
-                    <div class="team-row">
-                        <div class="rank-box">${i + 1}</div>
-                        <div class="team-info">
+                    <div class="mr-team-row">
+                        <div class="mr-rank-box">${i + 1}</div>
+                        <div class="mr-team-info">
                             ${logoImg}
-                            <div class="team-name">${t.name || 'TEAM'}</div>
+                            <div class="mr-team-name">${t.name || 'TEAM'}</div>
                         </div>
-                        <div class="stat-box">${placePts}</div>
-                        <div class="stat-box">${killPts}</div>
-                        <div class="total-pts">${totalPts}</div>
+                        <div class="mr-stat-box">${placePts}</div>
+                        <div class="mr-stat-box">${killPts}</div>
+                        <div class="mr-total-pts">${totalPts}</div>
                     </div>
                 `;
             }
             grid.innerHTML = html;
         }
+
+        setInterval(() => {
+            const board = document.getElementById('board');
+            const predContainer = document.getElementById('prediction-container');
+            
+            board.style.opacity = "0";
+            predContainer.style.opacity = "0";
+            
+            setTimeout(() => {
+                if(cachedTeamsData.length > 0) {
+                    shouldAnimateNextRender = true;
+                    board.style.opacity = "1";
+                    predContainer.style.opacity = "1";
+                    render(cachedTeamsData, cachedPredData);
+                }
+            }, 300); 
+        }, 30000);
     </script>
 </body>
 </html>
