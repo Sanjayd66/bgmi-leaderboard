@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BGMI Match Rankings - Live OBS Overlay</title>
+    <title>Match Rankings Overlay</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&family=Montserrat:wght@600;800;900&display=swap" rel="stylesheet">
     <style>
         @font-face {
             font-family: 'Agency FB';
@@ -14,12 +13,27 @@
             font-weight: bold;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+        :root {
+            --primary-blue: #0060ad;
+            --accent-blue: #0088e0;
+            --dark-blue: #083259;
+            --bottom-bar-bg: #008be3;
+            --text-color: #ffffff;
+        }
 
-        body {
+        * {
+            box-sizing: border-box;
+            font-family: 'Agency FB', 'Oswald', sans-serif;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
             width: 1920px;
             height: 1080px;
-            background: #ffffff;
+            background: #0d121d; /* Production mai background: transparent rakh sakte ho */
             overflow: hidden;
             position: relative;
         }
@@ -29,200 +43,186 @@
             position: absolute;
             top: 25px;
             right: 0;
-            width: 1470px;
+            width: 1100px;
             height: 110px;
-            background: #0d6efd;
-            clip-path: polygon(70px 0%, 100% 0, 100% 100%, 0% 100%);
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--primary-blue) 100%);
+            clip-path: polygon(120px 0, 100% 0, 100% 100%, 0 100%);
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            padding-right: 50px;
-        }
-
-        .header-accent-1 {
-            position: absolute;
-            top: 25px;
-            left: 420px;
-            width: 180px;
-            height: 110px;
-            background: #0b4ebd;
-            transform: skewX(-32deg);
-        }
-
-        .header-accent-2 {
-            position: absolute;
-            top: 25px;
-            left: 630px;
-            width: 200px;
-            height: 110px;
-            background: #0d6efd;
-            transform: skewX(-32deg);
+            padding-right: 60px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
         .header-title {
             font-size: 82px;
-            font-weight: 800;
             color: #ffffff;
-            letter-spacing: 2px;
-            font-family: 'Agency FB', 'Oswald', sans-serif;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            text-shadow: 3px 3px 10px rgba(0,0,0,0.4);
         }
 
-        /* LEFT SIDEBAR BRANDING */
+        /* LEFT SIDEBAR AREA */
         .left-sidebar {
             position: absolute;
-            left: 0;
-            top: 0;
-            width: 420px;
-            height: 980px;
+            left: 50px;
+            top: 40px;
+            width: 320px;
+            height: 940px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-evenly;
-            padding: 20px 10px;
+            justify-content: space-between;
         }
 
-        .bgmi-top-logo {
-            width: 240px;
-            opacity: 0.15;
-        }
-
-        .tourney-main-logo {
-            width: 320px;
-            max-height: 380px;
+        .top-sub-logo {
+            width: 180px;
+            height: 60px;
             object-fit: contain;
-            filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.4));
         }
 
-        .pan-icon {
-            width: 85px;
-            filter: drop-shadow(0px 5px 5px rgba(0,0,0,0.3));
+        .main-tournament-logo {
+            width: 300px;
+            height: 380px;
+            object-fit: contain;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7));
         }
 
-        /* RANKINGS MAIN BOARD GRID */
-        .board-container {
+        .bottom-pan-img {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 15px rgba(0,0,0,0.6));
+        }
+
+        /* TABLES GRID (2 COLUMNS) */
+        .rankings-container {
             position: absolute;
-            top: 195px;
-            left: 425px;
+            top: 170px;
+            left: 420px;
             width: 1450px;
-            height: 760px;
+            height: 800px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            column-gap: 25px;
+            column-gap: 30px;
             row-gap: 12px;
         }
 
-        .row-headers {
+        /* TABLE HEADER COLUMNS */
+        .col-headers {
             position: absolute;
-            top: -24px;
+            top: -28px;
             width: 100%;
             display: grid;
-            grid-template-columns: 80px 1fr 110px 110px 130px;
-            font-size: 13px;
-            font-weight: 800;
-            color: #aaa;
-            padding: 0 15px;
+            grid-template-columns: 75px 1fr 110px 110px 120px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
             letter-spacing: 1px;
         }
 
-        .rank-card {
+        .team-row {
             height: 68px;
-            background: #0d6efd;
             display: grid;
-            grid-template-columns: 75px 1fr 100px 100px 120px;
+            grid-template-columns: 75px 1fr 110px 110px 120px;
             align-items: center;
-            clip-path: polygon(0 0, 94% 0, 100% 100%, 0 100%);
-            padding-right: 10px;
+            background: linear-gradient(90deg, #004b87 0%, #006cc0 70%, #008be3 100%);
+            clip-path: polygon(0 0, 95% 0, 100% 100%, 0% 100%);
             color: #ffffff;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
         }
 
-        .rank-card:nth-child(even) {
-            background: #1778ff;
-        }
-
-        .rank-num {
+        .rank-box {
             font-size: 36px;
             font-weight: 800;
             text-align: center;
-            font-family: 'Agency FB', 'Oswald', sans-serif;
+            color: #ffffff;
         }
 
         .team-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
+            padding-left: 10px;
             overflow: hidden;
         }
 
         .team-logo {
-            width: 42px;
-            height: 42px;
+            width: 45px;
+            height: 45px;
             object-fit: contain;
         }
 
         .team-name {
-            font-size: 26px;
-            font-weight: 800;
+            font-size: 28px;
+            letter-spacing: 1px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-family: 'Agency FB', 'Oswald', sans-serif;
+            text-transform: uppercase;
         }
 
-        .stat-val {
-            font-size: 32px;
-            font-weight: 800;
+        .stat-box {
+            font-size: 30px;
             text-align: center;
-            font-family: 'Agency FB', 'Oswald', sans-serif;
+            font-weight: 700;
         }
 
         .total-pts {
-            font-size: 36px;
+            background: rgba(0,0,0,0.15);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            font-weight: 900;
             color: #ffffff;
-            font-weight: 800;
-            text-align: center;
-            font-family: 'Agency FB', 'Oswald', sans-serif;
         }
 
-        /* BOTTOM SPONSOR & SOCIAL BAR */
-        .bottom-bar {
+        /* BOTTOM FOOTER BAR */
+        .footer-bar {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 1920px;
-            height: 90px;
-            background: #0fa2e6;
+            width: 100%;
+            height: 60px;
+            background: var(--bottom-bar-bg);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 40px;
-            color: #ffffff;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
 
-        .presents-text {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            font-family: 'Agency FB', 'Oswald', sans-serif;
+        .presented-by {
+            font-size: 24px;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
 
         .social-handles {
             display: flex;
             align-items: center;
-            gap: 60px;
+            gap: 40px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            color: #ffffff;
         }
 
-        .social-box {
+        .social-item {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .social-icon {
-            width: 45px;
-            height: 45px;
-            background: white;
+            width: 32px;
+            height: 32px;
+            background: #ffffff;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -230,109 +230,78 @@
         }
 
         .social-icon img {
-            width: 26px;
-            height: 26px;
+            width: 20px;
+            height: 20px;
         }
 
-        .social-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .social-label {
-            font-size: 14px;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            text-transform: none;
-            opacity: 0.9;
-        }
-
-        .social-val {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .org-branding {
+        .organizer-logo-box {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .org-logo-img {
-            height: 55px;
+        .organizer-logo-box img {
+            height: 45px;
             object-fit: contain;
         }
 
-        .org-name {
-            font-size: 28px;
-            font-weight: 800;
-            font-family: 'Agency FB', 'Oswald', sans-serif;
+        .organizer-name {
+            font-size: 22px;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR BRANDING LOGOS -->
-    <div class="left-sidebar">
-        <img src="https://i.ibb.co/6y4G8sV/bgmi-logo.png" class="bgmi-top-logo" alt="BGMI" onerror="this.style.display='none'">
-        <img src="https://i.ibb.co/3kC0b8g/pan.png" class="pan-icon" alt="Pan" onerror="this.style.display='none'">
-        <img id="view-tourneyLogo" src="" class="tourney-main-logo" alt="Tournament Logo">
-        <img src="https://i.ibb.co/3kC0b8g/pan.png" class="pan-icon" alt="Pan" onerror="this.style.display='none'">
-    </div>
-
     <!-- TOP TITLE HEADER -->
-    <div class="header-accent-1"></div>
-    <div class="header-accent-2"></div>
     <div class="header-banner">
-        <div id="view-title" class="header-title">MATCH RANKINGS</div>
+        <div class="header-title" id="page-title">MATCH RANKINGS</div>
     </div>
 
-    <!-- 18 TEAMS BOARD GRID -->
-    <div class="board-container">
-        <!-- COLUMN 1 HEADERS -->
-        <div class="row-headers" style="left:0;">
-            <span>RANK</span><span>TEAM</span><span style="text-align:center;">PLACE PTS</span><span style="text-align:center;">KILLS</span><span style="text-align:center;">TOTAL</span>
-        </div>
-        <!-- COLUMN 2 HEADERS -->
-        <div class="row-headers" style="left: 737px;">
-            <span>RANK</span><span>TEAM</span><span style="text-align:center;">PLACE PTS</span><span style="text-align:center;">KILLS</span><span style="text-align:center;">TOTAL</span>
-        </div>
-
-        <!-- 18 DYNAMIC TEAM SLOTS -->
-        <div id="grid-left" style="display:flex; flex-direction:column; gap:12px;"></div>
-        <div id="grid-right" style="display:flex; flex-direction:column; gap:12px;"></div>
+    <!-- LEFT SIDE LOGOS -->
+    <div class="left-sidebar">
+        <img id="sub-logo" class="top-sub-logo" src="" alt="">
+        <img id="tournament-logo" class="main-tournament-logo" src="" alt="">
+        <img id="organizer-logo-side" class="bottom-pan-img" src="" alt="">
     </div>
 
-    <!-- BOTTOM BRANDING FOOTER BAR -->
-    <div class="bottom-bar">
-        <div id="view-presentedBy" class="presents-text">DIVINE OMEN PRESENTS</div>
+    <!-- RANKING TABLE GRID -->
+    <div class="rankings-container" id="rankings-grid">
+        <!-- JS generates 18 rows dynamically -->
+    </div>
+
+    <!-- BOTTOM SOCIAL & FOOTER BAR -->
+    <div class="footer-bar">
+        <div class="presented-by" id="presented-text">DIVINE OMEN PRESENTS</div>
 
         <div class="social-handles">
-            <div class="social-box">
+            <!-- INSTAGRAM -->
+            <div class="social-item">
                 <div class="social-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Insta">
+                    <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="IG">
                 </div>
-                <div class="social-details">
-                    <span class="social-label">Follow us on Instagram :</span>
-                    <span id="view-insta" class="social-val">@DIVINE_OMEN</span>
+                <div>
+                    <div style="font-size: 11px; opacity: 0.9;">Follow us on Instagram :</div>
+                    <div id="ig-handle" style="font-weight: 800;">DIVINE_OMEN</div>
                 </div>
             </div>
 
-            <div class="social-box">
+            <!-- YOUTUBE -->
+            <div class="social-item">
                 <div class="social-icon">
                     <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT">
                 </div>
-                <div class="social-details">
-                    <span class="social-label">Catch the live on YouTube :</span>
-                    <span id="view-yt" class="social-val">GODS OMEN</span>
+                <div>
+                    <div style="font-size: 11px; opacity: 0.9;">Catch the live on YouTube:</div>
+                    <div id="yt-handle" style="font-weight: 800;">GODS OMEN</div>
                 </div>
             </div>
         </div>
 
-        <div class="org-branding">
-            <img id="view-orgLogo" src="" class="org-logo-img" alt="" onerror="this.style.display='none'">
-            <span id="view-orgName" class="org-name">DIVINE OMEN</span>
+        <!-- ORGANIZER LOGO RIGHT -->
+        <div class="organizer-logo-box">
+            <img id="organizer-logo-bottom" src="" alt="">
+            <div class="organizer-name" id="organizer-name">DIVINE OMEN</div>
         </div>
     </div>
 
@@ -340,80 +309,80 @@
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const SYNC_PATH = 'TournamentData/LiveSession';
 
-        db.ref(SYNC_PATH).on('value', (snap) => {
-            const data = snap.val() || {};
-            const info = data.info || {};
-            const teams = data.teams || [];
-            const history = data.history || {};
-            const activeView = data.activeView || 'OVERALL';
+        // Realtime Sync Listener
+        db.ref('TournamentData/LiveSession').on('value', (snap) => {
+            const data = snap.val();
+            if (!data) return;
 
-            // 1. Update Tournament & Social Info
-            document.getElementById('view-presentedBy').innerText = info.presentedBy ? `${info.presentedBy} PRESENTS` : 'PRESENTS';
-            document.getElementById('view-insta').innerText = info.instaHandle || '@instagram';
-            document.getElementById('view-yt').innerText = info.ytHandle || 'YouTube Stream';
-            document.getElementById('view-tourneyLogo').src = info.tourneyLogo || 'https://i.ibb.co/3f5N73g/default-logo.png';
-            document.getElementById('view-orgLogo').src = info.orgLogo || '';
-            document.getElementById('view-orgName').innerText = info.presentedBy || '';
+            // 1. UPDATE BRANDING & CONFIG DETAILS FROM ADMIN PANEL
+            const cfg = data.config || {};
+            if(cfg.presentedBy) document.getElementById('presented-text').innerText = cfg.presentedBy;
+            if(cfg.igHandle) document.getElementById('ig-handle').innerText = cfg.igHandle;
+            if(cfg.ytHandle) document.getElementById('yt-handle').innerText = cfg.ytHandle;
+            if(cfg.organizerName) document.getElementById('organizer-name').innerText = cfg.organizerName;
+            
+            if(cfg.tournamentLogo) document.getElementById('tournament-logo').src = cfg.tournamentLogo;
+            if(cfg.subLogo) document.getElementById('sub-logo').src = cfg.subLogo;
+            if(cfg.organizerLogo) {
+                document.getElementById('organizer-logo-side').src = cfg.organizerLogo;
+                document.getElementById('organizer-logo-bottom').src = cfg.organizerLogo;
+            }
 
-            // 2. Determine View (Match Specific vs Overall)
-            let displayTeams = [];
-            if(activeView === 'OVERALL') {
-                document.getElementById('view-title').innerText = info.tourneyName ? `${info.tourneyName} - OVERALL` : "OVERALL STANDINGS";
-                displayTeams = [...teams].map(t => ({
-                    name: t.name,
-                    logo: t.logo,
-                    pos: (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0),
-                    fin: (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0),
-                    total: ((parseInt(t.prevPos)||0) + (parseInt(t.pos)||0)) + ((parseInt(t.prevFin)||0) + (parseInt(t.fin)||0))
-                }));
+            // 2. CHECK SELECTED MATCH FROM ADMIN PANEL
+            // E.g. data.selectedMatch = "match1", "match2", or "overall"
+            const activeMatchKey = data.selectedMatch || 'match1';
+            
+            let teamsList = [];
+            if(data.matches && data.matches[activeMatchKey]) {
+                teamsList = data.matches[activeMatchKey].teams || [];
             } else {
-                document.getElementById('view-title').innerText = `${activeView.replace("Match", "MATCH ")} RANKINGS`;
-                const savedMatch = history[activeView] || [];
-                displayTeams = [...savedMatch].map(t => ({
-                    name: t.name,
-                    logo: t.logo,
-                    pos: parseInt(t.pos)||0,
-                    fin: parseInt(t.fin)||0,
-                    total: (parseInt(t.pos)||0) + (parseInt(t.fin)||0)
-                }));
+                teamsList = data.teams || [];
             }
 
-            // Sort by Total Points descending
-            displayTeams.sort((a,b) => b.total - a.total);
-
-            // Pad up to 18 Teams
-            while(displayTeams.length < 18) {
-                displayTeams.push({ name: '-', logo: '', pos: 0, fin: 0, total: 0 });
+            // Update Header Title (MATCH 1 RANKINGS / OVERALL RANKINGS)
+            if(data.selectedMatchName) {
+                document.getElementById('page-title').innerText = data.selectedMatchName;
+            } else {
+                document.getElementById('page-title').innerText = activeMatchKey.toUpperCase() + " RANKINGS";
             }
 
-            // 3. Render 1 to 9 (Left Column) & 10 to 18 (Right Column)
-            renderColumn('grid-left', displayTeams.slice(0, 9), 1);
-            renderColumn('grid-right', displayTeams.slice(9, 18), 10);
+            renderRankings(teamsList);
         });
 
-        function renderColumn(elementId, teamList, startRank) {
-            const container = document.getElementById(elementId);
-            container.innerHTML = '';
+        function renderRankings(teams) {
+            const grid = document.getElementById('rankings-grid');
+            
+            // Sort teams by Total Points
+            const sorted = [...teams].sort((a,b) => {
+                let totalA = (parseInt(a.pos) || 0) + (parseInt(a.fin) || 0);
+                let totalB = (parseInt(b.pos) || 0) + (parseInt(b.fin) || 0);
+                return totalB - totalA;
+            });
 
-            teamList.forEach((t, i) => {
-                const rankNum = startRank + i;
-                const logoHtml = t.logo ? `<img src="${t.logo}" class="team-logo" onerror="this.style.display='none'">` : '';
+            // Ensure 18 slots
+            let html = '';
+            for (let i = 0; i < 18; i++) {
+                const t = sorted[i] || { name: '---', pos: 0, fin: 0, logo: '' };
+                const placePts = parseInt(t.pos) || 0;
+                const killPts = parseInt(t.fin) || 0;
+                const totalPts = placePts + killPts;
+                const logoImg = t.logo ? `<img class="team-logo" src="${t.logo}" onerror="this.style.opacity='0'">` : '';
 
-                container.innerHTML += `
-                    <div class="rank-card">
-                        <div class="rank-num">${rankNum}</div>
+                html += `
+                    <div class="team-row">
+                        <div class="rank-box">${i + 1}</div>
                         <div class="team-info">
-                            ${logoHtml}
-                            <span class="team-name">${t.name}</span>
+                            ${logoImg}
+                            <div class="team-name">${t.name || 'TEAM'}</div>
                         </div>
-                        <div class="stat-val">${t.pos}</div>
-                        <div class="stat-val">${t.fin}</div>
-                        <div class="total-pts">${t.total}</div>
+                        <div class="stat-box">${placePts}</div>
+                        <div class="stat-box">${killPts}</div>
+                        <div class="total-pts">${totalPts}</div>
                     </div>
                 `;
-            });
+            }
+            grid.innerHTML = html;
         }
     </script>
 </body>
