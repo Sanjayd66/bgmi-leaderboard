@@ -6,8 +6,22 @@
     <title>BGMI Admin Panel - Standings & Live Overlay Color Control</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'Agency FB';
+            src: local('Agency FB Bold'), local('AgencyFB-Bold'), local('Agency FB');
+            font-weight: bold;
+        }
+
         :root { --cyan: #00f2ff; }
+
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; margin: 0; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
         
@@ -33,40 +47,57 @@
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
 
-        /* GREEN SCREEN MODAL STYLING (HIGH RESOLUTION & CHROMA KEY READY) */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); align-items: center; justify-content: center; }
+        /* PURE GREEN SCREEN MODAL STYLING (CHROMA KEY OPTIMIZED) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: #00ff00; align-items: center; justify-content: center; }
         
         .modal-content { 
             background: #00ff00; 
-            border: 4px solid #00ff00; 
-            padding: 25px; 
-            border-radius: 12px; 
-            width: 90%; 
-            max-width: 950px; 
-            max-height: 85vh; 
+            border: 10px solid #00ff00; 
+            padding: 20px; 
+            border-radius: 0px; 
+            width: 92%; 
+            max-width: 1000px; 
+            max-height: 90vh; 
             overflow-y: auto; 
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.4); 
-            -webkit-font-smoothing: antialiased; 
-            -moz-osx-font-smoothing: grayscale; 
             transform: translateZ(0); 
             image-rendering: -webkit-optimize-contrast; 
         }
 
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #111; padding-bottom: 12px; margin-bottom: 15px; }
-        .modal-header h3 { font-size: 24px; letter-spacing: 1px; }
-        .close-btn { font-size: 28px; font-weight: bold; color: #ff0033; cursor: pointer; background: #000; border: none; padding: 2px 10px; border-radius: 6px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #111111; padding: 12px 18px; margin-bottom: 12px; border-bottom: 3px solid #ffcc00; }
+        .modal-header h3 { 
+            font-family: 'Agency FB', 'Oswald', sans-serif; 
+            font-size: 28px; 
+            letter-spacing: 1.5px; 
+            font-weight: bold; 
+            color: #ffffff; 
+            margin: 0; 
+        }
+        
+        .close-btn { font-size: 24px; font-weight: bold; color: #ffffff; cursor: pointer; background: #e63900; border: none; padding: 2px 12px; border-radius: 4px; }
 
         .pop-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; text-align: left; }
-        .pop-table th { color: #00ff00; text-transform: uppercase; font-size: 14px; font-weight: 900; padding: 14px 12px; background: #111; letter-spacing: 0.5px; }
-        .pop-table td { padding: 12px 10px; font-size: 16px; vertical-align: middle; background: #12161a; color: #ffffff; font-weight: 600; }
-        .pop-table tr td:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
-        .pop-table tr td:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+        .pop-table * { font-family: 'Agency FB', 'Oswald', sans-serif; font-weight: bold; }
         
-        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; color: #ffffff; }
-        .team-logo-img { width: 36px; height: 36px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.1); padding: 2px; }
+        .pop-table th { 
+            color: #ffffff; 
+            text-transform: uppercase; 
+            font-size: 18px; 
+            font-weight: bold; 
+            padding: 12px 14px; 
+            background: #111111; 
+            letter-spacing: 1px; 
+            border-bottom: 2px solid #333;
+        }
+        
+        .pop-table td { padding: 10px 14px; font-size: 20px; vertical-align: middle; background: #15191d; color: #ffffff; font-weight: bold; }
+        .pop-table tr td:first-child { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+        .pop-table tr td:last-child { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+        
+        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; color: #ffffff; font-size: 22px; }
+        .team-logo-img { width: 34px; height: 34px; object-fit: contain; border-radius: 3px; background: rgba(255,255,255,0.08); padding: 2px; }
 
-        /* Custom Scrollbar for Green Modal */
-        .modal-content::-webkit-scrollbar { width: 8px; }
+        /* Scrollbar Styling for Pure Green Chroma Background */
+        .modal-content::-webkit-scrollbar { width: 10px; }
         .modal-content::-webkit-scrollbar-track { background: #00ff00; }
         .modal-content::-webkit-scrollbar-thumb { background: #111111; border-radius: 4px; }
     </style>
@@ -128,10 +159,11 @@
         <div id="team-list"></div>
     </div>
 
+    <!-- PURE CHROMA GREEN MODAL -->
     <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3 id="modal-title" style="margin:0; color:#111111; font-weight:900; text-transform:uppercase;">Match Pointstable</h3>
+                <h3 id="modal-title">Match Pointstable</h3>
                 <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
             </div>
             <div id="modal-body"></div>
@@ -162,7 +194,6 @@
             isTransparentLayout = !!data.transparentLayout;
             pickerActive = !!data.pickerActive;
 
-            // SYNC COLOR PICKER INPUT VALUES
             const cfg = data.config || {};
             Object.keys(cfg).forEach(k => {
                 const el = document.getElementById('col-' + k);
@@ -318,11 +349,11 @@
             let html = `<table class="pop-table">
                 <thead>
                     <tr>
-                        <th style="width: 60px;">Rank</th>
+                        <th style="width: 70px;">Rank</th>
                         <th>Team Name</th>
                         <th style="text-align:center;">Match Kills</th>
                         <th style="text-align:center;">Match Pos Points</th>
-                        <th style="text-align:center; color:#00ff00;">Total Match Pts</th>
+                        <th style="text-align:center; color:#00f2ff;">Total Match Pts</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -334,7 +365,7 @@
                 let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
 
                 html += `<tr>
-                    <td style="font-weight:900; color:#00ff00;">#${idx + 1}</td>
+                    <td style="font-weight:bold; color:#ffcc00; font-size:22px;">#${idx + 1}</td>
                     <td>
                         <div class="team-cell">
                             ${imgTag}
@@ -343,7 +374,7 @@
                     </td>
                     <td style="text-align:center;">${t.fin || 0}</td>
                     <td style="text-align:center;">${t.pos || 0}</td>
-                    <td style="text-align:center; font-weight:900; color:#00ff00; font-size:18px;">${singleMatchTotal}</td>
+                    <td style="text-align:center; font-weight:bold; color:#00f2ff; font-size:24px;">${singleMatchTotal}</td>
                 </tr>`;
             });
 
@@ -365,11 +396,11 @@
             let html = `<table class="pop-table">
                 <thead>
                     <tr>
-                        <th style="width: 60px;">Rank</th>
+                        <th style="width: 70px;">Rank</th>
                         <th>Team Name</th>
                         <th style="text-align:center;">Total Kills</th>
                         <th style="text-align:center;">Total Pos Points</th>
-                        <th style="text-align:center; color:#00ff00;">OVERALL PTS</th>
+                        <th style="text-align:center; color:#00f2ff;">OVERALL PTS</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -384,7 +415,7 @@
                 let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
 
                 html += `<tr>
-                    <td style="font-weight:900; color:#00ff00;">#${idx + 1}</td>
+                    <td style="font-weight:bold; color:#ffcc00; font-size:22px;">#${idx + 1}</td>
                     <td>
                         <div class="team-cell">
                             ${imgTag}
@@ -393,7 +424,7 @@
                     </td>
                     <td style="text-align:center;">${overallKills}</td>
                     <td style="text-align:center;">${overallPos}</td>
-                    <td style="text-align:center; font-weight:900; color:#00ff00; font-size:20px;">${grandTotal}</td>
+                    <td style="text-align:center; font-weight:bold; color:#00f2ff; font-size:26px;">${grandTotal}</td>
                 </tr>`;
             });
 
