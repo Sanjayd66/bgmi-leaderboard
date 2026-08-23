@@ -47,6 +47,13 @@
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
 
+        /* TOURNAMENT CONFIG MODAL STYLING */
+        .config-modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
+        .config-modal-content { background: #15191d; border: 1px solid #00f2ff; padding: 25px; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        .config-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 15px; }
+        .config-item { display: flex; flex-direction: column; gap: 5px; }
+        .config-item label { font-size: 12px; color: var(--cyan); font-weight: bold; text-transform: uppercase; }
+
         /* FULL CHROMA GREEN MODAL SETUP - ALL CONTAINERS GREEN */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: #00ff00; align-items: center; justify-content: center; }
         
@@ -113,8 +120,11 @@
 </head>
 <body>
     <div id="admin-content" class="admin-panel" style="display:none;">
-        <h2 style="text-align:center; color:var(--cyan); margin-top:0;">BGMI ADMIN - OVERALL & COLOR CONTROLLER</h2>
-        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #2d3439; padding-bottom:10px;">
+            <h2 style="color:var(--cyan); margin:0;">BGMI ADMIN - OVERALL & COLOR CONTROLLER</h2>
+            <button class="trans-mode-btn" style="background:#0088ff;" onclick="openConfigModal()">⚙ EDIT TOURNAMENT INFO & BRANDING</button>
+        </div>
+
         <!-- COLOR CUSTOMIZER SECTION -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
             <div style="font-size: 12px; color: var(--cyan); font-weight: bold; text-transform: uppercase;">🎨 Custom Theme & Live Color Controller:</div>
@@ -168,6 +178,42 @@
         <div id="team-list"></div>
     </div>
 
+    <!-- STARTUP TOURNAMENT INFO & BRANDING MODAL -->
+    <div id="config-modal" class="config-modal">
+        <div class="config-modal-content">
+            <h3 style="color:var(--cyan); margin-top:0; text-align:center; text-transform:uppercase;">🏆 TOURNAMENT BRANDING SETUP</h3>
+            <div class="config-grid">
+                <div class="config-item">
+                    <label>Tournament Name</label>
+                    <input type="text" id="cfg-tourneyName" placeholder="e.g. BGIS 2026 GRAND FINALS">
+                </div>
+                <div class="config-item">
+                    <label>Presented By</label>
+                    <input type="text" id="cfg-presentedBy" placeholder="e.g. KRAFTON / ESPORTS DECK">
+                </div>
+                <div class="config-item">
+                    <label>Instagram Handle</label>
+                    <input type="text" id="cfg-instaHandle" placeholder="e.g. @esports_official">
+                </div>
+                <div class="config-item">
+                    <label>YouTube Handle</label>
+                    <input type="text" id="cfg-ytHandle" placeholder="e.g. @EsportsChannel">
+                </div>
+                <div class="config-item">
+                    <label>Tournament Logo URL</label>
+                    <input type="text" id="cfg-tourneyLogo" placeholder="https://domain.com/tourney-logo.png">
+                </div>
+                <div class="config-item">
+                    <label>Organizer / Sponsor Logo URL</label>
+                    <input type="text" id="cfg-orgLogo" placeholder="https://domain.com/org-logo.png">
+                </div>
+            </div>
+            <div style="margin-top: 20px; display:flex; gap:10px;">
+                <button class="btn" style="background:#2ed573; color:white;" onclick="saveTournamentConfig()">SAVE & CONTINUE TO ADMIN</button>
+            </div>
+        </div>
+    </div>
+
     <!-- PURE GREEN SCREEN MODAL -->
     <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
@@ -183,6 +229,7 @@
         const pass = prompt("Sanjay Bhai, Password daalo:");
         if(pass === "DT@97") {
             document.getElementById('admin-content').style.display = 'block';
+            document.getElementById('config-modal').style.display = 'flex';
         } else {
             document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>ACCESS DENIED</h1>";
             window.stop();
@@ -195,6 +242,7 @@
         let teams = []; let matchHistory = {};
         let isTransparentLayout = false;
         let pickerActive = false;
+        let tournamentInfo = {};
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
@@ -202,6 +250,15 @@
             matchHistory = data.history || {};
             isTransparentLayout = !!data.transparentLayout;
             pickerActive = !!data.pickerActive;
+            tournamentInfo = data.info || {};
+
+            // Load Saved Info into Input Boxes
+            document.getElementById('cfg-tourneyName').value = tournamentInfo.tourneyName || '';
+            document.getElementById('cfg-presentedBy').value = tournamentInfo.presentedBy || '';
+            document.getElementById('cfg-instaHandle').value = tournamentInfo.instaHandle || '';
+            document.getElementById('cfg-ytHandle').value = tournamentInfo.ytHandle || '';
+            document.getElementById('cfg-tourneyLogo').value = tournamentInfo.tourneyLogo || '';
+            document.getElementById('cfg-orgLogo').value = tournamentInfo.orgLogo || '';
 
             const cfg = data.config || {};
             Object.keys(cfg).forEach(k => {
@@ -214,6 +271,23 @@
             renderHistoryButtons();
             draw();
         });
+
+        function saveTournamentConfig() {
+            const info = {
+                tourneyName: document.getElementById('cfg-tourneyName').value,
+                presentedBy: document.getElementById('cfg-presentedBy').value,
+                instaHandle: document.getElementById('cfg-instaHandle').value,
+                ytHandle: document.getElementById('cfg-ytHandle').value,
+                tourneyLogo: document.getElementById('cfg-tourneyLogo').value,
+                orgLogo: document.getElementById('cfg-orgLogo').value
+            };
+            db.ref(SYNC_PATH + '/info').set(info);
+            document.getElementById('config-modal').style.display = 'none';
+        }
+
+        function openConfigModal() {
+            document.getElementById('config-modal').style.display = 'flex';
+        }
 
         function updateColor(key, value) {
             db.ref(SYNC_PATH + '/config/' + key).set(value);
@@ -260,7 +334,7 @@
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                 t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
             });
-            const payload = { teams, history: matchHistory, transparentLayout: isTransparentLayout, pickerActive: pickerActive };
+            const payload = { teams, history: matchHistory, transparentLayout: isTransparentLayout, pickerActive: pickerActive, info: tournamentInfo };
             if(elimData) payload.lastEliminated = elimData;
             db.ref(SYNC_PATH).update(payload);
         }
