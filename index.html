@@ -32,24 +32,6 @@
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
-
-        /* Fully Transparent Modal Styles */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: transparent; align-items: center; justify-content: center; }
-        .modal-content { background: transparent; border: none; padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: none; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); padding-bottom: 12px; margin-bottom: 15px; }
-        .close-btn { font-size: 24px; font-weight: bold; color: #ff4757; cursor: pointer; background: none; border: none; }
-        
-        .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 13px; padding: 12px 10px; border-bottom: 2px solid #2d3439; background: transparent; }
-        .pop-table td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 15px; vertical-align: middle; }
-        .pop-table tr:nth-child(even) { background: transparent; }
-        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; }
-        .team-logo-img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px; }
-
-        /* Custom Scrollbar for Transparent Modal */
-        .modal-content::-webkit-scrollbar { width: 6px; }
-        .modal-content::-webkit-scrollbar-track { background: transparent; }
-        .modal-content::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -109,16 +91,6 @@
         <div id="team-list"></div>
     </div>
 
-    <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3 id="modal-title" style="margin:0; color:var(--cyan); text-transform:uppercase;">Match Pointstable</h3>
-                <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
-            </div>
-            <div id="modal-body"></div>
-        </div>
-    </div>
-
     <script>
         const pass = prompt("Sanjay Bhai, Password daalo:");
         if(pass === "DT@97") {
@@ -143,7 +115,6 @@
             isTransparentLayout = !!data.transparentLayout;
             pickerActive = !!data.pickerActive;
 
-            // SYNC COLOR PICKER INPUT VALUES
             const cfg = data.config || {};
             Object.keys(cfg).forEach(k => {
                 const el = document.getElementById('col-' + k);
@@ -285,11 +256,55 @@
                 });
         }
 
-        function showPopupTable(matchKey) {
-            const modal = document.getElementById('popup-modal');
-            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
-            const savedTeams = matchHistory[matchKey] || [];
+        // POP-OUT WINDOW FUNCTION (OPTION 3)
+        function openResultWindow(title, tableData) {
+            const popWindow = window.open("", "_blank", "width=950,height=700");
+            
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>${title}</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap');
+                    :root { --cyan: #00f2ff; }
+                    body { 
+                        font-family: 'Oswald', sans-serif; 
+                        background: transparent !important; 
+                        color: white; 
+                        margin: 0; 
+                        padding: 20px; 
+                    }
+                    .title-header {
+                        font-size: 24px;
+                        color: var(--cyan);
+                        text-transform: uppercase;
+                        margin-bottom: 15px;
+                        border-bottom: 2px solid var(--cyan);
+                        padding-bottom: 8px;
+                    }
+                    .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
+                    .pop-table th { color: var(--cyan); text-transform: uppercase; font-size: 14px; padding: 12px 10px; border-bottom: 2px solid rgba(255,255,255,0.2); background: transparent; }
+                    .pop-table td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 16px; vertical-align: middle; }
+                    .pop-table tr:nth-child(even) { background: transparent; }
+                    .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; }
+                    .team-logo-img { width: 34px; height: 34px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px; }
+                </style>
+            </head>
+            <body>
+                <div class="title-header">${title}</div>
+                ${tableData}
+            </body>
+            </html>
+            `;
 
+            popWindow.document.write(htmlContent);
+            popWindow.document.close();
+        }
+
+        function showPopupTable(matchKey) {
+            const savedTeams = matchHistory[matchKey] || [];
             let sortedTeams = [...savedTeams].sort((a,b) => {
                 let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
                 let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
@@ -329,14 +344,10 @@
             });
 
             html += `</tbody></table>`;
-            document.getElementById('modal-body').innerHTML = html;
-            modal.style.display = 'flex';
+            openResultWindow(`${matchKey.replace("Match", "MATCH ")} SCOREBOARD`, html);
         }
 
         function showOverallPopupTable() {
-            const modal = document.getElementById('popup-modal');
-            document.getElementById('modal-title').innerText = `OVERALL TOURNAMENT STANDINGS`;
-
             let sortedTeams = [...teams].sort((a,b) => {
                 let totalA = ((parseInt(a.prevFin)||0) + (parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0) + (parseInt(a.pos)||0));
                 let totalB = ((parseInt(b.prevFin)||0) + (parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0) + (parseInt(b.pos)||0));
@@ -379,8 +390,7 @@
             });
 
             html += `</tbody></table>`;
-            document.getElementById('modal-body').innerHTML = html;
-            modal.style.display = 'flex';
+            openResultWindow("OVERALL TOURNAMENT STANDINGS", html);
         }
 
         function globalNewMatch() { 
