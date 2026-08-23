@@ -2,112 +2,430 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BGMI Live Stream Overlay View Panel</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'Agency FB';
-            src: local('Agency FB Bold'), local('AgencyFB-Bold'), local('Agency FB');
-            font-weight: bold;
-        }
-
-        :root {
-            --cyan: #ffcc00;
-            --dark-blue: #12193b;
-            --row-bg: #1a2245;
-            --top-row-bg: #15191d;
+        :root { 
+            --cyan: #ffcc00; 
+            --dark-blue: #12193b; 
+            --row-bg: #1a2245; 
+            --text-color: #ffffff; 
+            --status-bg: #252c33;
             --status-bar-color: #ffcc00;
+            --top-row-bg: #15191d;
+            --elim-bg: #15191d;
+            --pred-bg: #0b0e11;
             --pred-tag-bg: #ffb800;
             --elim-main-bg: #e63900;
             --elim-stats-bg: #ffaa00;
         }
 
-        * { box-sizing: border-box; }
-        body { margin: 0; padding: 20px; font-family: 'Agency FB', 'Oswald', sans-serif; background: transparent; overflow: hidden; }
-
-        .board-container {
-            width: 450px;
-            background: var(--dark-blue);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            transition: background 0.3s ease;
+        * {
+            box-sizing: border-box;
+            font-family: 'Oswald', sans-serif;
         }
-        .board-container.transparent-mode {
+
+        body { 
+            margin: 0; 
+            background: transparent;
+            overflow: hidden; 
+            width: 1920px; 
+            height: 1080px; 
+        }
+        
+        /* LEADERBOARD BOARD RIGHT SIDE */
+        #board { 
+            position: absolute; 
+            right: 40px; 
+            bottom: 40px; 
+            background: var(--dark-blue); 
+            padding: 8px; 
+            border-radius: 4px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            transition: all 0.5s ease;
+        }
+        
+        .header-row, .team-row { 
+            display: grid; 
+            grid-template-columns: 25px 30px 65px 45px 30px 35px; 
+            align-items: center; 
+            gap: 2px; 
+            color: var(--text-color); 
+        }
+
+        .header-row { 
+            font-size: 11px; 
+            color: var(--cyan); 
+            background: var(--top-row-bg); 
+            border-bottom: 1px solid rgba(255,255,255,0.2); 
+            margin-bottom: 4px; 
+            text-align: center; 
+        }
+        
+        .team-row { 
+            background: var(--row-bg); 
+            height: 32px; 
+            margin-bottom: 2px; 
+            transition: all 0.3s ease; 
+        }
+
+        .team-row.eliminated { 
+            background: var(--elim-bg) !important;
+            opacity: 0.4; 
+            filter: grayscale(1); 
+        }
+
+        .logo-col { 
+            width: 22px; 
+            height: 22px; 
+            background: transparent; 
+            border-radius: 2px; 
+            margin: auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        .logo-col img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+        }
+
+        .name-col { 
+            padding-left: 5px; 
+            font-weight: bold; 
+            font-size: 13px; 
+            overflow: hidden; 
+            white-space: nowrap; 
+            text-transform: uppercase; 
+        } 
+        
+        /* ALIVE STATUS BARS & ANIMATION */
+        .status-col { 
+            display: flex; 
+            gap: 3px; 
+            justify-content: center; 
+            background: var(--status-bg); 
+            height: 100%; 
+            align-items: center; 
+            padding: 0 4px;
+        }
+
+        .bar { 
+            width: 5px; 
+            height: 18px; 
+            background: var(--status-bar-color); 
+            box-shadow: 0 0 8px var(--status-bar-color); 
+            animation: liveBarPulse 1.2s infinite ease-in-out alternate;
+        }
+
+        .bar.dead { 
+            background: #333333 !important; 
+            box-shadow: none !important; 
+            opacity: 0.3; 
+            animation: none !important; 
+        }
+
+        .total-box { 
+            background: var(--cyan); 
+            color: #000; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 900; 
+        } 
+        
+        @keyframes liveBarPulse {
+            0% { transform: scaleY(0.85); opacity: 0.7; }
+            100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
+        }
+
+        /* WINNING PREDICTION LAYOUT */
+        #prediction-container {
+            position: absolute;
+            left: 80px;
+            bottom: 40px;
+            display: flex;
+            gap: 12px;
+            z-index: 900;
+            transition: all 0.5s ease;
+        }
+
+        .pred-card {
+            display: flex;
+            flex-direction: column;
+            width: 160px;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .pred-top-tag {
+            background: var(--pred-tag-bg);
+            color: #000000;
+            font-weight: 800;
+            font-size: 13px;
+            text-align: center;
+            width: 75%;
+            margin: 0 auto;
+            padding: 1px 0;
+            border-radius: 2px 2px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 2;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .pred-middle-box {
+            display: flex;
+            height: 50px;
+            background: var(--pred-bg);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .pred-logo-box {
+            width: 52px;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .pred-logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .pred-bars-box {
+            flex: 1;
+            background: var(--status-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .pred-player-bar {
+            width: 6px;
+            height: 24px;
+            border-radius: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .pred-player-bar.alive {
+            background: var(--status-bar-color);
+            box-shadow: 0 0 8px var(--status-bar-color);
+            opacity: 1;
+        }
+        
+        .pred-player-bar.dead {
+            background: #444444;
+            box-shadow: none;
+            opacity: 0.3;
+        }
+
+        .pred-bottom-bar {
+            background: var(--elim-main-bg);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            text-align: center;
+            padding: 3px 0;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        .trigger-animate {
+            animation: slideUpFade 0.5s ease-out forwards;
+        }
+        .trigger-card-animate {
+            animation: slideUpFade 0.4s ease-out forwards;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ELIMINATION BANNER POPUP */
+        #elim-banner { 
+            position: absolute; 
+            left: 80px; 
+            bottom: 240px; 
+            display: none; 
+            z-index: 1000; 
+            perspective: 1200px;
+        }
+        
+        #elim-banner.show { 
+            display: block; 
+        }
+        
+        #elim-banner.show .elim-card {
+            animation: exactPageUnfold 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        #elim-banner.hide-anim .elim-card {
+            animation: exactPageFold 0.4s ease-in forwards;
+        }
+
+        .elim-card { 
+            display: flex; 
+            align-items: stretch; 
+            position: relative; 
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+            transform-origin: left center;
+            opacity: 0;
+            background: #ffffff;
+        }
+
+        .elim-rank-tag {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background: var(--pred-tag-bg);
+            color: #000000;
+            font-size: 26px;
+            font-weight: 800;
+            padding: 2px 10px;
+            line-height: 1;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .elim-logo-container {
+            width: 80px;
+            height: 80px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            z-index: 10;
+        }
+
+        .elim-logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .elim-right-content {
+            display: flex;
+            flex-direction: column;
+            width: 360px;
+        }
+
+        .elim-main-banner {
+            background: var(--elim-main-bg);
+            height: 50px;
+            display: flex;
+            align-items: center;
+            padding-left: 18px;
+        }
+
+        .elim-main-banner span {
+            font-size: 38px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .elim-stats-bar {
+            background: var(--elim-stats-bg);
+            height: 30px;
+            display: flex;
+            align-items: center;
+            padding-left: 18px;
+            gap: 12px;
+            color: #000000;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .elim-stats-bar .sep {
+            font-weight: 400;
+            opacity: 0.4;
+        }
+
+        @keyframes exactPageUnfold {
+            0% { opacity: 0; transform: rotateY(-90deg) scaleX(0.3); }
+            70% { transform: rotateY(12deg) scaleX(1.02); }
+            100% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
+        }
+
+        @keyframes exactPageFold {
+            0% { opacity: 1; transform: rotateY(0deg) scaleX(1); }
+            100% { opacity: 0; transform: rotateY(-80deg) scaleX(0.4); }
+        }
+
+        /* CUSTOM GFX TRANSPARENT LAYOUT MODE */
+        body.transparent-mode #board,
+        body.transparent-mode .header-row,
+        body.transparent-mode .team-row,
+        body.transparent-mode .status-col,
+        body.transparent-mode .total-box,
+        body.transparent-mode .pred-middle-box,
+        body.transparent-mode .pred-logo-box,
+        body.transparent-mode .pred-bars-box,
+        body.transparent-mode .pred-bottom-bar,
+        body.transparent-mode .pred-top-tag,
+        body.transparent-mode .elim-card,
+        body.transparent-mode .elim-logo-container,
+        body.transparent-mode .elim-main-banner,
+        body.transparent-mode .elim-stats-bar {
             background: transparent !important;
             box-shadow: none !important;
+            border: none !important;
         }
 
-        .header-bar {
-            background: var(--top-row-bg);
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: #fff;
-            border-bottom: 2px solid var(--cyan);
+        /* VISUAL CLICK-TO-COLOR PICKER MODE STYLES */
+        body.picker-active * {
+            cursor: crosshair !important;
         }
-        .header-title { font-size: 22px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-
-        .team-list-overlay { display: flex; flex-direction: column; gap: 4px; padding: 6px; }
-
-        .overlay-row {
-            display: flex;
-            align-items: center;
-            background: var(--row-bg);
-            height: 38px;
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
-            animation: fadeIn 0.4s ease-in-out;
+        body.picker-active *:hover {
+            outline: 2px dashed #00f2ff !important;
+            outline-offset: -2px;
         }
-        .overlay-row.eliminated { opacity: 0.45; filter: grayscale(80%); }
-
-        .rank-box { width: 38px; height: 100%; background: rgba(0,0,0,0.3); color: var(--cyan); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
-        .logo-box { width: 36px; height: 36px; padding: 2px; display: flex; align-items: center; justify-content: center; }
-        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .name-box { flex: 1; padding-left: 8px; font-size: 20px; color: #fff; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .status-dots { display: flex; gap: 3px; margin-right: 10px; }
-        .dot { width: 10px; height: 10px; border-radius: 2px; background: #333; }
-        .dot.alive { background: var(--status-bar-color); }
-
-        .pts-box { width: 48px; height: 100%; background: var(--cyan); color: #000; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
-
-        /* PURANE ELIMINATION BANNER ANIMATIONS */
-        .elim-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--elim-main-bg);
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 0 15px rgba(230, 57, 0, 0.8);
-            animation: slideInRight 0.5s ease, fadeOut 0.5s ease 4.5s forwards;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 999;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
     </style>
 </head>
 <body>
-    <div id="toast-container"></div>
-    <div id="board" class="board-container">
-        <div class="header-bar">
-            <div id="tourney-title" class="header-title">LIVE MATCH STANDINGS</div>
+
+    <!-- ELIMINATION BANNER POPUP -->
+    <div id="elim-banner">
+        <div class="elim-card" data-var="elim-main-bg">
+            <div class="elim-rank-tag" id="elim-rank-tag" data-var="pred-tag-bg">#5</div>
+            <div class="elim-logo-container">
+                <img id="elim-logo-img" src="" onerror="this.style.display='none'">
+            </div>
+            <div class="elim-right-content">
+                <div class="elim-main-banner" data-var="elim-main-bg">
+                    <span>ELIMINATED</span>
+                </div>
+                <div class="elim-stats-bar" data-var="elim-stats-bg">
+                    <span id="elim-fin-text">1 FINISHES</span>
+                    <span class="sep">|</span>
+                    <span id="elim-pos-text">3 PLACE PTS.</span>
+                </div>
+            </div>
         </div>
-        <div id="overlay-teams" class="team-list-overlay"></div>
     </div>
+
+    <!-- WINNING PREDICTION FORECAST -->
+    <div id="prediction-container"></div>
+    
+    <!-- LEADERBOARD SIDEBAR -->
+    <div id="board" data-var="dark-blue"></div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
@@ -115,81 +433,269 @@
         const db = firebase.database();
         const SYNC_PATH = 'TournamentData/LiveSession';
 
-        let lastElimId = null;
+        let currentElimId = "";
+        let cachedTeamsData = [];
+        let cachedPredData = null;
+        let shouldAnimateNextRender = true;
+        let pickerModeActive = false;
+
+        // DYNAMIC COLOR CONFIG MAPPER
+        const COLOR_MAP = {
+            'cyan': '--cyan',
+            'dark-blue': '--dark-blue',
+            'row-bg': '--row-bg',
+            'text-color': '--text-color',
+            'status-bg': '--status-bg',
+            'status-bar-color': '--status-bar-color',
+            'top-row-bg': '--top-row-bg',
+            'elim-bg': '--elim-bg',
+            'pred-bg': '--pred-bg',
+            'pred-tag-bg': '--pred-tag-bg',
+            'elim-main-bg': '--elim-main-bg',
+            'elim-stats-bg': '--elim-stats-bg'
+        };
 
         db.ref(SYNC_PATH).on('value', (snap) => {
-            const data = snap.val() || {};
-            const teams = data.teams || [];
-            const isTransparent = !!data.transparentLayout;
-            const config = data.config || {};
-            const info = data.info || {};
+            const data = snap.val(); if(!data) return;
+            const cfg = data.config || {};
+            
+            // DYNAMICALLY SET ALL ROOT CSS VARIABLES
+            Object.keys(COLOR_MAP).forEach(k => {
+                if (cfg[k]) {
+                    document.documentElement.style.setProperty(COLOR_MAP[k], cfg[k]);
+                }
+            });
 
-            // Apply Dynamic Root CSS Colors
-            if(config.cyan) document.documentElement.style.setProperty('--cyan', config.cyan);
-            if(config['dark-blue']) document.documentElement.style.setProperty('--dark-blue', config['dark-blue']);
-            if(config['row-bg']) document.documentElement.style.setProperty('--row-bg', config['row-bg']);
-            if(config['top-row-bg']) document.documentElement.style.setProperty('--top-row-bg', config['top-row-bg']);
-            if(config['status-bar-color']) document.documentElement.style.setProperty('--status-bar-color', config['status-bar-color']);
-            if(config['elim-main-bg']) document.documentElement.style.setProperty('--elim-main-bg', config['elim-main-bg']);
-
-            const board = document.getElementById('board');
-            if(isTransparent) board.classList.add('transparent-mode');
-            else board.classList.remove('transparent-mode');
-
-            if(info.tourneyName) {
-                document.getElementById('tourney-title').innerText = info.tourneyName;
+            // PICKER MODE SYNC FROM ADMIN
+            pickerModeActive = !!data.pickerActive;
+            if(pickerModeActive) {
+                document.body.classList.add('picker-active');
+            } else {
+                document.body.classList.remove('picker-active');
             }
 
-            renderOverlay(teams);
+            // TRANSPARENT LAYOUT TOGGLE SYNC
+            if (data.transparentLayout) {
+                document.body.classList.add('transparent-mode');
+            } else {
+                document.body.classList.remove('transparent-mode');
+            }
 
-            if(data.lastEliminated && data.lastEliminated.id !== lastElimId) {
-                lastElimId = data.lastEliminated.id;
-                showEliminationToast(data.lastEliminated);
+            cachedTeamsData = data.teams || [];
+            cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
+
+            // ELIMINATION POPUP TRIGGER
+            if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
+                currentElimId = data.lastEliminated.id;
+                
+                document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
+                const logoImg = document.getElementById('elim-logo-img');
+                if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
+                    logoImg.src = data.lastEliminated.logo;
+                    logoImg.style.display = 'block';
+                } else {
+                    logoImg.style.display = 'none';
+                }
+
+                document.getElementById('elim-fin-text').innerText = `${data.lastEliminated.finishes || 0} FINISHES`;
+                let posPoints = 0;
+                let r = data.lastEliminated.rank || 0;
+                if(r === 1) posPoints = 10;
+                else if(r === 2) posPoints = 6;
+                else if(r === 3) posPoints = 5;
+                else if(r === 4) posPoints = 4;
+                else if(r === 5) posPoints = 3;
+                else if(r === 6) posPoints = 2;
+                else if(r === 7 || r === 8) posPoints = 1;
+
+                document.getElementById('elim-pos-text').innerText = `${posPoints} PLACE PTS.`;
+                
+                const banner = document.getElementById('elim-banner');
+                banner.classList.remove('show', 'hide-anim');
+                void banner.offsetWidth; 
+                banner.classList.add('show'); 
+                
+                setTimeout(() => { 
+                    banner.classList.add('hide-anim');
+                    setTimeout(() => { banner.classList.remove('show', 'hide-anim'); }, 400);
+                }, 5000);
+            }
+
+            render(cachedTeamsData, cachedPredData);
+        });
+
+        // CLICK EVENT LISTENER FOR VISUAL MOUSE CLICK COLOR PICKING
+        document.addEventListener('click', (e) => {
+            if(!pickerModeActive) return;
+
+            let target = e.target.closest('[data-var]');
+            if(target) {
+                e.preventDefault();
+                e.stopPropagation();
+                let varKey = target.getAttribute('data-var');
+                
+                // Prompt user to pick color for clicked element
+                let currentColor = getComputedStyle(document.documentElement).getPropertyValue(COLOR_MAP[varKey]).trim();
+                let newColor = prompt(`Editing Color for element: ${varKey}\nEnter Hex or Color Code:`, currentColor);
+                
+                if(newColor) {
+                    db.ref(SYNC_PATH + '/config/' + varKey).set(newColor.trim());
+                }
             }
         });
 
-        function renderOverlay(teams) {
-            const container = document.getElementById('overlay-teams');
-            container.innerHTML = '';
+        function render(teams, predData) {
+            const board = document.getElementById('board');
+            const predContainer = document.getElementById('prediction-container');
 
-            let sorted = [...teams].sort((a,b) => {
-                let totA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
-                let totB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
-                return totB - totA;
+            const aliveTeams = teams.filter(t => t.alive && t.alive.some(a => a == 1 || a == '1'));
+            const showPrediction = aliveTeams.length <= 5 && aliveTeams.length >= 2;
+
+            if (showPrediction) {
+                board.style.display = 'none';
+                predContainer.style.display = 'flex';
+            } else {
+                board.style.display = 'block';
+                predContainer.style.display = 'none';
+                predContainer.innerHTML = '';
+            }
+
+            board.classList.remove('trigger-animate');
+            predContainer.classList.remove('trigger-animate');
+
+            if (shouldAnimateNextRender) {
+                void board.offsetWidth;
+                void predContainer.offsetWidth;
+                if (!showPrediction) board.classList.add('trigger-animate');
+                if (showPrediction) predContainer.classList.add('trigger-animate');
+                shouldAnimateNextRender = false;
+            }
+
+            if (showPrediction) {
+                renderPrediction(predData, aliveTeams, predContainer.classList.contains('trigger-animate'));
+            }
+
+            let h = `<div class="header-row" data-var="top-row-bg"><div data-var="cyan">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+            
+            const sortedTeams = [...teams].sort((a,b)=> {
+                let totalA = ((parseInt(a.prevFin) || 0) + (parseInt(a.fin) || 0)) + ((parseInt(a.prevPos) || 0) + (parseInt(a.pos) || 0));
+                let totalB = ((parseInt(b.prevFin) || 0) + (parseInt(b.fin) || 0)) + ((parseInt(b.prevPos) || 0) + (parseInt(b.pos) || 0));
+                return totalB - totalA;
             });
 
-            sorted.forEach((t, i) => {
-                let totalPts = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
-                let isElim = t.elim || t.alive.every(a => a == 0);
+            sortedTeams.forEach((t, i) => {
+                let currentKills = parseInt(t.fin) || 0;
+                let overallTotal = ((parseInt(t.prevFin) || 0) + currentKills) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}" onerror="this.style.opacity='0'">` : '';
+                let isEliminated = t.elim || (t.alive && t.alive.every(a => a == 0 || a == '0'));
 
-                container.innerHTML += `
-                    <div class="overlay-row ${isElim ? 'eliminated' : ''}">
-                        <div class="rank-box">#${i+1}</div>
-                        <div class="logo-box">
-                            ${t.logo ? `<img src="${t.logo}" onerror="this.style.display='none'">` : ''}
+                let cardAnimClass = board.classList.contains('trigger-animate') ? 'trigger-card-animate' : '';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(i * 0.04) + 0.1}s"` : '';
+
+                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''} ${cardAnimClass}" ${cardDelay} data-var="row-bg">
+                    <div style="text-align:center;">${i+1}</div>
+                    <div class="logo-col">${logoSrc}</div>
+                    <div class="name-col" data-var="text-color">${t.name || 'TEAM'}</div>
+                    <div class="status-col" data-var="status-bg">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}" data-var="status-bar-color"></div>`).join('')}</div>
+                    <div style="text-align:center;">${currentKills}</div>
+                    <div class="total-box" data-var="cyan">${overallTotal}</div>
+                </div>`;
+            });
+            board.innerHTML = h;
+        }
+
+        function renderPrediction(rawPredData, aliveTeams, isAnimating) {
+            const container = document.getElementById('prediction-container');
+            let displayList = [];
+
+            if (rawPredData) {
+                let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
+                
+                rawList.forEach(p => {
+                    let liveTeam = aliveTeams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
+                    if (liveTeam) {
+                        displayList.push({
+                            name: liveTeam.name,
+                            logo: liveTeam.logo || p.logo,
+                            alive: liveTeam.alive,
+                            wwcd: p.wwcd || p.winChance || '20%'
+                        });
+                    }
+                });
+            }
+
+            if (displayList.length === 0 && aliveTeams.length >= 2) {
+                let totalScoreSum = aliveTeams.reduce((acc, t) => {
+                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
+                    return acc + (totalPts + (aliveCount * 4));
+                }, 0) || 1;
+
+                displayList = aliveTeams.map(t => {
+                    let totalPts = ((parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0)) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
+                    let aliveCount = t.alive.filter(a => a == 1 || a == '1').length;
+                    let prob = Math.round((((totalPts + (aliveCount * 4)) / totalScoreSum) * 100));
+                    return {
+                        name: t.name,
+                        logo: t.logo,
+                        alive: t.alive,
+                        wwcd: prob + '%'
+                    };
+                }).sort((a,b) => parseInt(b.wwcd) - parseInt(a.wwcd));
+            }
+
+            if (displayList.length === 0) {
+                container.innerHTML = "";
+                return;
+            }
+
+            let html = "";
+            let cardAnimClass = isAnimating ? 'trigger-card-animate' : '';
+
+            displayList.slice(0, 5).forEach((p, idx) => {
+                let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
+                let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
+                let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
+                
+                let playerAliveArr = p.alive || [1, 1, 1, 1];
+
+                html += `
+                    <div class="pred-card ${cardAnimClass}" ${cardDelay}>
+                        <div class="pred-top-tag" data-var="pred-tag-bg">${p.name || 'TEAM'}</div>
+                        <div class="pred-middle-box" data-var="pred-bg">
+                            <div class="pred-logo-box">
+                                ${logoSrc ? `<img src="${logoSrc}">` : ''}
+                            </div>
+                            <div class="pred-bars-box" data-var="status-bg">
+                                <div class="pred-player-bar ${playerAliveArr[0] == 1 || playerAliveArr[0] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[1] == 1 || playerAliveArr[1] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[2] == 1 || playerAliveArr[2] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                                <div class="pred-player-bar ${playerAliveArr[3] == 1 || playerAliveArr[3] == '1' ? 'alive' : 'dead'}" data-var="status-bar-color"></div>
+                            </div>
                         </div>
-                        <div class="name-box">${t.name || 'TEAM'}</div>
-                        <div class="status-dots">
-                            ${t.alive.map(a => `<div class="dot ${a ? 'alive' : ''}"></div>`).join('')}
-                        </div>
-                        <div class="pts-box">${totalPts}</div>
+                        <div class="pred-bottom-bar" data-var="elim-main-bg">WWCD - ${pctText}</div>
                     </div>
                 `;
             });
+            container.innerHTML = html;
         }
 
-        function showEliminationToast(elim) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'elim-toast';
-            toast.innerHTML = `
-                <span>ELIMINATED #${elim.rank}</span> | 
-                <span>${elim.name}</span> | 
-                <span>KILLS: ${elim.finishes}</span>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 5000);
-        }
+        setInterval(() => {
+            const board = document.getElementById('board');
+            const predContainer = document.getElementById('prediction-container');
+            
+            board.style.opacity = "0";
+            predContainer.style.opacity = "0";
+            
+            setTimeout(() => {
+                if(cachedTeamsData.length > 0) {
+                    shouldAnimateNextRender = true;
+                    board.style.opacity = "1";
+                    predContainer.style.opacity = "1";
+                    render(cachedTeamsData, cachedPredData);
+                }
+            }, 300); 
+        }, 30000);
     </script>
 </body>
 </html>
