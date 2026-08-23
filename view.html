@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BGMI Broadcast Overlay</title>
+    <title>BGMI Live Stream Overlay View Panel</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
@@ -15,267 +14,181 @@
         }
 
         :root {
-            --cyan: #00f2ff;
-            --blue-main: #005bb5;
-            --blue-dark: #003875;
+            --cyan: #ffcc00;
             --dark-blue: #12193b;
             --row-bg: #1a2245;
-            --text-color: #ffffff;
-            --status-bg: #0b0f26;
-            --status-bar-color: #00f2ff;
-            --top-row-bg: #090d21;
+            --top-row-bg: #15191d;
+            --status-bar-color: #ffcc00;
+            --pred-tag-bg: #ffb800;
+            --elim-main-bg: #e63900;
+            --elim-stats-bg: #ffaa00;
         }
 
-        * { box-sizing: border-box; font-family: 'Oswald', sans-serif; }
-        body { margin: 0; padding: 0; background: transparent; overflow: hidden; width: 100vw; height: 100vh; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 20px; font-family: 'Agency FB', 'Oswald', sans-serif; background: transparent; overflow: hidden; }
 
-        /* --- MODE 1: LIVE IN-GAME SIDE LEADERBOARD --- */
-        .leaderboard {
-            position: absolute; top: 20px; left: 20px;
-            width: 420px; background: var(--dark-blue); border-radius: 8px;
-            overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 1; transition: opacity 0.3s ease-in-out;
-            display: block;
+        .board-container {
+            width: 450px;
+            background: var(--dark-blue);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            transition: background 0.3s ease;
+        }
+        .board-container.transparent-mode {
+            background: transparent !important;
+            box-shadow: none !important;
         }
 
-        .header-row {
-            display: grid; grid-template-columns: 35px 45px 1fr 65px 45px 55px;
-            background: var(--top-row-bg); padding: 10px 8px; font-weight: 800;
-            font-size: 14px; color: var(--text-color); align-items: center; text-align: center;
+        .header-bar {
+            background: var(--top-row-bg);
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+            border-bottom: 2px solid var(--cyan);
+        }
+        .header-title { font-size: 22px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+
+        .team-list-overlay { display: flex; flex-direction: column; gap: 4px; padding: 6px; }
+
+        .overlay-row {
+            display: flex;
+            align-items: center;
+            background: var(--row-bg);
+            height: 38px;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .overlay-row.eliminated { opacity: 0.45; filter: grayscale(80%); }
+
+        .rank-box { width: 38px; height: 100%; background: rgba(0,0,0,0.3); color: var(--cyan); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+        .logo-box { width: 36px; height: 36px; padding: 2px; display: flex; align-items: center; justify-content: center; }
+        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .name-box { flex: 1; padding-left: 8px; font-size: 20px; color: #fff; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .status-dots { display: flex; gap: 3px; margin-right: 10px; }
+        .dot { width: 10px; height: 10px; border-radius: 2px; background: #333; }
+        .dot.alive { background: var(--status-bar-color); }
+
+        .pts-box { width: 48px; height: 100%; background: var(--cyan); color: #000; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+
+        /* PURANE ELIMINATION BANNER ANIMATIONS */
+        .elim-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--elim-main-bg);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(230, 57, 0, 0.8);
+            animation: slideInRight 0.5s ease, fadeOut 0.5s ease 4.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 999;
         }
 
-        .team-row {
-            display: grid; grid-template-columns: 35px 45px 1fr 65px 45px 55px;
-            background: var(--row-bg); margin-top: 2px; padding: 6px 8px;
-            align-items: center; color: var(--text-color); font-weight: 700; font-size: 16px;
-        }
-
-        .team-row.eliminated { opacity: 0.5; filter: grayscale(1); }
-        .logo-col img { width: 30px; height: 30px; object-fit: contain; }
-        .name-col { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; font-size: 15px; }
-        .status-col { display: flex; gap: 3px; justify-content: center; background: var(--status-bg); padding: 4px; border-radius: 4px; }
-        .bar { width: 8px; height: 14px; background: var(--status-bar-color); border-radius: 2px; }
-        .bar.dead { background: #333 !important; }
-        .total-box { background: var(--cyan); color: #000; font-weight: 800; border-radius: 4px; padding: 2px 0; text-align: center; }
-
-        /* --- MODE 2: FULL SCREEN MATCH RANKINGS GRAPHIC (EXACT IMAGE MATCH) --- */
-        .full-screen-rankings {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #ffffff; color: #000; z-index: 9999;
-        }
-
-        /* Top Header Banner */
-        .rankings-header {
-            position: absolute; top: 20px; right: 0; width: 75%; height: 80px;
-            background: var(--blue-main); clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%);
-            display: flex; align-items: center; justify-content: flex-end; padding-right: 50px;
-        }
-        .rankings-header-title { color: #ffffff; font-size: 55px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
-
-        .rankings-header-decor {
-            position: absolute; top: 20px; left: 18%; width: 120px; height: 80px;
-            background: var(--blue-main); transform: skewX(-25deg);
-        }
-
-        /* Left Side Branding Panel */
-        .left-brand-panel {
-            position: absolute; left: 0; top: 0; width: 22%; height: calc(100vh - 60px);
-            display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: 20px 10px;
-        }
-        .brand-logo-main { max-width: 80%; max-height: 220px; object-fit: contain; }
-        .decor-icon { width: 60px; opacity: 0.8; }
-
-        /* Grid Layout for 18 Teams (2 Columns x 9 Rows) */
-        .rankings-grid {
-            position: absolute; top: 120px; right: 20px; width: 76%; height: calc(100vh - 200px);
-            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(9, 1fr); gap: 10px 20px;
-        }
-
-        .rank-card {
-            background: var(--blue-main); color: #fff; display: flex; align-items: center;
-            height: 100%; border-radius: 2px; overflow: hidden; position: relative;
-            clip-path: polygon(0 0, 92% 0, 100% 100%, 0 100%);
-        }
-
-        .rank-num {
-            width: 50px; height: 100%; background: #111b36; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; font-weight: 800; color: #fff;
-        }
-
-        .rank-logo { width: 45px; height: 100%; display: flex; align-items: center; justify-content: center; padding: 2px; }
-        .rank-logo img { width: 32px; height: 32px; object-fit: contain; }
-
-        .rank-name {
-            flex: 1; font-size: 18px; font-weight: 700; text-transform: uppercase;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px;
-        }
-
-        .rank-stats-group { display: flex; align-items: center; padding-right: 40px; gap: 15px; }
-        .stat-box { display: flex; flex-direction: column; align-items: center; }
-        .stat-val { font-size: 18px; font-weight: 800; color: #fff; }
-        .stat-lbl { font-size: 9px; opacity: 0.7; text-transform: uppercase; margin-top: -3px; }
-
-        /* Bottom Footer Strip */
-        .bottom-footer {
-            position: absolute; bottom: 0; left: 0; width: 100vw; height: 60px;
-            background: #0d88d6; color: #fff; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 40px; font-weight: 700; font-size: 18px; text-transform: uppercase;
-        }
-        .footer-item { display: flex; align-items: center; gap: 10px; }
-        .footer-logo { height: 35px; object-fit: contain; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
     </style>
 </head>
 <body>
-
-    <!-- MODE 1: LIVE FLOATING OVERLAY -->
-    <div id="board" class="leaderboard"></div>
-
-    <!-- MODE 2: FULL SCREEN MATCH RANKINGS SCREEN -->
-    <div id="full-rankings-screen" class="full-screen-rankings">
-        <div class="rankings-header-decor"></div>
-        <div class="rankings-header">
-            <div id="rankings-header-title" class="rankings-header-title">MATCH RANKINGS</div>
+    <div id="toast-container"></div>
+    <div id="board" class="board-container">
+        <div class="header-bar">
+            <div id="tourney-title" class="header-title">LIVE MATCH STANDINGS</div>
         </div>
-
-        <div class="left-brand-panel">
-            <img class="decor-icon" src="https://cdn-icons-png.flaticon.com/512/808/808431.png" alt="Icon">
-            <img id="brand-event-logo" class="brand-logo-main" src="" alt="Event Logo">
-            <img class="decor-icon" src="https://cdn-icons-png.flaticon.com/512/808/808431.png" alt="Icon">
-        </div>
-
-        <div id="rankings-grid" class="rankings-grid"></div>
-
-        <div class="bottom-footer">
-            <div id="footer-presented-by">ORGANIZER PRESENTS</div>
-            <div class="footer-item">
-                <span>Follow us on Instagram :</span>
-                <span id="footer-insta" style="color:#fff; font-weight:800;">@INSTAGRAM</span>
-            </div>
-            <div class="footer-item">
-                <span>Catch the live on YouTube :</span>
-                <span id="footer-yt" style="color:#fff; font-weight:800;">YOUTUBE CHANNEL</span>
-            </div>
-            <div class="footer-item">
-                <img id="footer-org-logo" class="footer-logo" src="" alt="">
-            </div>
-        </div>
+        <div id="overlay-teams" class="team-list-overlay"></div>
     </div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const BASE_PATH = 'TournamentData/LiveSession';
+        const SYNC_PATH = 'TournamentData/LiveSession';
 
-        db.ref(BASE_PATH).on('value', (snap) => {
+        let lastElimId = null;
+
+        db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
-            const activeMatch = data.activeMatch || 'LIVE';
+            const teams = data.teams || [];
+            const isTransparent = !!data.transparentLayout;
+            const config = data.config || {};
             const info = data.info || {};
 
-            // Dynamic Branding Updates
-            document.getElementById('brand-event-logo').src = info.tourneyLogo || 'https://via.placeholder.com/200?text=EVENT+LOGO';
-            document.getElementById('footer-org-logo').src = info.orgLogo || 'https://via.placeholder.com/100?text=ORG';
-            document.getElementById('footer-presented-by').innerText = info.presentedBy ? `${info.presentedBy} PRESENTS` : 'EVENT PRESENTS';
-            document.getElementById('footer-insta').innerText = info.instaHandle || '@ESPORTS';
-            document.getElementById('footer-yt').innerText = info.ytHandle || 'LIVE GAMING';
+            // Apply Dynamic Root CSS Colors
+            if(config.cyan) document.documentElement.style.setProperty('--cyan', config.cyan);
+            if(config['dark-blue']) document.documentElement.style.setProperty('--dark-blue', config['dark-blue']);
+            if(config['row-bg']) document.documentElement.style.setProperty('--row-bg', config['row-bg']);
+            if(config['top-row-bg']) document.documentElement.style.setProperty('--top-row-bg', config['top-row-bg']);
+            if(config['status-bar-color']) document.documentElement.style.setProperty('--status-bar-color', config['status-bar-color']);
+            if(config['elim-main-bg']) document.documentElement.style.setProperty('--elim-main-bg', config['elim-main-bg']);
 
-            if (activeMatch === 'LIVE') {
-                // Show Floating Live Leaderboard
-                document.getElementById('board').style.display = 'block';
-                document.getElementById('full-rankings-screen').style.display = 'none';
-                renderLiveBoard(data.teams || []);
-            } else {
-                // Show Full Screen Graphic Overlay
-                document.getElementById('board').style.display = 'none';
-                document.getElementById('full-rankings-screen').style.display = 'block';
+            const board = document.getElementById('board');
+            if(isTransparent) board.classList.add('transparent-mode');
+            else board.classList.remove('transparent-mode');
 
-                let matchTeams = [];
-                if (activeMatch === 'OVERALL') {
-                    document.getElementById('rankings-header-title').innerText = 'OVERALL STANDINGS';
-                    matchTeams = data.teams || [];
-                } else {
-                    document.getElementById('rankings-header-title').innerText = activeMatch.replace('Match', 'MATCH ') + ' RANKINGS';
-                    matchTeams = (data.history && data.history[activeMatch]) ? data.history[activeMatch] : [];
-                }
+            if(info.tourneyName) {
+                document.getElementById('tourney-title').innerText = info.tourneyName;
+            }
 
-                renderFullScreenGrid(matchTeams, activeMatch === 'OVERALL');
+            renderOverlay(teams);
+
+            if(data.lastEliminated && data.lastEliminated.id !== lastElimId) {
+                lastElimId = data.lastEliminated.id;
+                showEliminationToast(data.lastEliminated);
             }
         });
 
-        // 1. Live In-Game Floating Overlay Render
-        function renderLiveBoard(teams) {
-            const board = document.getElementById('board');
-            let h = `<div class="header-row"><div style="color:var(--cyan)">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
+        function renderOverlay(teams) {
+            const container = document.getElementById('overlay-teams');
+            container.innerHTML = '';
 
-            const sorted = [...teams].sort((a,b) => {
-                let totalA = ((parseInt(a.prevFin)||0) + (parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0) + (parseInt(a.pos)||0));
-                let totalB = ((parseInt(b.prevFin)||0) + (parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0) + (parseInt(b.pos)||0));
-                return totalB - totalA;
+            let sorted = [...teams].sort((a,b) => {
+                let totA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
+                let totB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
+                return totB - totA;
             });
 
             sorted.forEach((t, i) => {
-                let currentKills = parseInt(t.fin) || 0;
-                let overallTotal = ((parseInt(t.prevFin) || 0) + currentKills) + ((parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0));
-                let logoSrc = (t.logo && t.logo.trim() !== '') ? `<img src="${t.logo}">` : '';
-                let isEliminated = t.elim || (t.alive && t.alive.every(a => a == 0 || a == '0'));
+                let totalPts = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
+                let isElim = t.elim || t.alive.every(a => a == 0);
 
-                h += `<div class="team-row ${isEliminated ? 'eliminated' : ''}">
-                    <div style="text-align:center;">${i+1}</div>
-                    <div class="logo-col">${logoSrc}</div>
-                    <div class="name-col">${t.name || 'TEAM'}</div>
-                    <div class="status-col">${(t.alive || [1,1,1,1]).map(a => `<div class="bar ${a == 1 || a == '1' ? '' : 'dead'}"></div>`).join('')}</div>
-                    <div style="text-align:center;">${currentKills}</div>
-                    <div class="total-box">${overallTotal}</div>
-                </div>`;
+                container.innerHTML += `
+                    <div class="overlay-row ${isElim ? 'eliminated' : ''}">
+                        <div class="rank-box">#${i+1}</div>
+                        <div class="logo-box">
+                            ${t.logo ? `<img src="${t.logo}" onerror="this.style.display='none'">` : ''}
+                        </div>
+                        <div class="name-box">${t.name || 'TEAM'}</div>
+                        <div class="status-dots">
+                            ${t.alive.map(a => `<div class="dot ${a ? 'alive' : ''}"></div>`).join('')}
+                        </div>
+                        <div class="pts-box">${totalPts}</div>
+                    </div>
+                `;
             });
-            board.innerHTML = h;
         }
 
-        // 2. Full Screen Image Matching Graphic Grid
-        function renderFullScreenGrid(teamsList, isOverall) {
-            const grid = document.getElementById('rankings-grid');
-            grid.innerHTML = '';
-
-            let sorted = [...teamsList].sort((a,b) => {
-                let totalA = isOverall ? 
-                    (((parseInt(a.prevFin)||0)+(parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0)+(parseInt(a.pos)||0))) :
-                    ((parseInt(a.fin)||0) + (parseInt(a.pos)||0));
-                let totalB = isOverall ? 
-                    (((parseInt(b.prevFin)||0)+(parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0)+(parseInt(b.pos)||0))) :
-                    ((parseInt(b.fin)||0) + (parseInt(b.pos)||0));
-                return totalB - totalA;
-            });
-
-            // Fill up to 18 slots as per image layout
-            for (let i = 0; i < 18; i++) {
-                let t = sorted[i];
-                if (t) {
-                    let kills = isOverall ? ((parseInt(t.prevFin)||0) + (parseInt(t.fin)||0)) : (parseInt(t.fin)||0);
-                    let posPts = isOverall ? ((parseInt(t.prevPos)||0) + (parseInt(t.pos)||0)) : (parseInt(t.pos)||0);
-                    let totalPts = kills + posPts;
-                    let logoHtml = t.logo ? `<img src="${t.logo}" onerror="this.style.display='none'">` : '';
-
-                    grid.innerHTML += `
-                        <div class="rank-card">
-                            <div class="rank-num">${i + 1}</div>
-                            <div class="rank-logo">${logoHtml}</div>
-                            <div class="rank-name">${t.name || 'TEAM'}</div>
-                            <div class="rank-stats-group">
-                                <div class="stat-box"><span class="stat-val">${posPts}</span><span class="stat-lbl">PLACE PTS</span></div>
-                                <div class="stat-box"><span class="stat-val">${kills}</span><span class="stat-lbl">KILLS</span></div>
-                                <div class="stat-box"><span class="stat-val" style="color:var(--cyan);">${totalPts}</span><span class="stat-lbl">TOTAL</span></div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Empty Card Shell
-                    grid.innerHTML += `
-                        <div class="rank-card" style="opacity: 0.3;">
-                            <div class="rank-num">${i + 1}</div>
-                            <div class="rank-name">--</div>
-                        </div>
-                    `;
-                }
-            }
+        function showEliminationToast(elim) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'elim-toast';
+            toast.innerHTML = `
+                <span>ELIMINATED #${elim.rank}</span> | 
+                <span>${elim.name}</span> | 
+                <span>KILLS: ${elim.finishes}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
         }
     </script>
 </body>
