@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BGMI Admin Panel - Standings & Dynamic Link Generator</title>
+    <title>BGMI Admin Panel - Standings & Live Overlay Color Control</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -23,19 +23,52 @@
 
         .history-container { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; background: #1c2227; padding: 12px; border-radius: 8px; border: 1px solid #2d3439; align-items: center; }
         .hist-btn { background: #252c33; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
-        .hist-btn.active { background: var(--cyan); color: #000; }
+        .hist-btn:hover { background: var(--cyan); color: #000; }
 
         .overall-btn { background: linear-gradient(135deg, #00f2ff 0%, #0088ff 100%); color: #000; border: none; padding: 8px 18px; cursor: pointer; border-radius: 4px; font-weight: 800; text-transform: uppercase; transition: 0.2s; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
         .overall-btn:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 242, 255, 0.6); }
-
-        .obs-link-box { background: #0b0e11; border: 1px solid var(--cyan); padding: 12px; border-radius: 8px; margin-top: 15px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-        .obs-link-input { background: transparent; border: none; color: #00f2ff; font-size: 14px; width: 100%; font-family: monospace; }
-        .copy-btn { background: var(--cyan); color: #000; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
         .team-row { background: #1c2227; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #2d3439; display: grid; grid-template-columns: 1.2fr 1.2fr 75px 75px 75px 75px 100px 30px; gap: 10px; align-items: center; }
         input[type="text"], input[type="number"] { background: #0b0e11; border: 1px solid #343a40; color: white; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .status-dot { width: 22px; height: 22px; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
         .label-tag { font-size: 9px; color: #888; display: block; margin-top: 2px; text-transform: uppercase; }
+
+        /* GREEN SCREEN MODAL STYLING (HIGH RESOLUTION & CHROMA KEY READY) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); align-items: center; justify-content: center; }
+        
+        .modal-content { 
+            background: #00ff00; 
+            border: 4px solid #00ff00; 
+            padding: 25px; 
+            border-radius: 12px; 
+            width: 90%; 
+            max-width: 950px; 
+            max-height: 85vh; 
+            overflow-y: auto; 
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.4); 
+            -webkit-font-smoothing: antialiased; 
+            -moz-osx-font-smoothing: grayscale; 
+            transform: translateZ(0); 
+            image-rendering: -webkit-optimize-contrast; 
+        }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #111; padding-bottom: 12px; margin-bottom: 15px; }
+        .modal-header h3 { font-size: 24px; letter-spacing: 1px; }
+        .close-btn { font-size: 28px; font-weight: bold; color: #ff0033; cursor: pointer; background: #000; border: none; padding: 2px 10px; border-radius: 6px; }
+
+        .pop-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; text-align: left; }
+        .pop-table th { color: #00ff00; text-transform: uppercase; font-size: 14px; font-weight: 900; padding: 14px 12px; background: #111; letter-spacing: 0.5px; }
+        .pop-table td { padding: 12px 10px; font-size: 16px; vertical-align: middle; background: #12161a; color: #ffffff; font-weight: 600; }
+        .pop-table tr td:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+        .pop-table tr td:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+        
+        .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; color: #ffffff; }
+        .team-logo-img { width: 36px; height: 36px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.1); padding: 2px; }
+
+        /* Custom Scrollbar for Green Modal */
+        .modal-content::-webkit-scrollbar { width: 8px; }
+        .modal-content::-webkit-scrollbar-track { background: #00ff00; }
+        .modal-content::-webkit-scrollbar-thumb { background: #111111; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -49,25 +82,42 @@
         </div>
         
         <div class="color-picker-grid">
-            <div class="color-item"><label>Main Accent / Total Box</label><input type="color" id="col-cyan" value="#ffcc00" onchange="updateColor('cyan', this.value)"></div>
-            <div class="color-item"><label>Board Main Bg</label><input type="color" id="col-dark-blue" value="#12193b" onchange="updateColor('dark-blue', this.value)"></div>
-            <div class="color-item"><label>Team Row Bg</label><input type="color" id="col-row-bg" value="#1a2245" onchange="updateColor('row-bg', this.value)"></div>
-            <div class="color-item"><label>Header Row Bg</label><input type="color" id="col-top-row-bg" value="#15191d" onchange="updateColor('top-row-bg', this.value)"></div>
-            <div class="color-item"><label>Alive Status Bar</label><input type="color" id="col-status-bar-color" value="#ffcc00" onchange="updateColor('status-bar-color', this.value)"></div>
-            <div class="color-item"><label>Prediction Tag Bg</label><input type="color" id="col-pred-tag-bg" value="#ffb800" onchange="updateColor('pred-tag-bg', this.value)"></div>
-            <div class="color-item"><label>WWCD Banner Bg</label><input type="color" id="col-elim-main-bg" value="#e63900" onchange="updateColor('elim-main-bg', this.value)"></div>
-            <div class="color-item"><label>Elim Stats Bar Bg</label><input type="color" id="col-elim-stats-bg" value="#ffaa00" onchange="updateColor('elim-stats-bg', this.value)"></div>
+            <div class="color-item">
+                <label>Main Accent / Total Box</label>
+                <input type="color" id="col-cyan" value="#ffcc00" onchange="updateColor('cyan', this.value)">
+            </div>
+            <div class="color-item">
+                <label>Board Main Bg</label>
+                <input type="color" id="col-dark-blue" value="#12193b" onchange="updateColor('dark-blue', this.value)">
+            </div>
+            <div class="color-item">
+                <label>Team Row Bg</label>
+                <input type="color" id="col-row-bg" value="#1a2245" onchange="updateColor('row-bg', this.value)">
+            </div>
+            <div class="color-item">
+                <label>Header Row Bg</label>
+                <input type="color" id="col-top-row-bg" value="#15191d" onchange="updateColor('top-row-bg', this.value)">
+            </div>
+            <div class="color-item">
+                <label>Alive Status Bar</label>
+                <input type="color" id="col-status-bar-color" value="#ffcc00" onchange="updateColor('status-bar-color', this.value)">
+            </div>
+            <div class="color-item">
+                <label>Prediction Tag Bg</label>
+                <input type="color" id="col-pred-tag-bg" value="#ffb800" onchange="updateColor('pred-tag-bg', this.value)">
+            </div>
+            <div class="color-item">
+                <label>WWCD Banner Bg</label>
+                <input type="color" id="col-elim-main-bg" value="#e63900" onchange="updateColor('elim-main-bg', this.value)">
+            </div>
+            <div class="color-item">
+                <label>Elim Stats Bar Bg</label>
+                <input type="color" id="col-elim-stats-bg" value="#ffaa00" onchange="updateColor('elim-stats-bg', this.value)">
+            </div>
         </div>
 
-        <div style="font-size: 11px; color: #888; margin-top: 10px; font-weight: bold; text-transform: uppercase;">Select Active View for OBS Overlay:</div>
+        <div style="font-size: 11px; color: #888; margin-top: 10px; font-weight: bold; text-transform: uppercase;">Points Table Views & Match History:</div>
         <div class="history-container" id="history-buttons-layout"></div>
-
-        <!-- GENERATED OBS BROWSER LINK BOX -->
-        <div class="obs-link-box">
-            <span style="font-weight:bold; color:#fff; font-size:12px; white-space:nowrap;">🎥 OBS BROWSER SOURCE LINK:</span>
-            <input type="text" id="obs-link-field" class="obs-link-input" readonly value="Click any match button above to generate link...">
-            <button class="copy-btn" onclick="copyObsLink()">COPY LINK</button>
-        </div>
 
         <div style="display:flex; gap:10px; margin-bottom:20px; margin-top:15px; flex-wrap:wrap;">
             <button class="btn" style="background:#2ed573; color:white;" onclick="addTeam()">+ ADD TEAM</button>
@@ -76,6 +126,16 @@
             <button class="btn" style="background:#ff4757; color:white;" onclick="resetAll()">FULL RESET</button>
         </div>
         <div id="team-list"></div>
+    </div>
+
+    <div id="popup-modal" class="modal" onclick="document.getElementById('popup-modal').style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title" style="margin:0; color:#111111; font-weight:900; text-transform:uppercase;">Match Pointstable</h3>
+                <button class="close-btn" onclick="document.getElementById('popup-modal').style.display='none'">✖</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
     </div>
 
     <script>
@@ -94,7 +154,6 @@
         let teams = []; let matchHistory = {};
         let isTransparentLayout = false;
         let pickerActive = false;
-        let currentActiveView = 'Overall';
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
@@ -102,8 +161,8 @@
             matchHistory = data.history || {};
             isTransparentLayout = !!data.transparentLayout;
             pickerActive = !!data.pickerActive;
-            currentActiveView = data.activeView || 'Overall';
 
+            // SYNC COLOR PICKER INPUT VALUES
             const cfg = data.config || {};
             Object.keys(cfg).forEach(k => {
                 const el = document.getElementById('col-' + k);
@@ -113,7 +172,6 @@
             updateTransBtnUI();
             updatePickerBtnUI();
             renderHistoryButtons();
-            updateObsLinkDisplay(currentActiveView);
             draw();
         });
 
@@ -129,16 +187,26 @@
         function updatePickerBtnUI() {
             const btn = document.getElementById('picker-toggle-btn');
             if(btn) {
-                btn.innerText = pickerActive ? "SELECT COLOR VIA MOUSE CLICK: ON (CLICK OVERLAY)" : "SELECT COLOR VIA MOUSE CLICK: OFF";
-                btn.style.background = pickerActive ? "#e91e63" : "#9c27b0";
+                if(pickerActive) {
+                    btn.innerText = "SELECT COLOR VIA MOUSE CLICK: ON (CLICK OVERLAY)";
+                    btn.style.background = "#e91e63";
+                } else {
+                    btn.innerText = "SELECT COLOR VIA MOUSE CLICK: OFF";
+                    btn.style.background = "#9c27b0";
+                }
             }
         }
 
         function updateTransBtnUI() {
             const btn = document.getElementById('trans-btn');
             if(btn) {
-                btn.innerText = isTransparentLayout ? "LAYOUT BACKGROUND: TRANSPARENT (CUSTOM GFX)" : "LAYOUT BACKGROUND: DEFAULT";
-                if(isTransparentLayout) btn.classList.add('active'); else btn.classList.remove('active');
+                if(isTransparentLayout) {
+                    btn.innerText = "LAYOUT BACKGROUND: TRANSPARENT (CUSTOM GFX)";
+                    btn.classList.add('active');
+                } else {
+                    btn.innerText = "LAYOUT BACKGROUND: DEFAULT";
+                    btn.classList.remove('active');
+                }
             }
         }
 
@@ -147,33 +215,12 @@
             db.ref(SYNC_PATH + '/transparentLayout').set(isTransparentLayout);
         }
 
-        function selectMatchView(viewKey) {
-            currentActiveView = viewKey;
-            db.ref(SYNC_PATH + '/activeView').set(viewKey);
-            updateObsLinkDisplay(viewKey);
-        }
-
-        function updateObsLinkDisplay(viewKey) {
-            // Yahan par aapka Overlay HTML file ka Path / GitHub Pages URL auto generate ho jayega
-            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/overlay.html';
-            const generatedUrl = `${baseUrl}?view=${viewKey}`;
-            document.getElementById('obs-link-field').value = generatedUrl;
-        }
-
-        function copyObsLink() {
-            const copyText = document.getElementById("obs-link-field");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value);
-            alert("OBS Browser Source Link Copied!\n\nPaste this URL in OBS Browser Source.");
-        }
-
         function sync(elimData = null) { 
             teams.forEach(t => { 
                 t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                 t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
             });
-            const payload = { teams, history: matchHistory, transparentLayout: isTransparentLayout, pickerActive: pickerActive, activeView: currentActiveView };
+            const payload = { teams, history: matchHistory, transparentLayout: isTransparentLayout, pickerActive: pickerActive };
             if(elimData) payload.lastEliminated = elimData;
             db.ref(SYNC_PATH).update(payload);
         }
@@ -186,8 +233,10 @@
                     <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
                     <div><span class="label-tag">Prev Kills</span><input type="number" value="${t.prevFin || 0}" onchange="edit(${i},'prevFin',this.value)"></div>
                     <div><span class="label-tag">Match Kills</span><input type="number" value="${t.fin || 0}" onchange="edit(${i},'fin',this.value)"></div>
+                    
                     <div><span class="label-tag">Prev Pos</span><input type="number" value="${t.prevPos || 0}" onchange="edit(${i},'prevPos',this.value)"></div>
                     <div><span class="label-tag">Match Pos</span><input type="number" value="${t.pos || 0}" onchange="edit(${i},'pos',this.value)"></div>
+                    
                     <div><span class="label-tag">Status</span><div style="display:flex; gap:4px;">
                         ${t.alive.map((a,pi)=>`<button class="status-dot" style="background:${a? '#ffcc00' : '#333'}" onclick="tog(${i},${pi})"></button>`).join('')}
                     </div></div>
@@ -236,7 +285,7 @@
             const overallBtn = document.createElement('button');
             overallBtn.className = 'overall-btn';
             overallBtn.innerText = '📊 OVERALL STANDINGS';
-            overallBtn.onclick = () => selectMatchView('Overall');
+            overallBtn.onclick = () => showOverallPopupTable();
             container.appendChild(overallBtn);
 
             const keys = Object.keys(matchHistory);
@@ -248,11 +297,109 @@
             keys.sort((a,b) => parseInt(a.replace("Match", "")) - parseInt(b.replace("Match", "")))
                 .forEach(key => {
                     const btn = document.createElement('button');
-                    btn.className = 'hist-btn' + (currentActiveView === key ? ' active' : '');
+                    btn.className = 'hist-btn';
                     btn.innerText = key.replace("Match", "MATCH ");
-                    btn.onclick = () => selectMatchView(key);
+                    btn.onclick = () => showPopupTable(key);
                     container.appendChild(btn);
                 });
+        }
+
+        function showPopupTable(matchKey) {
+            const modal = document.getElementById('popup-modal');
+            document.getElementById('modal-title').innerText = `${matchKey.replace("Match", "MATCH ")} SCOREBOARD`;
+            const savedTeams = matchHistory[matchKey] || [];
+
+            let sortedTeams = [...savedTeams].sort((a,b) => {
+                let totalA = (parseInt(a.fin)||0) + (parseInt(a.pos)||0);
+                let totalB = (parseInt(b.fin)||0) + (parseInt(b.pos)||0);
+                return totalB - totalA;
+            });
+
+            let html = `<table class="pop-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Rank</th>
+                        <th>Team Name</th>
+                        <th style="text-align:center;">Match Kills</th>
+                        <th style="text-align:center;">Match Pos Points</th>
+                        <th style="text-align:center; color:#00ff00;">Total Match Pts</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            sortedTeams.forEach((t, idx) => {
+                let singleMatchTotal = (parseInt(t.fin)||0) + (parseInt(t.pos)||0);
+                let teamName = (t.name || 'TEAM').trim();
+                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
+                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
+
+                html += `<tr>
+                    <td style="font-weight:900; color:#00ff00;">#${idx + 1}</td>
+                    <td>
+                        <div class="team-cell">
+                            ${imgTag}
+                            <span>${teamName}</span>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">${t.fin || 0}</td>
+                    <td style="text-align:center;">${t.pos || 0}</td>
+                    <td style="text-align:center; font-weight:900; color:#00ff00; font-size:18px;">${singleMatchTotal}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('modal-body').innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        function showOverallPopupTable() {
+            const modal = document.getElementById('popup-modal');
+            document.getElementById('modal-title').innerText = `OVERALL TOURNAMENT STANDINGS`;
+
+            let sortedTeams = [...teams].sort((a,b) => {
+                let totalA = ((parseInt(a.prevFin)||0) + (parseInt(a.fin)||0)) + ((parseInt(a.prevPos)||0) + (parseInt(a.pos)||0));
+                let totalB = ((parseInt(b.prevFin)||0) + (parseInt(b.fin)||0)) + ((parseInt(b.prevPos)||0) + (parseInt(b.pos)||0));
+                return totalB - totalA;
+            });
+
+            let html = `<table class="pop-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Rank</th>
+                        <th>Team Name</th>
+                        <th style="text-align:center;">Total Kills</th>
+                        <th style="text-align:center;">Total Pos Points</th>
+                        <th style="text-align:center; color:#00ff00;">OVERALL PTS</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            sortedTeams.forEach((t, idx) => {
+                let overallKills = (parseInt(t.prevFin)||0) + (parseInt(t.fin)||0);
+                let overallPos = (parseInt(t.prevPos)||0) + (parseInt(t.pos)||0);
+                let grandTotal = overallKills + overallPos;
+
+                let teamName = (t.name || 'TEAM').trim();
+                let logoUrl = (t.logo && t.logo.trim() !== '') ? t.logo.trim() : '';
+                let imgTag = logoUrl ? `<img src="${logoUrl}" class="team-logo-img" onerror="this.style.display='none'">` : '';
+
+                html += `<tr>
+                    <td style="font-weight:900; color:#00ff00;">#${idx + 1}</td>
+                    <td>
+                        <div class="team-cell">
+                            ${imgTag}
+                            <span>${teamName}</span>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">${overallKills}</td>
+                    <td style="text-align:center;">${overallPos}</td>
+                    <td style="text-align:center; font-weight:900; color:#00ff00; font-size:20px;">${grandTotal}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('modal-body').innerHTML = html;
+            modal.style.display = 'flex';
         }
 
         function globalNewMatch() { 
@@ -265,8 +412,10 @@
                 teams.forEach(t => { 
                     t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
                     t.fin = 0; 
+                    
                     t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
                     t.pos = 0;
+                    
                     t.alive = [1,1,1,1]; t.elim = false; 
                 }); 
                 
