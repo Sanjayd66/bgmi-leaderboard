@@ -254,11 +254,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ELIMINATION BANNER POPUP */
+        /* ELIMINATION BANNER POPUP - now centered horizontally, slightly above vertical center */
         #elim-banner { 
             position: absolute; 
-            left: 80px; 
-            bottom: 240px; 
+            left: 50%; 
+            top: 42%; 
+            transform: translate(-50%, -50%);
             display: none; 
             z-index: 1000; 
             perspective: 1200px;
