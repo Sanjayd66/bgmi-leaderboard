@@ -143,13 +143,14 @@
             100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
         }
 
-        /* WINNING PREDICTION LAYOUT */
+        /* WINNING PREDICTION LAYOUT - centered using flex (avoids transform conflict with animation) */
         #prediction-container {
             position: absolute;
-            left: 50%;
-            top: 42%;
-            transform: translate(-50%, -50%);
+            left: 0;
+            width: 100%;
+            top: 48px;
             display: flex;
+            justify-content: center;
             gap: 12px;
             z-index: 900;
             transition: all 0.5s ease;
@@ -255,12 +256,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ELIMINATION BANNER POPUP - centered, just below the prediction (top-middle stack) */
+        /* ELIMINATION BANNER POPUP - centered horizontally, just below prediction cards */
         #elim-banner { 
             position: absolute; 
             left: 50%; 
-            top: 58%; 
-            transform: translate(-50%, -50%);
+            top: 209px; 
+            transform: translateX(-50%);
             display: none; 
             z-index: 1000; 
             perspective: 1200px;
