@@ -341,6 +341,10 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 410px;
         }
 
         .elim-stats-bar {
@@ -358,12 +362,9 @@
             overflow: hidden;
         }
 
-        .elim-stats-bar .elim-name {
-            color: #000000;
+        .elim-stats-bar .elim-label {
+            color: #cc0000;
             font-weight: 800;
-            max-width: 170px;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .elim-stats-bar .sep {
@@ -423,10 +424,10 @@
             </div>
             <div class="elim-right-content">
                 <div class="elim-main-banner" data-var="elim-main-bg">
-                    <span>ELIMINATED</span>
+                    <span id="elim-name-text">TEAM</span>
                 </div>
                 <div class="elim-stats-bar" data-var="elim-stats-bg">
-                    <span class="elim-name" id="elim-name-text">TEAM</span>
+                    <span class="elim-label">ELIMINATED</span>
                     <span class="sep">|</span>
                     <span id="elim-fin-text">1 FINISHES</span>
                     <span class="sep">|</span>
