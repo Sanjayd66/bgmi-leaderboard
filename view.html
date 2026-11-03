@@ -323,7 +323,7 @@
         .elim-right-content {
             display: flex;
             flex-direction: column;
-            width: 360px;
+            width: 440px;
         }
 
         .elim-main-banner {
@@ -354,6 +354,16 @@
             font-size: 18px;
             font-weight: 800;
             text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .elim-stats-bar .elim-name {
+            color: #000000;
+            font-weight: 800;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .elim-stats-bar .sep {
@@ -416,6 +426,8 @@
                     <span>ELIMINATED</span>
                 </div>
                 <div class="elim-stats-bar" data-var="elim-stats-bg">
+                    <span class="elim-name" id="elim-name-text">TEAM</span>
+                    <span class="sep">|</span>
                     <span id="elim-fin-text">1 FINISHES</span>
                     <span class="sep">|</span>
                     <span id="elim-pos-text">3 PLACE PTS.</span>
@@ -492,9 +504,28 @@
                 currentElimId = data.lastEliminated.id;
                 
                 document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
+
+                // TEAM NAME + LOGO (fallback: teams list se dhoondo)
+                let elimName = data.lastEliminated.name || data.lastEliminated.teamName || '';
+                let elimLogo = data.lastEliminated.logo || '';
+
+                if (!elimName || !elimLogo) {
+                    const m = (Array.isArray(cachedTeamsData) ? cachedTeamsData : Object.values(cachedTeamsData)).find(t =>
+                        t && (
+                            t.id == data.lastEliminated.id ||
+                            (t.logo && t.logo === data.lastEliminated.logo)
+                        )
+                    );
+                    if (m) {
+                        if (!elimName) elimName = m.name;
+                        if (!elimLogo) elimLogo = m.logo;
+                    }
+                }
+                document.getElementById('elim-name-text').innerText = (elimName || 'TEAM').toString().toUpperCase();
+
                 const logoImg = document.getElementById('elim-logo-img');
-                if(data.lastEliminated.logo && data.lastEliminated.logo.trim() !== "") {
-                    logoImg.src = data.lastEliminated.logo;
+                if(elimLogo && elimLogo.trim() !== "") {
+                    logoImg.src = elimLogo;
                     logoImg.style.display = 'block';
                 } else {
                     logoImg.style.display = 'none';
