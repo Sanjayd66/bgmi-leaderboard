@@ -24,9 +24,9 @@
 
         body { font-family: 'Oswald', sans-serif; background: #0b0e11; color: white; padding: 15px; margin: 0; }
         .admin-panel { background: #15191d; padding: 20px; border-radius: 12px; max-width: 1200px; margin: auto; border: 1px solid #2d3439; }
-        
+
         .btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; transition: 0.3s; }
-        
+
         .trans-mode-btn { background: #2196F3; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
         .trans-mode-btn.active { background: #e91e63; color: white; }
 
@@ -56,59 +56,59 @@
 
         /* FULL CHROMA GREEN MODAL SETUP - ALL CONTAINERS GREEN */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: #00ff00; align-items: center; justify-content: center; }
-        
-        .modal-content { 
-            background: #00ff00 !important; 
-            border: none !important; 
-            padding: 20px; 
-            width: 92%; 
-            max-width: 1000px; 
-            max-height: 90vh; 
-            overflow-y: auto; 
-            transform: translateZ(0); 
-            image-rendering: -webkit-optimize-contrast; 
+
+        .modal-content {
+            background: #00ff00 !important;
+            border: none !important;
+            padding: 20px;
+            width: 92%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateZ(0);
+            image-rendering: -webkit-optimize-contrast;
             box-shadow: none !important;
         }
 
         .modal-header { display: flex; justify-content: space-between; align-items: center; background: #00ff00; padding: 12px 0px; margin-bottom: 12px; border-bottom: none; }
-        .modal-header h3 { 
-            font-family: 'Agency FB', 'Oswald', sans-serif; 
-            font-size: 32px; 
-            letter-spacing: 1.5px; 
-            font-weight: bold; 
-            color: #ffffff; 
-            margin: 0; 
+        .modal-header h3 {
+            font-family: 'Agency FB', 'Oswald', sans-serif;
+            font-size: 32px;
+            letter-spacing: 1.5px;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 0;
             text-shadow: 2px 2px 4px #000000;
         }
-        
+
         .close-btn { font-size: 24px; font-weight: bold; color: #ffffff; cursor: pointer; background: #e63900; border: none; padding: 2px 12px; border-radius: 4px; }
 
         .pop-table { width: 100%; border-collapse: collapse; text-align: left; }
         .pop-table * { font-family: 'Agency FB', 'Oswald', sans-serif; font-weight: bold; }
-        
-        .pop-table th { 
-            color: #ffffff; 
-            text-transform: uppercase; 
-            font-size: 20px; 
-            font-weight: bold; 
-            padding: 12px 10px; 
-            background: #00ff00 !important; 
-            letter-spacing: 1px; 
+
+        .pop-table th {
+            color: #ffffff;
+            text-transform: uppercase;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 12px 10px;
+            background: #00ff00 !important;
+            letter-spacing: 1px;
             border-bottom: none !important;
             text-shadow: 2px 2px 3px #000000;
         }
-        
-        .pop-table td { 
-            padding: 10px 10px; 
-            font-size: 22px; 
-            vertical-align: middle; 
-            background: #00ff00 !important; 
-            color: #ffffff; 
-            font-weight: bold; 
+
+        .pop-table td {
+            padding: 10px 10px;
+            font-size: 22px;
+            vertical-align: middle;
+            background: #00ff00 !important;
+            color: #ffffff;
+            font-weight: bold;
             border: none !important;
             text-shadow: 2px 2px 3px #000000;
         }
-        
+
         .team-cell { display: flex; align-items: center; gap: 12px; font-weight: bold; text-transform: uppercase; color: #ffffff; font-size: 24px; }
         .team-logo-img { width: 36px; height: 36px; object-fit: contain; }
 
@@ -130,7 +130,7 @@
             <div style="font-size: 12px; color: var(--cyan); font-weight: bold; text-transform: uppercase;">🎨 Custom Theme & Live Color Controller:</div>
             <button id="picker-toggle-btn" class="trans-mode-btn" style="background:#9c27b0;" onclick="toggleClickPickerMode()">SELECT COLOR VIA MOUSE CLICK: OFF</button>
         </div>
-        
+
         <div class="color-picker-grid">
             <div class="color-item">
                 <label>Main Accent / Total Box</label>
@@ -235,6 +235,19 @@
             window.stop();
         }
 
+        /* ===== FIX 1: number box par mouse wheel / arrow keys se kills na badlein ===== */
+        document.addEventListener('wheel', () => {
+            const el = document.activeElement;
+            if (el && el.type === 'number') el.blur();
+        }, { passive: true });
+
+        document.addEventListener('keydown', (e) => {
+            const el = document.activeElement;
+            if (el && el.type === 'number' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                e.preventDefault();
+            }
+        });
+
         const firebaseConfig = { databaseURL: "https://bgmi-overlay-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -246,7 +259,7 @@
 
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val() || {};
-            teams = data.teams || []; 
+            teams = data.teams || [];
             matchHistory = data.history || {};
             isTransparentLayout = !!data.transparentLayout;
             pickerActive = !!data.pickerActive;
@@ -328,10 +341,10 @@
             db.ref(SYNC_PATH + '/transparentLayout').set(isTransparentLayout);
         }
 
-        function sync(elimData = null) { 
-            teams.forEach(t => { 
-                t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0); 
+        function sync(elimData = null) {
+            teams.forEach(t => {
+                t.totalFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0);
+                t.totalPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
             });
             const payload = { teams, history: matchHistory, transparentLayout: isTransparentLayout, pickerActive: pickerActive, info: tournamentInfo };
             if(elimData) payload.lastEliminated = elimData;
@@ -341,6 +354,7 @@
         function draw() {
             const list = document.getElementById('team-list'); list.innerHTML = '';
             teams.forEach((t, i) => {
+                if (!Array.isArray(t.alive)) t.alive = [1,1,1,1];
                 list.innerHTML += `<div class="team-row">
                     <div><span class="label-tag">Team</span><input type="text" value="${t.name || ''}" onchange="edit(${i},'name',this.value)"></div>
                     <div><span class="label-tag">Logo</span><input type="text" value="${t.logo || ''}" onchange="edit(${i},'logo',this.value)"></div>
@@ -356,15 +370,15 @@
             });
         }
 
-        function edit(i,f,v) { 
+        function edit(i,f,v) {
             if(f === 'prevFin' || f === 'fin' || f === 'prevPos' || f === 'pos') {
                 teams[i][f] = parseInt(v) || 0;
             } else {
                 teams[i][f] = v;
             }
-            sync(); 
+            sync();
         }
-        
+
         function tog(i,pi) {
             teams[i].alive[pi] = teams[i].alive[pi] ? 0 : 1;
             let elim = null;
@@ -373,10 +387,10 @@
                     teams[i].elim = true;
                     let aliveCount = teams.filter(t => !t.elim).length;
                     let rankNum = aliveCount + 1;
-                    elim = { 
-                        id: Date.now().toString(), 
-                        name: teams[i].name, 
-                        logo: teams[i].logo, 
+                    elim = {
+                        id: Date.now().toString(),
+                        name: teams[i].name,
+                        logo: teams[i].logo,
                         finishes: (parseInt(teams[i].fin)||0),
                         rank: rankNum
                     };
@@ -388,7 +402,7 @@
         }
 
         function addTeam() { teams.push({ name: "TEAM", logo: "", fin: 0, prevFin: 0, totalFin: 0, pos: 0, prevPos: 0, totalPos: 0, alive: [1,1,1,1], elim: false }); sync(); }
-        
+
         function renderHistoryButtons() {
             const container = document.getElementById('history-buttons-layout');
             container.innerHTML = '';
@@ -513,27 +527,31 @@
             modal.style.display = 'flex';
         }
 
-        function globalNewMatch() { 
+        /* ===== FIX 2: NEW MATCH ab sirf ek hi Firebase write karta hai (race condition khatam) ===== */
+        function globalNewMatch() {
             if(confirm("New Match? Status reset hoga, points history me save ho jayenge.")) {
-                const currentMatchNumber = Object.keys(matchHistory).length + 1;
-                const matchKeyName = "Match" + currentMatchNumber;
-                
+                const matchKeyName = "Match" + (Object.keys(matchHistory).length + 1);
                 matchHistory[matchKeyName] = JSON.parse(JSON.stringify(teams));
 
-                teams.forEach(t => { 
-                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0); 
-                    t.fin = 0; 
-                    
+                teams.forEach(t => {
+                    t.prevFin = (parseInt(t.prevFin) || 0) + (parseInt(t.fin) || 0);
+                    t.fin = 0;
                     t.prevPos = (parseInt(t.prevPos) || 0) + (parseInt(t.pos) || 0);
                     t.pos = 0;
-                    
-                    t.alive = [1,1,1,1]; t.elim = false; 
-                }); 
-                
-                db.ref(SYNC_PATH + '/lastEliminated').remove().then(() => sync());
+                    t.alive = [1,1,1,1];
+                    t.elim = false;
+                    t.totalFin = t.prevFin;
+                    t.totalPos = t.prevPos;
+                });
+
+                db.ref(SYNC_PATH).update({
+                    teams: teams,
+                    history: matchHistory,
+                    lastEliminated: null   // null = Firebase se delete, usi write mein
+                });
             }
         }
-        
+
         function removeTeam(i) { if(confirm("Delete Team?")) { teams.splice(i, 1); sync(); } }
         function resetAll() { if(confirm("HARD RESET? History aur teams sab clean ho jayega.")) { db.ref(SYNC_PATH).set(null); } }
     </script>
