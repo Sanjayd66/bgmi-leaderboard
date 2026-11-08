@@ -6,11 +6,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --cyan: #ffcc00; 
-            --dark-blue: #12193b; 
-            --row-bg: #1a2245; 
-            --text-color: #ffffff; 
+        :root {
+            --cyan: #ffcc00;
+            --dark-blue: #12193b;
+            --row-bg: #1a2245;
+            --text-color: #ffffff;
             --status-bg: #252c33;
             --status-bar-color: #ffcc00;
             --top-row-bg: #15191d;
@@ -26,124 +26,124 @@
             font-family: 'Oswald', sans-serif;
         }
 
-        body { 
-            margin: 0; 
+        body {
+            margin: 0;
             background: transparent;
-            overflow: hidden; 
-            width: 1920px; 
-            height: 1080px; 
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
         }
-        
+
         /* LEADERBOARD BOARD RIGHT SIDE */
-        #board { 
-            position: absolute; 
-            right: 40px; 
-            bottom: 40px; 
-            background: var(--dark-blue); 
-            padding: 8px; 
-            border-radius: 4px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        #board {
+            position: absolute;
+            right: 40px;
+            bottom: 40px;
+            background: var(--dark-blue);
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             transition: all 0.5s ease;
         }
-        
-        .header-row, .team-row { 
-            display: grid; 
-            grid-template-columns: 25px 30px 45px 45px 30px 35px; 
-            align-items: center; 
-            gap: 2px; 
-            color: var(--text-color); 
+
+        .header-row, .team-row {
+            display: grid;
+            grid-template-columns: 25px 30px 45px 45px 30px 35px;
+            align-items: center;
+            gap: 2px;
+            color: var(--text-color);
         }
 
-        .header-row { 
-            font-size: 11px; 
-            color: var(--cyan); 
-            background: var(--top-row-bg); 
-            border-bottom: 1px solid rgba(255,255,255,0.2); 
-            margin-bottom: 4px; 
-            text-align: center; 
-        }
-        
-        .team-row { 
-            background: var(--row-bg); 
-            height: 32px; 
-            margin-bottom: 2px; 
-            transition: all 0.3s ease; 
+        .header-row {
+            font-size: 11px;
+            color: var(--cyan);
+            background: var(--top-row-bg);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 4px;
+            text-align: center;
         }
 
-        .team-row.eliminated { 
+        .team-row {
+            background: var(--row-bg);
+            height: 32px;
+            margin-bottom: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .team-row.eliminated {
             background: var(--elim-bg) !important;
-            opacity: 0.4; 
-            filter: grayscale(1); 
+            opacity: 0.4;
+            filter: grayscale(1);
         }
 
-        .logo-col { 
-            width: 22px; 
-            height: 22px; 
-            background: transparent; 
-            border-radius: 2px; 
-            margin: auto; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+        .logo-col {
+            width: 22px;
+            height: 22px;
+            background: transparent;
+            border-radius: 2px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .logo-col img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; 
+        .logo-col img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
-        .name-col { 
-            padding-left: 5px; 
-            font-weight: bold; 
-            font-size: 13px; 
-            overflow: hidden; 
-            white-space: nowrap; 
-            text-transform: uppercase; 
-        } 
-        
+        .name-col {
+            padding-left: 5px;
+            font-weight: bold;
+            font-size: 13px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+
         /* ALIVE STATUS BARS & ANIMATION */
-        .status-col { 
-            display: flex; 
-            gap: 3px; 
-            justify-content: center; 
-            background: var(--status-bg); 
-            height: 100%; 
-            align-items: center; 
+        .status-col {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            background: var(--status-bg);
+            height: 100%;
+            align-items: center;
             padding: 0 4px;
         }
 
-        .bar { 
-            width: 5px; 
-            height: 18px; 
-            background: var(--status-bar-color); 
-            box-shadow: 0 0 8px var(--status-bar-color); 
+        .bar {
+            width: 5px;
+            height: 18px;
+            background: var(--status-bar-color);
+            box-shadow: 0 0 8px var(--status-bar-color);
             animation: liveBarPulse 1.2s infinite ease-in-out alternate;
         }
 
-        .bar.dead { 
-            background: #333333 !important; 
-            box-shadow: none !important; 
-            opacity: 0.3; 
-            animation: none !important; 
+        .bar.dead {
+            background: #333333 !important;
+            box-shadow: none !important;
+            opacity: 0.3;
+            animation: none !important;
         }
 
-        .total-box { 
-            background: var(--cyan); 
-            color: #000; 
-            height: 100%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: 900; 
-        } 
-        
+        .total-box {
+            background: var(--cyan);
+            color: #000;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+
         @keyframes liveBarPulse {
             0% { transform: scaleY(0.85); opacity: 0.7; }
             100% { transform: scaleY(1.1); opacity: 1; box-shadow: 0 0 10px var(--status-bar-color); }
         }
 
-        /* WINNING PREDICTION LAYOUT - centered using flex (avoids transform conflict with animation) */
+        /* WINNING PREDICTION LAYOUT */
         #prediction-container {
             position: absolute;
             left: 0;
@@ -226,7 +226,7 @@
             box-shadow: 0 0 8px var(--status-bar-color);
             opacity: 1;
         }
-        
+
         .pred-player-bar.dead {
             background: #444444;
             box-shadow: none;
@@ -256,33 +256,33 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ELIMINATION BANNER POPUP - centered horizontally, just below prediction cards */
-        #elim-banner { 
-            position: absolute; 
-            left: 50%; 
-            top: 209px; 
+        /* ELIMINATION BANNER POPUP */
+        #elim-banner {
+            position: absolute;
+            left: 50%;
+            top: 209px;
             transform: translateX(-50%);
-            display: none; 
-            z-index: 1000; 
+            display: none;
+            z-index: 1000;
             perspective: 1200px;
         }
-        
-        #elim-banner.show { 
-            display: block; 
+
+        #elim-banner.show {
+            display: block;
         }
-        
+
         #elim-banner.show .elim-card {
             animation: exactPageUnfold 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        
+
         #elim-banner.hide-anim .elim-card {
             animation: exactPageFold 0.4s ease-in forwards;
         }
 
-        .elim-card { 
-            display: flex; 
-            align-items: stretch; 
-            position: relative; 
+        .elim-card {
+            display: flex;
+            align-items: stretch;
+            position: relative;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
             transform-origin: left center;
             opacity: 0;
@@ -439,7 +439,7 @@
 
     <!-- WINNING PREDICTION FORECAST -->
     <div id="prediction-container"></div>
-    
+
     <!-- LEADERBOARD SIDEBAR -->
     <div id="board" data-var="dark-blue"></div>
 
@@ -450,6 +450,7 @@
         const SYNC_PATH = 'TournamentData/LiveSession';
 
         let currentElimId = "";
+        let firstLoad = true;   // FIX: overlay reload par purana elimination banner dobara na chale
         let cachedTeamsData = [];
         let cachedPredData = null;
         let shouldAnimateNextRender = true;
@@ -474,7 +475,7 @@
         db.ref(SYNC_PATH).on('value', (snap) => {
             const data = snap.val(); if(!data) return;
             const cfg = data.config || {};
-            
+
             // DYNAMICALLY SET ALL ROOT CSS VARIABLES
             Object.keys(COLOR_MAP).forEach(k => {
                 if (cfg[k]) {
@@ -500,10 +501,16 @@
             cachedTeamsData = data.teams || [];
             cachedPredData = data.predictions || data.predictionForecast || data.winningForecast || data.wwcdPrediction || null;
 
+            // Pehli baar load hone par purane elimination ko sirf yaad rakho, banner mat dikhao
+            if (firstLoad) {
+                firstLoad = false;
+                if (data.lastEliminated) currentElimId = data.lastEliminated.id;
+            }
+
             // ELIMINATION POPUP TRIGGER
             if(data.lastEliminated && data.lastEliminated.id !== currentElimId) {
                 currentElimId = data.lastEliminated.id;
-                
+
                 document.getElementById('elim-rank-tag').innerText = `#${data.lastEliminated.rank || 1}`;
 
                 // TEAM NAME + LOGO (fallback: teams list se dhoondo)
@@ -544,13 +551,13 @@
                 else if(r === 7 || r === 8) posPoints = 1;
 
                 document.getElementById('elim-pos-text').innerText = `${posPoints} PLACE PTS.`;
-                
+
                 const banner = document.getElementById('elim-banner');
                 banner.classList.remove('show', 'hide-anim');
-                void banner.offsetWidth; 
-                banner.classList.add('show'); 
-                
-                setTimeout(() => { 
+                void banner.offsetWidth;
+                banner.classList.add('show');
+
+                setTimeout(() => {
                     banner.classList.add('hide-anim');
                     setTimeout(() => { banner.classList.remove('show', 'hide-anim'); }, 400);
                 }, 5000);
@@ -568,11 +575,10 @@
                 e.preventDefault();
                 e.stopPropagation();
                 let varKey = target.getAttribute('data-var');
-                
-                // Prompt user to pick color for clicked element
+
                 let currentColor = getComputedStyle(document.documentElement).getPropertyValue(COLOR_MAP[varKey]).trim();
                 let newColor = prompt(`Editing Color for element: ${varKey}\nEnter Hex or Color Code:`, currentColor);
-                
+
                 if(newColor) {
                     db.ref(SYNC_PATH + '/config/' + varKey).set(newColor.trim());
                 }
@@ -611,7 +617,7 @@
             }
 
             let h = `<div class="header-row" data-var="top-row-bg"><div data-var="cyan">#</div><div>LOGO</div><div style="text-align:left;">TEAM</div><div style="text-align:center;">STATUS</div><div>FIN.</div><div>TOTAL</div></div>`;
-            
+
             const sortedTeams = [...teams].sort((a,b)=> {
                 let totalA = ((parseInt(a.prevFin) || 0) + (parseInt(a.fin) || 0)) + ((parseInt(a.prevPos) || 0) + (parseInt(a.pos) || 0));
                 let totalB = ((parseInt(b.prevFin) || 0) + (parseInt(b.fin) || 0)) + ((parseInt(b.prevPos) || 0) + (parseInt(b.pos) || 0));
@@ -645,7 +651,7 @@
 
             if (rawPredData) {
                 let rawList = Array.isArray(rawPredData) ? rawPredData : Object.values(rawPredData);
-                
+
                 rawList.forEach(p => {
                     let liveTeam = aliveTeams.find(t => (t.name || '').toLowerCase().trim() === (p.name || '').toLowerCase().trim());
                     if (liveTeam) {
@@ -691,7 +697,7 @@
                 let logoSrc = p.logo && p.logo.trim() !== "" ? p.logo : "";
                 let pctText = p.wwcd ? (p.wwcd.toString().includes('%') ? p.wwcd : p.wwcd + '%') : '20%';
                 let cardDelay = cardAnimClass !== '' ? `style="animation-delay: ${(idx * 0.05) + 0.15}s"` : '';
-                
+
                 let playerAliveArr = p.alive || [1, 1, 1, 1];
 
                 html += `
@@ -718,10 +724,10 @@
         setInterval(() => {
             const board = document.getElementById('board');
             const predContainer = document.getElementById('prediction-container');
-            
+
             board.style.opacity = "0";
             predContainer.style.opacity = "0";
-            
+
             setTimeout(() => {
                 if(cachedTeamsData.length > 0) {
                     shouldAnimateNextRender = true;
@@ -729,7 +735,7 @@
                     predContainer.style.opacity = "1";
                     render(cachedTeamsData, cachedPredData);
                 }
-            }, 300); 
+            }, 300);
         }, 30000);
     </script>
 </body>
